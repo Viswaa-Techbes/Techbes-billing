@@ -84,7 +84,7 @@ export default function EditQuotationPage() {
         ]);
 
         if (profileRes.data?.success) {
-          setBusinessProfile(profileRes.data.data);
+          setBusinessProfile(profileRes.data.data?.business || {});
         }
         if (clientsRes.data?.success) {
           setClients(clientsRes.data.data.clients || []);

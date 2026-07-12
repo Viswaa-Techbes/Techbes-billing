@@ -212,7 +212,7 @@ export default function QuotationDetailPage() {
                 {getStatusBadge(document.status)}
               </div>
             </div>
-          </div></div>
+          </div>
 
           {/* Client & Shipping Details */}
           <div className="grid grid-cols-2 gap-8 border-b border-slate-200 pb-6">
