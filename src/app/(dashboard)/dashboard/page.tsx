@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import { useAuth } from '../../../context/AuthContext';
-import PageHeader from '../../../components/PageHeader';
+import { useAuth } from '@/context/AuthContext';
+import PageHeader from '@/components/PageHeader';
 import Link from 'next/link';
 
 export default function DashboardPage() {

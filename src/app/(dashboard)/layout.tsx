@@ -1,22 +1,22 @@
 import React from 'react';
-import ProtectedRoute from '../../components/ProtectedRoute';
-import Sidebar from '../../components/Sidebar';
-import Topbar from '../../components/Topbar';
+import ProtectedRoute from '@/components/ProtectedRoute';
+import Sidebar from '@/components/Sidebar';
+import Topbar from '@/components/Topbar';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-slate-950 flex">
-        {/* Sidebar */}
+      <div className="min-h-screen bg-slate-50 flex text-slate-800">
+        {/* Sidebar (Fixed width 256px / w-64) */}
         <Sidebar />
 
-        {/* Core panel area */}
-        <div className="flex-1 flex flex-col min-h-screen w-[calc(100%-16rem)]">
-          {/* Top navigation */}
+        {/* Content Panel Wrapper (Offset by 256px via pl-64) */}
+        <div className="flex-1 pl-64 flex flex-col min-h-screen">
+          {/* Top Bar */}
           <Topbar />
 
-          {/* Main page content view */}
-          <main className="flex-1 p-8 overflow-y-auto w-[calc(100%-16rem)] ml-64 bg-slate-950/40">
+          {/* Page Body Viewport */}
+          <main className="flex-1 p-8 overflow-y-auto">
             <div className="max-w-7xl mx-auto animate-fadeIn">
               {children}
             </div>

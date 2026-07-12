@@ -3,11 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import api from '../../../../lib/api';
-import { useToast } from '../../../../context/ToastContext';
-import PageHeader from '../../../../components/PageHeader';
-import Modal from '../../../../components/ui/Modal';
-import LoadingSpinner from '../../../../components/ui/LoadingSpinner';
+import api from '@/lib/api';
+import { useToast } from '@/context/ToastContext';
+import PageHeader from '@/components/PageHeader';
+import Modal from '@/components/ui/Modal';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 interface Address {
   addressLine1?: string;
@@ -50,9 +50,9 @@ export default function ClientDetailPage() {
   const [summary, setSummary] = useState<ClientSummary | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Delete modal
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [deleting, setDeleting] = useState(false);
+  // Delete/status modal
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
 
   const fetchClientDetails = async () => {
     setLoading(true);
@@ -82,26 +82,36 @@ export default function ClientDetailPage() {
     }
   }, [id]);
 
-  const confirmDelete = async () => {
-    setDeleting(true);
+  const handleToggleStatus = async () => {
+    if (!client) return;
+    setUpdatingStatus(true);
+    const newStatus = client.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
     try {
-      const response = await api.delete(`/clients/${id}`);
-      if (response.data?.success || response.status === 200) {
-        showToast('Client deleted successfully', 'success');
-        setIsDeleteModalOpen(false);
-        router.push('/clients');
+      const response = await api.put(`/clients/${client._id}`, {
+        clientName: client.clientName,
+        clientType: client.clientType,
+        status: newStatus,
+      });
+
+      if (response.data?.success) {
+        showToast(
+          `Client marked as ${newStatus === 'ACTIVE' ? 'Active' : 'Inactive'} successfully.`, 
+          'success'
+        );
+        setIsStatusModalOpen(false);
+        fetchClientDetails();
       }
     } catch (err: any) {
-      showToast(err.response?.data?.message || 'Failed to delete client.', 'error');
+      showToast(err.response?.data?.message || 'Failed to update client status.', 'error');
     } finally {
-      setDeleting(false);
+      setUpdatingStatus(false);
     }
   };
 
   if (loading) {
     return (
-      <div className="glass-panel p-16 rounded-2xl flex items-center justify-center min-h-[300px]">
-        <LoadingSpinner size="lg" />
+      <div className="card-panel p-16 rounded-xl flex items-center justify-center min-h-[300px]">
+        <LoadingSpinner size="md" />
       </div>
     );
   }
@@ -110,10 +120,10 @@ export default function ClientDetailPage() {
 
   const renderAddress = (addr?: Address) => {
     if (!addr || (!addr.addressLine1 && !addr.city)) {
-      return <p className="text-slate-500 text-sm">No address registered.</p>;
+      return <p className="text-slate-400 text-xs">No address registered.</p>;
     }
     return (
-      <div className="text-slate-300 text-sm space-y-0.5">
+      <div className="text-slate-600 text-xs space-y-0.5 font-sans">
         <p>{addr.addressLine1}</p>
         {addr.addressLine2 && <p>{addr.addressLine2}</p>}
         <p>
@@ -127,52 +137,62 @@ export default function ClientDetailPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-slate-800">
       {/* Header */}
       <PageHeader
-        title={client.clientName}
-        subtitle={client.businessName ? `Company: ${client.businessName}` : 'Individual Customer'}
+        title={client.clientType === 'BUSINESS' ? (client.businessName || client.clientName) : client.clientName}
+        subtitle={client.clientType === 'BUSINESS' ? `Contact: ${client.clientName}` : 'Individual Customer'}
         actions={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Link
               href="/clients"
-              className="px-4 py-2 border border-slate-800 rounded-xl text-sm font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-colors"
+              className="px-4 py-2 border border-slate-300 rounded-xl text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-50 transition-colors"
             >
               Back to List
             </Link>
             <Link
               href={`/clients/${client._id}/edit`}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold transition-colors"
+              className="px-4 py-2 border border-slate-300 rounded-xl text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-50 transition-colors"
             >
               Edit Client
             </Link>
             <button
-              onClick={() => setIsDeleteModalOpen(true)}
-              className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-sm font-semibold transition-colors"
+              onClick={() => setIsStatusModalOpen(true)}
+              className={`px-4 py-2 border rounded-xl text-xs font-semibold transition-colors ${
+                client.status === 'ACTIVE'
+                  ? 'border-amber-200 text-amber-600 hover:bg-amber-50'
+                  : 'border-emerald-250 text-emerald-600 hover:bg-emerald-50'
+              }`}
             >
-              Delete
+              {client.status === 'ACTIVE' ? 'Mark Inactive' : 'Mark Active'}
             </button>
+            <Link
+              href={`/quotations/new?clientId=${client._id}`}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold transition-colors shadow-sm"
+            >
+              Create Quotation
+            </Link>
           </div>
         }
       />
 
       {/* Financial Ledger Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="glass-panel p-6 rounded-2xl border border-slate-800">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Sales</p>
-          <p className="text-2xl font-bold text-slate-100 mt-2">
+        <div className="card-panel p-5 rounded-xl bg-white">
+          <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Total Sales</p>
+          <p className="text-xl font-bold text-slate-900 mt-1">
             ₹{summary?.totalSales?.toLocaleString('en-IN', { minimumFractionDigits: 2 }) || '0.00'}
           </p>
         </div>
-        <div className="glass-panel p-6 rounded-2xl border border-slate-800">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Outstanding Dues</p>
-          <p className="text-2xl font-bold text-amber-400 mt-2">
+        <div className="card-panel p-5 rounded-xl bg-white">
+          <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Outstanding Dues</p>
+          <p className="text-xl font-bold text-brand-accent mt-1">
             ₹{summary?.outstanding?.toLocaleString('en-IN', { minimumFractionDigits: 2 }) || '0.00'}
           </p>
         </div>
-        <div className="glass-panel p-6 rounded-2xl border border-slate-800">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Opening Balance</p>
-          <p className="text-2xl font-bold text-slate-300 mt-2">
+        <div className="card-panel p-5 rounded-xl bg-white">
+          <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Opening Balance</p>
+          <p className="text-xl font-bold text-slate-700 mt-1">
             ₹{summary?.openingBalance?.toLocaleString('en-IN', { minimumFractionDigits: 2 }) || '0.00'}
           </p>
         </div>
@@ -180,44 +200,46 @@ export default function ClientDetailPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Basic & Contact Info */}
-        <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-6">
-          <h3 className="text-sm font-bold uppercase tracking-wider text-indigo-400">Client Profile</h3>
+        <div className="card-panel p-6 rounded-xl space-y-5">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-brand-primary">Client Profile</h3>
 
-          <div className="space-y-4">
-            <div className="grid grid-cols-3 border-b border-slate-800/60 pb-3">
-              <span className="text-xs font-semibold text-slate-500 uppercase">Client Type</span>
-              <span className="col-span-2 text-sm text-slate-200">{client.clientType}</span>
+          <div className="space-y-3.5 text-xs text-slate-700">
+            <div className="grid grid-cols-3 border-b border-slate-100 pb-2.5">
+              <span className="font-semibold text-slate-500">Client Type</span>
+              <span className="col-span-2 font-medium text-slate-900">
+                {client.clientType === 'BUSINESS' ? 'Business Entity' : 'Individual'}
+              </span>
             </div>
 
-            <div className="grid grid-cols-3 border-b border-slate-800/60 pb-3">
-              <span className="text-xs font-semibold text-slate-500 uppercase">Email</span>
-              <span className="col-span-2 text-sm text-slate-200">{client.email || '—'}</span>
+            <div className="grid grid-cols-3 border-b border-slate-100 pb-2.5">
+              <span className="font-semibold text-slate-500">Email</span>
+              <span className="col-span-2 text-slate-900">{client.email || '—'}</span>
             </div>
 
-            <div className="grid grid-cols-3 border-b border-slate-800/60 pb-3">
-              <span className="text-xs font-semibold text-slate-500 uppercase">Phone</span>
-              <span className="col-span-2 text-sm text-slate-200">{client.phone || '—'}</span>
+            <div className="grid grid-cols-3 border-b border-slate-100 pb-2.5">
+              <span className="font-semibold text-slate-500">Phone</span>
+              <span className="col-span-2 text-slate-900">{client.phone || '—'}</span>
             </div>
 
-            <div className="grid grid-cols-3 border-b border-slate-800/60 pb-3">
-              <span className="text-xs font-semibold text-slate-500 uppercase">GSTIN</span>
-              <span className="col-span-2 text-sm text-slate-200 font-mono">{client.gstin || '—'}</span>
+            <div className="grid grid-cols-3 border-b border-slate-100 pb-2.5">
+              <span className="font-semibold text-slate-500">GSTIN</span>
+              <span className="col-span-2 text-slate-900 font-mono">{client.gstin || '—'}</span>
             </div>
 
-            <div className="grid grid-cols-3 border-b border-slate-800/60 pb-3">
-              <span className="text-xs font-semibold text-slate-500 uppercase">PAN</span>
-              <span className="col-span-2 text-sm text-slate-200 font-mono">{client.pan || '—'}</span>
+            <div className="grid grid-cols-3 border-b border-slate-100 pb-2.5">
+              <span className="font-semibold text-slate-500">PAN</span>
+              <span className="col-span-2 text-slate-900 font-mono">{client.pan || '—'}</span>
             </div>
 
             <div className="grid grid-cols-3 pb-1">
-              <span className="text-xs font-semibold text-slate-500 uppercase">Status</span>
+              <span className="font-semibold text-slate-500">Status</span>
               <span className="col-span-2">
-                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium border ${
                   client.status === 'ACTIVE'
-                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                    : 'bg-slate-500/10 text-slate-400 border-slate-500/20'
+                    ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                    : 'bg-slate-50 text-slate-500 border-slate-200'
                 }`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${client.status === 'ACTIVE' ? 'bg-emerald-400' : 'bg-slate-400'}`} />
+                  <span className={`w-1 h-1 rounded-full ${client.status === 'ACTIVE' ? 'bg-emerald-500' : 'bg-slate-400'}`} />
                   {client.status === 'ACTIVE' ? 'Active' : 'Inactive'}
                 </span>
               </span>
@@ -226,15 +248,15 @@ export default function ClientDetailPage() {
         </div>
 
         {/* Addresses */}
-        <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-6">
-          <h3 className="text-sm font-bold uppercase tracking-wider text-indigo-400">Registered Addresses</h3>
-          <div className="space-y-6">
+        <div className="card-panel p-6 rounded-xl space-y-5">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-brand-primary">Registered Addresses</h3>
+          <div className="space-y-5">
             <div>
-              <p className="text-xs font-bold text-slate-500 uppercase mb-2">Billing Address</p>
+              <p className="text-[10px] font-bold text-slate-500 uppercase mb-2">Billing Address</p>
               {renderAddress(client.billingAddress)}
             </div>
-            <div className="border-t border-slate-800/60 pt-4">
-              <p className="text-xs font-bold text-slate-500 uppercase mb-2">Shipping Address</p>
+            <div className="border-t border-slate-100 pt-4">
+              <p className="text-[10px] font-bold text-slate-500 uppercase mb-2">Shipping Address</p>
               {renderAddress(client.shippingAddress)}
             </div>
           </div>
@@ -242,40 +264,49 @@ export default function ClientDetailPage() {
 
         {/* Internal Notes */}
         {client.notes && (
-          <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-3 md:col-span-2">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-indigo-400">Internal Remarks</h3>
-            <p className="text-slate-350 text-sm whitespace-pre-wrap leading-relaxed bg-slate-950/20 p-4 rounded-xl border border-slate-800/60">
+          <div className="card-panel p-6 rounded-xl space-y-3 md:col-span-2">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-brand-primary">Internal Remarks</h3>
+            <p className="text-slate-600 text-xs whitespace-pre-wrap leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-100">
               {client.notes}
             </p>
           </div>
         )}
       </div>
 
-      {/* Delete Confirmation Modal */}
+      {/* Toggle Status Modal */}
       <Modal
-        isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
-        title="Confirm Client Deletion"
+        isOpen={isStatusModalOpen}
+        onClose={() => setIsStatusModalOpen(false)}
+        title={client.status === 'ACTIVE' ? 'Mark Client as Inactive' : 'Mark Client as Active'}
         footer={
           <>
             <button
-              onClick={() => setIsDeleteModalOpen(false)}
-              className="px-4 py-2 border border-slate-800 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-colors"
+              onClick={() => setIsStatusModalOpen(false)}
+              className="px-4 py-2 border border-slate-300 rounded-lg text-xs text-slate-700 hover:text-slate-900 hover:bg-slate-55 transition-colors"
             >
               Cancel
             </button>
             <button
-              onClick={confirmDelete}
-              disabled={deleting}
-              className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-sm font-semibold flex items-center gap-2 shadow-lg shadow-rose-900/10 transition-colors"
+              onClick={handleToggleStatus}
+              disabled={updatingStatus}
+              className={`px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 shadow-sm text-white transition-colors ${
+                client.status === 'ACTIVE'
+                  ? 'bg-amber-600 hover:bg-amber-500'
+                  : 'bg-emerald-600 hover:bg-emerald-500'
+              }`}
             >
-              {deleting ? 'Deleting...' : 'Delete'}
+              {updatingStatus ? 'Updating...' : client.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
             </button>
           </>
         }
       >
-        <p>Are you sure you want to delete <span className="font-semibold text-slate-100">{client.clientName}</span>?</p>
-        <p className="mt-2 text-slate-500 text-xs">This action will soft-delete the client. You can restore them later or set status to inactive if you want to keep records.</p>
+        <p className="text-xs text-slate-650">
+          Are you sure you want to mark <span className="font-bold text-slate-900">{client.clientName}</span> as{' '}
+          <span className="font-bold text-slate-900">{client.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'}</span>?
+        </p>
+        <p className="mt-2 text-slate-500 text-[10px]">
+          Inactive clients will not appear in search listings during quotation or document generation until re-activated.
+        </p>
       </Modal>
     </div>
   );

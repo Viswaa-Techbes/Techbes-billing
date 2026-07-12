@@ -12,12 +12,12 @@ const config: Config = {
         background: "var(--background)",
         foreground: "var(--foreground)",
         brand: {
-          dark: "#0f172a",
-          card: "#1e293b",
-          border: "#334155",
-          accent: "#6366f1",
-          accentHover: "#4f46e5",
-          purple: "#8b5cf6",
+          primary: "#2563eb",
+          primaryHover: "#1d4ed8",
+          accent: "#f97316",
+          navy: "#0f172a",
+          grayBg: "#f8fafc",
+          border: "#e2e8f0",
         }
       },
       animation: {
