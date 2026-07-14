@@ -739,7 +739,6 @@ export default function EditQuotationPage() {
                               className="w-full form-input text-xs py-1 text-center"
                             />
                           </td>
-                          </td>
                           <td className="p-3">
                             <input
                               type="number"
@@ -749,7 +748,6 @@ export default function EditQuotationPage() {
                               className="w-full form-input text-xs py-1 text-right font-medium"
                               placeholder="0.00"
                             />
-                          </td>
                           </td>
                           <td className="p-3">
                             <select
