@@ -61,6 +61,8 @@ function NewQuotationForm() {
 
   // Form Headers
   const [docTitle, setDocTitle] = useState('Quotation');
+  const [documentNumber, setDocumentNumber] = useState('Auto-generated');
+  const [isNumberEditable, setIsNumberEditable] = useState(false);
   const [docSubtitle, setDocSubtitle] = useState('');
   const [showSubtitleInput, setShowSubtitleInput] = useState(false);
   const [poNumber, setPoNumber] = useState('');
@@ -216,7 +218,10 @@ function NewQuotationForm() {
           const biz = profileRes.data.data.business;
           setBusinessProfile(biz);
           if (biz.logoUrl) setLogoBase64(biz.logoUrl);
-          if (biz.signatureUrl) setSignatureBase64(biz.signatureUrl);
+          if (biz.signatureUrl) {
+            setSignatureBase64(biz.signatureUrl);
+            setShowSignatureArea(true);
+          }
           if (biz.signatoryName) setSignatoryName(biz.signatoryName);
           if (biz.address?.state) {
             setPlaceOfSupply({
@@ -224,6 +229,21 @@ function NewQuotationForm() {
               stateCode: biz.address.stateCode || '',
             });
           }
+        }
+
+        try {
+          const numRes = await api.get('/documents/next-number?type=QUOTATION');
+          if (numRes.data?.success) {
+            if (numRes.data.data.exists) {
+              setDocumentNumber(numRes.data.data.nextNumber);
+              setIsNumberEditable(false);
+            } else {
+              setDocumentNumber('');
+              setIsNumberEditable(true);
+            }
+          }
+        } catch (e) {
+          console.error("Error fetching next document number:", e);
         }
       } catch (err: any) {
         // Safe to ignore or toast
@@ -609,7 +629,8 @@ function NewQuotationForm() {
       const payload = {
         clientId: selectedClientId,
         documentType: 'QUOTATION',
-        poNumber,
+        documentNumber: documentNumber || undefined,
+        status: statusOverride,
         issueDate: new Date(issueDate).toISOString(),
         validTill: validTill ? new Date(validTill).toISOString() : undefined,
         placeOfSupply,
@@ -636,7 +657,6 @@ function NewQuotationForm() {
           showItemDescriptions: displayOptions.showItemDescriptions,
           showTotalQuantity: displayOptions.showTotalQuantity,
         },
-        status: statusOverride,
       };
 
       const response = await api.post('/documents', payload);
@@ -826,9 +846,18 @@ function NewQuotationForm() {
 
               {/* Metadata Details Area */}
               <div className="w-full sm:w-auto text-left sm:text-right space-y-2.5 text-xs text-slate-650 font-mono">
-                <div>
+                <div className="flex items-center sm:justify-end gap-2 text-xs">
                   <span className="font-semibold text-slate-500 uppercase text-[10px]">Quotation No:</span>
-                  <span className="ml-2 font-bold text-slate-900">Auto-generated on save</span>
+                  <input
+                    type="text"
+                    value={documentNumber}
+                    onChange={(e) => setDocumentNumber(e.target.value)}
+                    disabled={!isNumberEditable}
+                    placeholder={isNumberEditable ? "Enter Quotation No" : "Auto-generated"}
+                    className={`border border-slate-300 rounded px-2 py-0.5 w-28 bg-white font-sans text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none ${
+                      !isNumberEditable ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : 'text-slate-900'
+                    }`}
+                  />
                 </div>
                 
                 <div className="flex items-center sm:justify-end gap-2">
@@ -1150,7 +1179,6 @@ function NewQuotationForm() {
                       {gstEnabled && <th className="p-3 w-20 text-center">GST %</th>}
                       <th className="p-3 w-20 text-center">Qty</th>
                       <th className="p-3 w-24 text-right">Rate</th>
-                      <th className="p-3 w-28 text-center">Discount</th>
                       <th className="p-3 w-28 text-right">Amount</th>
                       <th className="p-3 w-24 text-right">Actions</th>
                     </tr>
@@ -1160,7 +1188,7 @@ function NewQuotationForm() {
                       if (item.isGroupHeader) {
                         return (
                           <tr key={item.id} className="bg-blue-50/40 align-middle">
-                            <td colSpan={displayOptions.showHsnSac ? (gstEnabled ? 8 : 7) : (gstEnabled ? 7 : 6)} className="p-3">
+                            <td colSpan={displayOptions.showHsnSac ? (gstEnabled ? 7 : 6) : (gstEnabled ? 6 : 5)} className="p-3">
                               <div className="flex items-center gap-3">
                                 <span className="text-[10px] font-bold text-blue-800 uppercase tracking-widest">Group Header:</span>
                                 <input
@@ -1225,13 +1253,6 @@ function NewQuotationForm() {
                                 <option value="PRODUCT">Product</option>
                                 <option value="SERVICE">Service</option>
                               </select>
-                              <input
-                                type="text"
-                                value={item.unit}
-                                onChange={(e) => handleItemFieldChange(item.id, 'unit', e.target.value)}
-                                className="form-input text-[10px] text-slate-500 py-0.5 w-16 border-slate-200 text-center"
-                                placeholder="Unit (e.g. PCS)"
-                              />
                             </div>
                           </td>
 
@@ -1288,27 +1309,7 @@ function NewQuotationForm() {
                             />
                           </td>
 
-                          {/* Item Discount */}
-                          <td className="p-3 space-y-1">
-                            <select
-                              value={item.discountType}
-                              onChange={(e) => handleItemFieldChange(item.id, 'discountType', e.target.value)}
-                              className="w-full form-input text-[11px] bg-white border-slate-200 py-0.5 text-slate-900"
-                            >
-                              <option value="NONE">None</option>
-                              <option value="PERCENTAGE">% percentage</option>
-                              <option value="FIXED">₹ fixed</option>
-                            </select>
-                            {item.discountType !== 'NONE' && (
-                              <input
-                                type="number"
-                                min={0}
-                                value={item.discountValue}
-                                onChange={(e) => handleItemFieldChange(item.id, 'discountValue', parseFloat(e.target.value) || 0)}
-                                className="w-full form-input text-xs text-center border-slate-200 py-0.5 font-mono"
-                              />
-                            )}
-                          </td>
+                          {/* Amount Column is next, Discount removed */}
 
                           {/* Total Amount */}
                           <td className="p-3 text-right font-mono font-bold text-slate-900">

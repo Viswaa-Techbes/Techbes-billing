@@ -60,6 +60,7 @@ export default function CreditNoteEditor({ initialId }: CreditNoteEditorProps) {
 
   // Form states
   const [documentNumber, setDocumentNumber] = useState('Auto-generated');
+  const [isNumberEditable, setIsNumberEditable] = useState(false);
   const [title, setTitle] = useState('Credit Note');
   const [subtitle, setSubtitle] = useState('');
   const [issueDate, setIssueDate] = useState(new Date().toISOString().substring(0, 10));
@@ -142,9 +143,19 @@ export default function CreditNoteEditor({ initialId }: CreditNoteEditorProps) {
     setLoading(true);
     try {
       if (!initialId) {
-        const numRes = await api.get('/documents/next-number?type=CREDIT_NOTE');
-        if (numRes.data?.success) {
-          setDocumentNumber(numRes.data.data);
+        try {
+          const numRes = await api.get('/documents/next-number?type=CREDIT_NOTE');
+          if (numRes.data?.success) {
+            if (numRes.data.data.exists) {
+              setDocumentNumber(numRes.data.data.nextNumber);
+              setIsNumberEditable(false);
+            } else {
+              setDocumentNumber('');
+              setIsNumberEditable(true);
+            }
+          }
+        } catch (e) {
+          console.error("Error fetching next document number:", e);
         }
       }
 
@@ -152,6 +163,13 @@ export default function CreditNoteEditor({ initialId }: CreditNoteEditorProps) {
       if (bizRes.data?.success) {
         const biz = bizRes.data.data.business;
         setBusinessProfile(biz);
+        if (!initialId) {
+          if (biz.signatureUrl || biz.signature) {
+            setShowSignature(true);
+            setSignatureUrl(biz.signatureUrl || biz.signature || '');
+            setSignatureLabel(biz.signatoryName || 'Authorised Signatory');
+          }
+        }
         setContactDetails({
           email: biz.email || '',
           phoneCountryCode: '+91',
@@ -669,8 +687,12 @@ export default function CreditNoteEditor({ initialId }: CreditNoteEditorProps) {
                 <input
                   type="text"
                   value={documentNumber}
-                  disabled
-                  className="w-full form-input bg-slate-50 text-slate-500"
+                  onChange={(e) => setDocumentNumber(e.target.value)}
+                  disabled={!isNumberEditable}
+                  placeholder={isNumberEditable ? "Enter Credit Note No (e.g. CN-001)" : "Auto-generated"}
+                  className={`w-full form-input ${
+                    !isNumberEditable ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-900'
+                  }`}
                 />
               </div>
               <div>

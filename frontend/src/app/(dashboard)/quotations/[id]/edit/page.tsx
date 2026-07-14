@@ -691,9 +691,7 @@ export default function EditQuotationPage() {
                       <th className="px-4 py-3 w-[250px]">Item Details</th>
                       {displayOptions.showHsnSac && <th className="px-4 py-3 w-[100px]">HSN/SAC</th>}
                       <th className="px-4 py-3 w-[90px]">Qty</th>
-                      <th className="px-4 py-3 w-[90px]">Unit</th>
                       <th className="px-4 py-3 w-[110px]">Rate</th>
-                      <th className="px-4 py-3 w-[140px]">Discount</th>
                       <th className="px-4 py-3 w-[90px]">GST %</th>
                       <th className="px-4 py-3 text-right w-[110px]">Total (INR)</th>
                       <th className="px-4 py-3 text-center w-[90px]">Actions</th>
@@ -741,16 +739,6 @@ export default function EditQuotationPage() {
                               className="w-full form-input text-xs py-1 text-center"
                             />
                           </td>
-                          <td className="p-3">
-                            <select
-                              value={item.unit}
-                              onChange={(e) => handleItemFieldChange(idx, 'unit', e.target.value)}
-                              className="w-full form-input text-xs py-1 bg-white px-1"
-                            >
-                              {['PCS', 'NOS', 'UNIT', 'METER', 'FEET', 'HOUR', 'DAY', 'MONTH', 'SERVICE'].map(u => (
-                                <option key={u} value={u}>{u}</option>
-                              ))}
-                            </select>
                           </td>
                           <td className="p-3">
                             <input
@@ -762,26 +750,6 @@ export default function EditQuotationPage() {
                               placeholder="0.00"
                             />
                           </td>
-                          <td className="p-3">
-                            <div className="flex gap-1.5 items-center">
-                              <select
-                                value={item.discountType}
-                                onChange={(e) => handleItemFieldChange(idx, 'discountType', e.target.value)}
-                                className="form-input text-[10px] py-1 bg-white px-1 w-14"
-                              >
-                                <option value="NONE">None</option>
-                                <option value="PERCENTAGE">%</option>
-                                <option value="FIXED">₹</option>
-                              </select>
-                              {item.discountType !== 'NONE' && (
-                                <input
-                                  type="number"
-                                  value={item.discountValue}
-                                  onChange={(e) => handleItemFieldChange(idx, 'discountValue', parseFloat(e.target.value) || 0)}
-                                  className="w-16 form-input text-xs py-1 text-right"
-                                />
-                              )}
-                            </div>
                           </td>
                           <td className="p-3">
                             <select
