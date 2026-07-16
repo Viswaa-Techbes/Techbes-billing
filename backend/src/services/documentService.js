@@ -356,9 +356,39 @@ const createDocument = async (userId, data) => {
     availableCredit = (data.status !== 'DRAFT') ? calculations.grandTotal : 0;
   }
 
+  // Load Business defaults if not explicitly provided
+  const terms = data.terms !== undefined ? data.terms : (business.defaultTerms || '');
+  const notes = data.notes !== undefined ? data.notes : (business.defaultNotes || '');
+  const footer = data.footer !== undefined ? data.footer : (business.defaultFooter || '');
+
+  let bankDetails = data.bankDetails;
+  if (!bankDetails?.accountNumber && business.bankName) {
+    bankDetails = {
+      accountHolderName: business.accountName || business.businessName,
+      bankName: business.bankName,
+      accountNumber: business.accountNumber,
+      ifsc: business.ifsc,
+      branchName: business.branchName,
+      accountType: 'Current'
+    };
+  }
+
+  let upiDetails = data.upiDetails;
+  if (!upiDetails?.upiId && business.upiId) {
+    upiDetails = {
+      upiId: business.upiId,
+      displayName: business.businessName
+    };
+  }
+
   const document = await SalesDocument.create({
     ...data,
     ...calculations,
+    terms,
+    notes,
+    footer,
+    bankDetails,
+    upiDetails,
     documentNumber: docNum,
     businessId: business._id,
     businessSnapshot,
@@ -368,6 +398,18 @@ const createDocument = async (userId, data) => {
     paymentStatus: 'UNPAID',
     availableCreditAmount: availableCredit,
   });
+
+  // Track item usage frequency (asynchronous operation)
+  if (data.items && data.items.length > 0) {
+    const Item = require('../models/Item');
+    const itemNames = data.items.map((item) => item.itemName).filter(Boolean);
+    if (itemNames.length > 0) {
+      Item.updateMany(
+        { businessId: business._id, itemName: { $in: itemNames } },
+        { $inc: { usageFrequency: 1 } }
+      ).catch((err) => console.error('Error updating item usage frequency:', err));
+    }
+  }
 
   await logAuditEvent(document, 'CREATED', `Created document ${docNum} of type ${documentType}`, userId);
   await document.save();

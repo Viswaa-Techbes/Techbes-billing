@@ -61,6 +61,18 @@ const businessRules = [
       }
       return true;
     }),
+  body('accountName')
+    .optional({ values: 'falsy' })
+    .trim(),
+  body('defaultTerms')
+    .optional({ values: 'falsy' })
+    .trim(),
+  body('defaultNotes')
+    .optional({ values: 'falsy' })
+    .trim(),
+  body('defaultFooter')
+    .optional({ values: 'falsy' })
+    .trim(),
 ];
 
 module.exports = { businessRules };

@@ -9,6 +9,7 @@ import PageHeader from '@/components/PageHeader';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Modal from '@/components/ui/Modal';
 import { INDIAN_STATES } from '@/lib/constants';
+import ItemAutocomplete from '@/components/ItemAutocomplete';
 
 interface LineItem {
   id: string; // client-side key
@@ -146,6 +147,9 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
   const [showNotesArea, setShowNotesArea] = useState(false);
   const [notes, setNotes] = useState('');
 
+  const [showFooterArea, setShowFooterArea] = useState(false);
+  const [footer, setFooter] = useState('');
+
   const [showAttachmentsArea, setShowAttachmentsArea] = useState(false);
   const [attachments, setAttachments] = useState<{ fileName: string; fileUrl: string; mimeType: string; fileSize: number }[]>([]);
 
@@ -244,6 +248,19 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
           setSignatoryName(profile.signatoryName || '');
           setSignatoryDesignation(profile.designation || '');
           setShowSignatureArea(!!(profile.signatureUrl || profile.signature));
+
+          if (profile.defaultTerms) {
+            setTerms(profile.defaultTerms);
+            setShowTermsArea(true);
+          }
+          if (profile.defaultNotes) {
+            setNotes(profile.defaultNotes);
+            setShowNotesArea(true);
+          }
+          if (profile.defaultFooter) {
+            setFooter(profile.defaultFooter);
+            setShowFooterArea(true);
+          }
         }
         
         // Determine readiness status
@@ -368,6 +385,9 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
 
           setNotes(doc.notes || '');
           setShowNotesArea(!!doc.notes);
+
+          setFooter(doc.footer || '');
+          setShowFooterArea(!!doc.footer);
 
           setAttachments(doc.attachments || []);
           setShowAttachmentsArea(!!doc.attachments?.length);
@@ -770,6 +790,7 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
         
         terms,
         notes,
+        footer,
         attachments,
         additionalInfo,
         contactDetails,
@@ -1409,12 +1430,18 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
                             )}
 
                             <div className="flex-1 space-y-1.5">
-                              <input
-                                type="text"
+                              <ItemAutocomplete
                                 value={item.itemName}
-                                onChange={(e) => handleUpdateItemRow(i, { itemName: e.target.value })}
-                                placeholder="Item name / SKU"
-                                className="w-full form-input text-xs font-semibold text-slate-900 bg-white"
+                                onChange={(val) => handleUpdateItemRow(i, { itemName: val })}
+                                onSelect={(selected) => handleUpdateItemRow(i, {
+                                  itemName: selected.itemName,
+                                  description: selected.description,
+                                  hsnSac: selected.hsnSac,
+                                  gstRate: selected.gstRate,
+                                  rate: selected.sellingPrice,
+                                  unit: selected.unit,
+                                })}
+                                placeholder="Search item or type name..."
                               />
                               <textarea
                                 value={item.description}
@@ -1569,6 +1596,14 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
                     + Remarks / Notes
                   </button>
                   <button
+                    onClick={() => setShowFooterArea(!showFooterArea)}
+                    className={`p-3 rounded-xl border text-left font-bold transition-all ${
+                      showFooterArea ? 'bg-blue-50/50 border-blue-200 text-blue-755' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    + Footer Text
+                  </button>
+                  <button
                     onClick={() => setShowSignatureArea(!showSignatureArea)}
                     className={`p-3 rounded-xl border text-left font-bold transition-all ${
                       showSignatureArea ? 'bg-blue-50/50 border-blue-200 text-blue-700' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
@@ -1600,15 +1635,27 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
                   />
                 </div>
               )}
-
               {showNotesArea && (
                 <div className="space-y-2 animate-slideUp">
                   <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Remarks / Notes</label>
                   <textarea
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Enter notes visible to clients..."
+                    placeholder="Enter internal notes visible to client..."
                     rows={4}
+                    className="w-full form-input text-xs text-slate-900 bg-white"
+                  />
+                </div>
+              )}
+
+              {showFooterArea && (
+                <div className="space-y-2 animate-slideUp">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Footer Text</label>
+                  <input
+                    type="text"
+                    value={footer}
+                    onChange={(e) => setFooter(e.target.value)}
+                    placeholder="e.g. This is a computer generated document."
                     className="w-full form-input text-xs text-slate-900 bg-white"
                   />
                 </div>

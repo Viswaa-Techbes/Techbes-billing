@@ -61,6 +61,21 @@ export default function Sidebar() {
           <span className="text-sm">Dashboard</span>
         </Link>
 
+        {/* Item Master Link */}
+        <Link
+          href="/inventory"
+          className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-150 ${
+            isLinkActive('/inventory')
+              ? 'bg-blue-50 text-blue-700 font-medium'
+              : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+          }`}
+        >
+          <svg className="w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+          </svg>
+          <span className="text-sm">Item Master</span>
+        </Link>
+
         {/* Settings Link */}
         <Link
           href="/settings"

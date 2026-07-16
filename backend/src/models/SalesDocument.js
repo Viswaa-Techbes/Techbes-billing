@@ -98,6 +98,7 @@ const salesDocumentSchema = new mongoose.Schema(
     // Clauses & Meta
     terms: { type: String, default: '' },
     notes: { type: String, default: '' },
+    footer: { type: String, default: '' },
     customFields: [customFieldSchema],
     signatoryName: { type: String, default: '' },
 

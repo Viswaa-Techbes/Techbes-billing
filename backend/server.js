@@ -12,6 +12,7 @@ const clientRoutes = require('./src/routes/clientRoutes');
 const documentRoutes = require('./src/routes/documentRoutes');
 const importRoutes = require('./src/routes/importRoutes');
 const paymentReceiptRoutes = require('./src/routes/paymentReceiptRoutes');
+const itemRoutes = require('./src/routes/itemRoutes');
 
 const app = express();
 
@@ -35,6 +36,7 @@ app.use('/api/clients', clientRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/imports', importRoutes);
 app.use('/api/payment-receipts', paymentReceiptRoutes);
+app.use('/api/items', itemRoutes);
 
 // Base route
 app.get('/', (req, res) => {

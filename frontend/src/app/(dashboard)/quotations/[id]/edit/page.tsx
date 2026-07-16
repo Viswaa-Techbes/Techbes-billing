@@ -8,6 +8,7 @@ import { useToast } from '@/context/ToastContext';
 import PageHeader from '@/components/PageHeader';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { INDIAN_STATES } from '@/lib/constants';
+import ItemAutocomplete from '@/components/ItemAutocomplete';
 
 export default function EditQuotationPage() {
   const router = useRouter();
@@ -62,6 +63,7 @@ export default function EditQuotationPage() {
   // Clauses & custom metadata
   const [terms, setTerms] = useState('');
   const [notes, setNotes] = useState('');
+  const [footer, setFooter] = useState('');
   const [customFields, setCustomFields] = useState<any[]>([]);
   const [signatoryName, setSignatoryName] = useState('');
 
@@ -125,6 +127,7 @@ export default function EditQuotationPage() {
           setAdditionalCharges(doc.additionalCharges || []);
           setTerms(doc.terms || '');
           setNotes(doc.notes || '');
+          setFooter(doc.footer || '');
           setCustomFields(doc.customFields || []);
           setSignatoryName(doc.signatoryName || '');
           
@@ -423,6 +426,7 @@ export default function EditQuotationPage() {
         additionalCharges,
         terms,
         notes,
+        footer,
         customFields: customFields.filter(f => f.key.trim() && f.value.trim()),
         signatoryName,
         displayOptions,
@@ -703,12 +707,18 @@ export default function EditQuotationPage() {
                       return (
                         <tr key={idx} className="align-top hover:bg-slate-55/20 transition-colors">
                           <td className="p-3">
-                            <input
-                              type="text"
+                            <ItemAutocomplete
                               value={item.itemName}
-                              onChange={(e) => handleItemFieldChange(idx, 'itemName', e.target.value)}
-                              placeholder="Item or Service Name"
-                              className="w-full form-input text-xs py-1"
+                              onChange={(val) => handleItemFieldChange(idx, 'itemName', val)}
+                              onSelect={(selected) => {
+                                handleItemFieldChange(idx, 'itemName', selected.itemName);
+                                handleItemFieldChange(idx, 'description', selected.description);
+                                handleItemFieldChange(idx, 'hsnSac', selected.hsnSac);
+                                handleItemFieldChange(idx, 'gstRate', selected.gstRate);
+                                handleItemFieldChange(idx, 'rate', selected.sellingPrice);
+                                handleItemFieldChange(idx, 'unit', selected.unit);
+                              }}
+                              placeholder="Search item or type name..."
                             />
                             {displayOptions.showItemDescriptions && (
                               <textarea
@@ -997,6 +1007,16 @@ export default function EditQuotationPage() {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   className="w-full form-input text-xs h-20 resize-y"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Footer Text</label>
+                <input
+                  type="text"
+                  value={footer}
+                  onChange={(e) => setFooter(e.target.value)}
+                  className="w-full form-input text-xs"
                 />
               </div>
 

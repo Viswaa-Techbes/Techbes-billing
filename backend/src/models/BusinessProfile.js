@@ -37,10 +37,16 @@ const businessProfileSchema = new mongoose.Schema(
 
     // Bank details
     bankName: { type: String, trim: true },
+    accountName: { type: String, trim: true },
     accountNumber: { type: String, trim: true },
     ifsc: { type: String, trim: true, uppercase: true },
     branchName: { type: String, trim: true },
     upiId: { type: String, trim: true },
+
+    // Business Defaults
+    defaultTerms: { type: String, default: '' },
+    defaultNotes: { type: String, default: '' },
+    defaultFooter: { type: String, default: '' },
 
     // Signature
     signatureUrl: { type: String },

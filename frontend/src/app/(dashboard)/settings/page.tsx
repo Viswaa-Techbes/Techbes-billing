@@ -49,10 +49,16 @@ export default function SettingsPage() {
 
   // Bank details
   const [bankName, setBankName] = useState('');
+  const [accountName, setAccountName] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
   const [ifsc, setIfsc] = useState('');
   const [branchName, setBranchName] = useState('');
   const [upiId, setUpiId] = useState('');
+
+  // Business Defaults
+  const [defaultTerms, setDefaultTerms] = useState('');
+  const [defaultNotes, setDefaultNotes] = useState('');
+  const [defaultFooter, setDefaultFooter] = useState('');
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -84,10 +90,14 @@ export default function SettingsPage() {
           }
 
           setBankName(biz.bankName || '');
+          setAccountName(biz.accountName || '');
           setAccountNumber(biz.accountNumber || '');
           setIfsc(biz.ifsc || '');
           setBranchName(biz.branchName || '');
           setUpiId(biz.upiId || '');
+          setDefaultTerms(biz.defaultTerms || '');
+          setDefaultNotes(biz.defaultNotes || '');
+          setDefaultFooter(biz.defaultFooter || '');
         }
       } catch (err: any) {
         showToast('Failed to fetch business profile details.', 'error');
@@ -175,10 +185,14 @@ export default function SettingsPage() {
         address,
         logoUrl: logoUrl || undefined,
         bankName: bankName.trim() || undefined,
+        accountName: accountName.trim() || undefined,
         accountNumber: accountNumber.trim() || undefined,
         ifsc: ifsc.trim().toUpperCase() || undefined,
         branchName: branchName.trim() || undefined,
         upiId: upiId.trim() || undefined,
+        defaultTerms: defaultTerms.trim(),
+        defaultNotes: defaultNotes.trim(),
+        defaultFooter: defaultFooter.trim(),
         signatureUrl: signatureUrl || undefined,
       };
 
@@ -408,6 +422,17 @@ export default function SettingsPage() {
             </div>
 
             <div>
+              <label className="block text-xs font-semibold text-slate-650 mb-2">Account Name</label>
+              <input
+                type="text"
+                value={accountName}
+                onChange={(e) => setAccountName(e.target.value)}
+                className="w-full form-input text-xs text-slate-900 placeholder:text-slate-400"
+                placeholder="e.g. TechBes Solutions Private Limited"
+              />
+            </div>
+
+            <div>
               <label className="block text-xs font-semibold text-slate-650 mb-2">Account Number</label>
               <input
                 type="text"
@@ -448,6 +473,46 @@ export default function SettingsPage() {
                 onChange={(e) => setUpiId(e.target.value)}
                 className="w-full form-input text-xs text-slate-900 placeholder:text-slate-400 font-mono"
                 placeholder="e.g. techbes@okaxis"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Business Defaults Card */}
+        <div className="card-panel p-6 rounded-xl bg-white space-y-6">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-brand-primary">Business Document Defaults</h3>
+
+          <div className="grid grid-cols-1 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-650 mb-2">Default Terms & Conditions</label>
+              <textarea
+                value={defaultTerms}
+                onChange={(e) => setDefaultTerms(e.target.value)}
+                className="w-full form-input text-xs text-slate-900 placeholder:text-slate-400"
+                rows={4}
+                placeholder="Goods once sold cannot be returned.&#10;Warranty as per manufacturer policy.&#10;Payment due within 7 days.&#10;Subject to Bengaluru jurisdiction."
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-650 mb-2">Default Notes</label>
+              <textarea
+                value={defaultNotes}
+                onChange={(e) => setDefaultNotes(e.target.value)}
+                className="w-full form-input text-xs text-slate-900 placeholder:text-slate-400"
+                rows={3}
+                placeholder="e.g. Thank you for choosing TechBes."
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-650 mb-2">Default Footer Text</label>
+              <input
+                type="text"
+                value={defaultFooter}
+                onChange={(e) => setDefaultFooter(e.target.value)}
+                className="w-full form-input text-xs text-slate-900 placeholder:text-slate-400"
+                placeholder="e.g. This is a computer generated document."
               />
             </div>
           </div>

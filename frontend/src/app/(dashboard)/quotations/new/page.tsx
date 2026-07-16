@@ -9,6 +9,7 @@ import PageHeader from '@/components/PageHeader';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Modal from '@/components/ui/Modal';
 import { INDIAN_STATES } from '@/lib/constants';
+import ItemAutocomplete from '@/components/ItemAutocomplete';
 
 interface LineItem {
   id: string; // client-side unique key
@@ -135,6 +136,9 @@ function NewQuotationForm() {
   const [showNotesArea, setShowNotesArea] = useState(false);
   const [notes, setNotes] = useState('');
 
+  const [showFooterArea, setShowFooterArea] = useState(false);
+  const [footer, setFooter] = useState('');
+
   const [showAttachmentsArea, setShowAttachmentsArea] = useState(false);
   const [attachments, setAttachments] = useState<{ name: string; base64: string }[]>([]);
 
@@ -223,6 +227,18 @@ function NewQuotationForm() {
             setShowSignatureArea(true);
           }
           if (biz.signatoryName) setSignatoryName(biz.signatoryName);
+          if (biz.defaultTerms) {
+            setTerms(biz.defaultTerms);
+            setShowTermsArea(true);
+          }
+          if (biz.defaultNotes) {
+            setNotes(biz.defaultNotes);
+            setShowNotesArea(true);
+          }
+          if (biz.defaultFooter) {
+            setFooter(biz.defaultFooter);
+            setShowFooterArea(true);
+          }
           if (biz.address?.state) {
             setPlaceOfSupply({
               state: biz.address.state,
@@ -640,6 +656,7 @@ function NewQuotationForm() {
         additionalCharges,
         terms,
         notes,
+        footer,
         customFields: [
           ...additionalInfo.filter((f) => f.label.trim() && f.value.trim()).map((f) => ({ key: f.label, value: f.value })),
           ...(docTitle !== 'Quotation' ? [{ key: 'doc_title_override', value: docTitle }] : []),
@@ -1228,12 +1245,18 @@ function NewQuotationForm() {
                         <tr key={item.id} className="align-top hover:bg-slate-50/50 transition-colors">
                           {/* Item Details */}
                           <td className="p-3 space-y-2">
-                            <input
-                              type="text"
+                            <ItemAutocomplete
                               value={item.itemName}
-                              onChange={(e) => handleItemFieldChange(item.id, 'itemName', e.target.value)}
-                              className="w-full form-input text-xs text-slate-900 border-slate-200"
-                              placeholder="Item or Product Name"
+                              onChange={(val) => handleItemFieldChange(item.id, 'itemName', val)}
+                              onSelect={(selected) => {
+                                handleItemFieldChange(item.id, 'itemName', selected.itemName);
+                                handleItemFieldChange(item.id, 'description', selected.description);
+                                handleItemFieldChange(item.id, 'hsnSac', selected.hsnSac);
+                                handleItemFieldChange(item.id, 'gstRate', selected.gstRate);
+                                handleItemFieldChange(item.id, 'rate', selected.sellingPrice);
+                                handleItemFieldChange(item.id, 'unit', selected.unit);
+                              }}
+                              placeholder="Search item or type name..."
                             />
                             {displayOptions.showItemDescriptions && (
                               <textarea
@@ -1585,6 +1608,16 @@ function NewQuotationForm() {
 
                 <button
                   type="button"
+                  onClick={() => setShowFooterArea(!showFooterArea)}
+                  className={`px-3 py-1.5 border rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors ${
+                    showFooterArea ? 'bg-blue-50 border-blue-300 text-blue-700' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  {showFooterArea ? '✓ Footer Text' : '+ Add Footer Text'}
+                </button>
+
+                <button
+                  type="button"
                   onClick={() => setShowAttachmentsArea(!showAttachmentsArea)}
                   className={`px-3 py-1.5 border rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors ${
                     showAttachmentsArea ? 'bg-blue-50 border-blue-300 text-blue-700' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'
@@ -1673,6 +1706,19 @@ function NewQuotationForm() {
                     className="w-full form-input text-xs text-slate-900 bg-white resize-y"
                     rows={3}
                     placeholder="Remarks visible on documents"
+                  />
+                </div>
+              )}
+
+              {showFooterArea && (
+                <div className="p-5 rounded-xl bg-slate-50 border border-slate-100 space-y-1.5 animate-fadeIn">
+                  <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Footer Text</label>
+                  <input
+                    type="text"
+                    value={footer}
+                    onChange={(e) => setFooter(e.target.value)}
+                    className="w-full form-input text-xs text-slate-900 bg-white"
+                    placeholder="e.g. This is a computer generated document."
                   />
                 </div>
               )}

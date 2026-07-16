@@ -129,6 +129,10 @@ const downloadTemplate = asyncHandler(async (req, res) => {
     headers = 'Client Name,Company Name,Email,Phone,GSTIN,Address Line 1,City,State,Pincode,Country\n';
     headers += 'Test Client,Test Company Pvt Ltd,client@test.com,9876543210,29AAAAA0000A1Z5,123 Main St,Bengaluru,Karnataka,560001,India\n';
     filename = 'clients_template.csv';
+  } else if (type === 'ITEM') {
+    headers = 'Item Name,SKU,HSN,GST,Rate,Category\n';
+    headers += 'CCTV Camera 5MP,CCTV-5MP-01,8525,18,3500,CCTV Cameras\n';
+    filename = 'items_template.csv';
   } else if (['QUOTATION', 'PROFORMA_INVOICE', 'INVOICE', 'SALES_ORDER', 'DELIVERY_CHALLAN', 'CREDIT_NOTE'].includes(type)) {
     headers = 'Document Number,Client Name,Issue Date,Valid Till,PO Number,Item Name,Item Details,HSN/SAC,GST Rate,Quantity,Rate,Grand Total\n';
     headers += 'INV-0099,Test Client,2026-07-14,2026-07-29,PO-777,Camera,2K HD Sensor,8525,18,2,1500,3540\n';

@@ -5,6 +5,7 @@ const PaymentReceipt = require('../models/PaymentReceipt');
 const Counter = require('../models/Counter');
 const BusinessProfile = require('../models/BusinessProfile');
 const ImportHistory = require('../models/ImportHistory');
+const Item = require('../models/Item');
 const documentService = require('./documentService');
 
 // Column mapping aliases
@@ -35,6 +36,8 @@ const ALIASES = {
   paymentMethod: ['payment method', 'payment mode', 'mode', 'method'],
   referenceNumber: ['reference number', 'transaction id', 'reference no', 'ref no', 'ref number', 'txn id', 'transaction reference', 'ref'],
   reason: ['reason', 'return reason', 'credit reason'],
+  sku: ['sku', 'part number', 'item code', 'product code', 'part no', 'item no'],
+  category: ['category', 'group', 'type', 'item category', 'product category'],
 };
 
 // Normalize string for alias matching
@@ -163,7 +166,35 @@ const validateImport = async (businessId, importType, rows, columnMapping, clien
     return { client: null, conflict: false, matchedClients: [] };
   };
 
-  if (importType === 'CLIENT') {
+  if (importType === 'ITEM') {
+    for (let idx = 0; idx < rows.length; idx++) {
+      const rowNum = idx + 2;
+      const rawData = mapRow(rows[idx]);
+      
+      if (!rawData.itemName) {
+        errors.push({ rowNumber: rowNum, status: 'MISSING_ITEM_NAME', message: 'Item Name is required.', data: rawData });
+        continue;
+      }
+
+      // Check duplicates
+      const dupQuery = {
+        businessId,
+        itemName: { $regex: new RegExp(`^${rawData.itemName.trim()}$`, 'i') }
+      };
+
+      if (rawData.sku) {
+        dupQuery.sku = { $regex: new RegExp(`^${rawData.sku.trim()}$`, 'i') };
+      }
+
+      const existingItem = await Item.findOne(dupQuery);
+
+      if (existingItem) {
+        duplicates.push({ rowNumber: rowNum, status: 'DUPLICATE_ITEM', message: `Item already exists: ${existingItem.itemName}`, data: rawData });
+      } else {
+        valid.push({ rowNumber: rowNum, status: 'VALID', data: rawData });
+      }
+    }
+  } else if (importType === 'CLIENT') {
     for (let idx = 0; idx < rows.length; idx++) {
       const rowNum = idx + 2;
       const rawData = mapRow(rows[idx]);
@@ -475,6 +506,8 @@ const executeImport = async (businessId, userId, importType, rows, columnMapping
     for (const dup of validation.duplicates) {
       if (importType === 'CLIENT') {
         await Client.deleteMany({ businessId, clientName: dup.data.clientName, isDeleted: false });
+      } else if (importType === 'ITEM') {
+        await Item.deleteMany({ businessId, itemName: dup.data.itemName });
       } else if (importType === 'PAYMENT_RECEIPT') {
         await PaymentReceipt.deleteMany({ businessId, receiptNumber: dup.documentNumber });
       } else {
@@ -484,7 +517,42 @@ const executeImport = async (businessId, userId, importType, rows, columnMapping
     importableList.push(...validation.duplicates);
   }
 
-  if (importType === 'CLIENT') {
+  if (importType === 'ITEM') {
+    for (const rec of importableList) {
+      const d = rec.data;
+      
+      // Parse GST
+      let gstRate = 0;
+      if (d.gstRate !== undefined) {
+        const parsedGst = parseFloat(String(d.gstRate).replace(/%/g, ''));
+        if (!isNaN(parsedGst)) {
+          gstRate = parsedGst;
+        }
+      }
+
+      // Parse Rate (sellingPrice)
+      let sellingPrice = 0;
+      if (d.rate !== undefined) {
+        const parsedRate = parseFloat(d.rate);
+        if (!isNaN(parsedRate)) {
+          sellingPrice = parsedRate;
+        }
+      }
+
+      await Item.create({
+        businessId,
+        itemName: d.itemName,
+        sku: d.sku || '',
+        description: d.description || '',
+        hsnSac: d.hsnSac || '',
+        gstRate,
+        sellingPrice,
+        category: d.category || '',
+        status: 'ACTIVE',
+      });
+      importedCount++;
+    }
+  } else if (importType === 'CLIENT') {
     for (const rec of importableList) {
       const d = rec.data;
       await Client.create({

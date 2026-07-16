@@ -7,6 +7,7 @@ import api from '@/lib/api';
 import { useToast } from '@/context/ToastContext';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Modal from '@/components/ui/Modal';
+import ItemAutocomplete from '@/components/ItemAutocomplete';
 
 interface ClientType {
   _id: string;
@@ -106,6 +107,8 @@ export default function DeliveryChallanEditor({ initialId }: DeliveryChallanEdit
   const [notesText, setNotesText] = useState('');
   const [showTerms, setShowTerms] = useState(false);
   const [termsText, setTermsText] = useState('');
+  const [showFooter, setShowFooter] = useState(false);
+  const [footerText, setFooterText] = useState('');
 
   const [showContact, setShowContact] = useState(false);
   const [contactDetails, setContactDetails] = useState({
@@ -155,6 +158,18 @@ export default function DeliveryChallanEditor({ initialId }: DeliveryChallanEdit
             setShowSignature(true);
             setSignatureUrl(biz.signatureUrl || biz.signature || '');
             setSignatureLabel(biz.signatoryName || 'Authorised Signatory');
+          }
+          if (biz.defaultTerms) {
+            setTermsText(biz.defaultTerms);
+            setShowTerms(true);
+          }
+          if (biz.defaultNotes) {
+            setNotesText(biz.defaultNotes);
+            setShowNotes(true);
+          }
+          if (biz.defaultFooter) {
+            setFooterText(biz.defaultFooter);
+            setShowFooter(true);
           }
         }
         setContactDetails({
@@ -209,6 +224,10 @@ export default function DeliveryChallanEditor({ initialId }: DeliveryChallanEdit
           if (doc.terms) {
             setShowTerms(true);
             setTermsText(doc.terms);
+          }
+          if (doc.footer) {
+            setShowFooter(true);
+            setFooterText(doc.footer);
           }
           if (doc.contactDetails?.email) {
             setShowContact(true);
@@ -511,6 +530,7 @@ export default function DeliveryChallanEditor({ initialId }: DeliveryChallanEdit
       })),
       notes: showNotes ? notesText : undefined,
       terms: showTerms ? termsText : undefined,
+      footer: showFooter ? footerText : undefined,
       contactDetails: showContact ? contactDetails : undefined,
       additionalInfo: showAdditionalInfo ? { customFields } : undefined,
       signature: showSignature ? { signatureUrl, label: signatureLabel } : undefined,
@@ -830,12 +850,18 @@ export default function DeliveryChallanEditor({ initialId }: DeliveryChallanEdit
                     {items.map((item, idx) => (
                       <tr key={idx} className="hover:bg-slate-50/20">
                         <td className="px-4 py-3 space-y-1.5">
-                          <input
-                            type="text"
+                          <ItemAutocomplete
                             value={item.itemName}
-                            onChange={(e) => handleItemLineChange(idx, 'itemName', e.target.value)}
-                            placeholder="Item Name / SKU"
-                            className="w-full form-input text-xs font-semibold text-slate-900"
+                            onChange={(val) => handleItemLineChange(idx, 'itemName', val)}
+                            onSelect={(selected) => {
+                              handleItemLineChange(idx, 'itemName', selected.itemName);
+                              handleItemLineChange(idx, 'description', selected.description);
+                              handleItemLineChange(idx, 'hsnSac', selected.hsnSac);
+                              handleItemLineChange(idx, 'gstRate', selected.gstRate);
+                              handleItemLineChange(idx, 'rate', selected.sellingPrice);
+                              handleItemLineChange(idx, 'unit', selected.unit);
+                            }}
+                            placeholder="Search item or type name..."
                           />
                           <textarea
                             value={item.description || ''}
@@ -970,10 +996,19 @@ export default function DeliveryChallanEditor({ initialId }: DeliveryChallanEdit
                     type="button"
                     onClick={() => setShowTerms(!showTerms)}
                     className={`px-3 py-1.5 rounded-lg border font-bold text-xs ${
-                      showTerms ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white border-slate-350 text-slate-700'
+                      showTerms ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white border-slate-355 text-slate-700'
                     }`}
                   >
                     {showTerms ? '✓ Terms & Conditions Added' : '+ Add Terms'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowFooter(!showFooter)}
+                    className={`px-3 py-1.5 rounded-lg border font-bold text-xs ${
+                      showFooter ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white border-slate-355 text-slate-700'
+                    }`}
+                  >
+                    {showFooter ? '✓ Footer Text Added' : '+ Add Footer'}
                   </button>
                   <button
                     type="button"
@@ -1002,6 +1037,16 @@ export default function DeliveryChallanEditor({ initialId }: DeliveryChallanEdit
                     onChange={(e) => setTermsText(e.target.value)}
                     placeholder="Enter Terms and Conditions..."
                     rows={3}
+                    className="w-full form-input text-xs bg-white text-slate-900"
+                  />
+                )}
+
+                {showFooter && (
+                  <input
+                    type="text"
+                    value={footerText}
+                    onChange={(e) => setFooterText(e.target.value)}
+                    placeholder="e.g. This is a computer generated document."
                     className="w-full form-input text-xs bg-white text-slate-900"
                   />
                 )}

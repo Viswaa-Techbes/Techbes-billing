@@ -522,6 +522,12 @@ export default function DeliveryChallanDetailPage() {
               </div>
             </div>
 
+            {/* Footer Text */}
+            {document.footer && (
+              <div className="border-t border-slate-150 pt-4 mt-8 text-center text-[10px] text-slate-400 font-medium">
+                {document.footer}
+              </div>
+            )}
           </div>
         </div>
 
