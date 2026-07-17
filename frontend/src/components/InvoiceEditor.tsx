@@ -239,6 +239,24 @@ export default function InvoiceEditor({ mode, documentId }: InvoiceEditorProps) 
     total: true,
   });
 
+  const getResolvedPlaceOfSupply = () => {
+    const fallbackState = businessProfile?.address?.state || 'Delhi';
+    const fallbackStateCode = (businessProfile?.address?.stateCode || 'DL').toUpperCase();
+    const currentStateCode = placeOfSupply?.stateCode?.trim();
+
+    if (currentStateCode) {
+      return {
+        state: placeOfSupply?.state?.trim() || fallbackState,
+        stateCode: currentStateCode.toUpperCase(),
+      };
+    }
+
+    return {
+      state: fallbackState,
+      stateCode: fallbackStateCode,
+    };
+  };
+
   // Local Draft Recovery logic Key name generator
   const getDraftKey = (businessIdStr: string) => {
     const docIdStr = mode === 'create' ? 'new' : (documentId || 'new');
@@ -1051,6 +1069,8 @@ export default function InvoiceEditor({ mode, documentId }: InvoiceEditorProps) 
 
     setSaving(true);
     try {
+      const resolvedPlaceOfSupply = getResolvedPlaceOfSupply();
+
       // Serialize items (prefix group headers to itemName)
       const serializedItems = items.map((item) => {
         if (item.isGroupHeader) {
@@ -1089,7 +1109,7 @@ export default function InvoiceEditor({ mode, documentId }: InvoiceEditorProps) 
         validTill: new Date(dueDate).toISOString(),
         clientId: selectedClientId,
         customFields,
-        placeOfSupply,
+        placeOfSupply: resolvedPlaceOfSupply,
         
         shippingDetails: enableShipping ? shippingAddress : null,
         currency: {
@@ -1099,7 +1119,7 @@ export default function InvoiceEditor({ mode, documentId }: InvoiceEditorProps) 
         },
         gstConfiguration: {
           gstEnabled,
-          placeOfSupply,
+          placeOfSupply: resolvedPlaceOfSupply,
           reverseCharge,
           taxType,
         },
