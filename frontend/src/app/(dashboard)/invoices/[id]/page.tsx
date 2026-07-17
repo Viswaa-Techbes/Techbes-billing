@@ -503,13 +503,16 @@ export default function InvoiceDetailsPage({ params }: InvoiceDetailsProps) {
       </div>
 
       {/* Batch Summary check if items contain batches */}
-      {displayOptions.displayBatchDetails && (
+      {localSettings.advanced.showBatchDetails && (
         <div className="card-panel p-5 rounded-2xl bg-white border border-slate-200 text-xs print:hidden space-y-2">
           <h3 className="font-bold text-slate-900 pb-2 border-b border-slate-100 uppercase tracking-wider text-[10px]">
             Batch Summary Ledger
           </h3>
           <p className="italic text-slate-400">No active batches or serial lots mapped in current items.</p>
-<div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start">
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start">
         {/* Central PDF layout Preview Document */}
         <div className="xl:col-span-3 space-y-6">
           <div

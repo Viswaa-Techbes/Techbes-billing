@@ -236,6 +236,74 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
   // Load baseline profile & clients
   const loadInitialData = async () => {
     setLoading(true);
+    if (mode === 'create') {
+      setDocTitle('Proforma Invoice');
+      setDocSubtitle('');
+      setShowSubtitleInput(false);
+      setPoNumber('');
+      setIssueDate(new Date().toISOString().split('T')[0]);
+      setDueDate(() => {
+        const date = new Date();
+        date.setDate(date.getDate() + 15);
+        return date.toISOString().split('T')[0];
+      });
+      setCustomFields([]);
+      setSelectedClientId('');
+      setSelectedClient(null);
+      setEnableShipping(false);
+      setShippingAddress({
+        addressLine1: '',
+        addressLine2: '',
+        city: '',
+        state: '',
+        stateCode: '',
+        country: 'India',
+        pincode: '',
+      });
+      setGstEnabled(true);
+      setPlaceOfSupply({ state: '', stateCode: '' });
+      setReverseCharge(false);
+      setTaxType('Auto');
+      setItems([
+        {
+          id: Math.random().toString(36).substring(2, 9),
+          isGroupHeader: false,
+          itemName: '',
+          description: '',
+          hsnSac: '',
+          gstRate: 18,
+          quantity: 1,
+          unit: 'PCS',
+          rate: 0,
+          discountType: 'NONE',
+          discountValue: 0,
+          productType: 'PRODUCT',
+        },
+      ]);
+      setEnableDocDiscount(false);
+      setDocDiscountType('PERCENTAGE');
+      setDocDiscountValue(0);
+      setAdditionalCharges([]);
+      setEnableRoundOff(true);
+      setSummarizeTotalQuantity(false);
+      setShowSignatureArea(false);
+      setSignatoryName('');
+      setSignatoryDesignation('');
+      setSignatureBase64('');
+      setShowTermsArea(false);
+      setTerms('');
+      setShowNotesArea(false);
+      setNotes('');
+      setShowFooterArea(false);
+      setFooter('');
+      setShowAttachmentsArea(false);
+      setAttachments([]);
+      setShowAdditionalInfo(false);
+      setAdditionalInfo([]);
+      setShowContactDetails(false);
+      setContactDetails({ name: '', phone: '', email: '' });
+      setIsRecurring(false);
+    }
     try {
       // 1. Business Profile
       const profileRes = await api.get('/business');

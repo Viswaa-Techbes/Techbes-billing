@@ -4,5 +4,5 @@ import React from 'react';
 import DeliveryChallanEditor from '@/components/DeliveryChallanEditor';
 
 export default function NewDeliveryChallanRoutePage() {
-  return <DeliveryChallanEditor />;
+  return <DeliveryChallanEditor key="new-delivery-challan" />;
 }

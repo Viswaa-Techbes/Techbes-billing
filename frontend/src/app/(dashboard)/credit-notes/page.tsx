@@ -78,6 +78,18 @@ export default function CreditNotesListPage() {
     }
   };
 
+  const handleDuplicate = async (id: string) => {
+    try {
+      const response = await api.post(`/documents/${id}/duplicate`);
+      if (response.data?.success) {
+        showToast('Document duplicated successfully.', 'success');
+        fetchCreditNotes();
+      }
+    } catch (err: any) {
+      showToast(err.response?.data?.message || 'Failed to duplicate document.', 'error');
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const styles: Record<string, string> = {
       DRAFT: 'bg-slate-100 text-slate-700 border-slate-205',
@@ -268,6 +280,16 @@ export default function CreditNotesListPage() {
                               <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                             </svg>
                           </Link>
+
+                          <button
+                            onClick={() => handleDuplicate(cn._id)}
+                            className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition-colors"
+                            title="Duplicate"
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+                            </svg>
+                          </button>
 
                           {cn.status === 'DRAFT' && (
                             <>

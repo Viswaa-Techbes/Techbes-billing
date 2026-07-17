@@ -10,5 +10,5 @@ interface EditInvoicePageProps {
 }
 
 export default function EditInvoicePage({ params }: EditInvoicePageProps) {
-  return <InvoiceEditor mode="edit" documentId={params.id} />;
+  return <InvoiceEditor key={params.id} mode="edit" documentId={params.id} />;
 }

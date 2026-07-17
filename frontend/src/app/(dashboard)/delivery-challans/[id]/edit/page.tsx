@@ -6,5 +6,5 @@ import DeliveryChallanEditor from '@/components/DeliveryChallanEditor';
 
 export default function EditDeliveryChallanRoutePage() {
   const { id } = useParams();
-  return <DeliveryChallanEditor initialId={id as string} />;
+  return <DeliveryChallanEditor key={id} initialId={id as string} />;
 }

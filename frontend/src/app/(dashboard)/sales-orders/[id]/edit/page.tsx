@@ -6,5 +6,5 @@ import SalesOrderEditor from '@/components/SalesOrderEditor';
 
 export default function EditSalesOrderRoutePage() {
   const { id } = useParams();
-  return <SalesOrderEditor initialId={id as string} />;
+  return <SalesOrderEditor key={id} initialId={id as string} />;
 }

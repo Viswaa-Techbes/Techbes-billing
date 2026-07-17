@@ -10,5 +10,5 @@ interface EditProformaInvoicePageProps {
 }
 
 export default function EditProformaInvoicePage({ params }: EditProformaInvoicePageProps) {
-  return <ProformaInvoiceEditor mode="edit" documentId={params.id} />;
+  return <ProformaInvoiceEditor key={params.id} mode="edit" documentId={params.id} />;
 }

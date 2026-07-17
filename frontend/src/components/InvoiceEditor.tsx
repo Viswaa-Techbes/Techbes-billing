@@ -56,6 +56,7 @@ export default function InvoiceEditor({ mode, documentId }: InvoiceEditorProps) 
   const [showRecoveryBanner, setShowRecoveryBanner] = useState(false);
   const [hasLoadedFromRecovery, setHasLoadedFromRecovery] = useState(false);
   const [cleanBackendState, setCleanBackendState] = useState<any>(null);
+  const [recoveredData, setRecoveredData] = useState<any>(null);
 
   // Business profile state
   const [businessProfile, setBusinessProfile] = useState<any>({
@@ -247,6 +248,75 @@ export default function InvoiceEditor({ mode, documentId }: InvoiceEditorProps) 
   // Load baseline profile & clients
   const loadInitialData = async () => {
     setLoading(true);
+    if (mode === 'create') {
+      setDocTitle('Invoice');
+      setDocSubtitle('');
+      setShowSubtitleInput(false);
+      setPoNumber('');
+      setIssueDate(new Date().toISOString().split('T')[0]);
+      setDueDate(() => {
+        const date = new Date();
+        date.setDate(date.getDate() + 15);
+        return date.toISOString().split('T')[0];
+      });
+      setCustomFields([]);
+      setSelectedClientId('');
+      setSelectedClient(null);
+      setEnableShipping(false);
+      setShippingAddress({
+        addressLine1: '',
+        addressLine2: '',
+        city: '',
+        state: '',
+        stateCode: '',
+        country: 'India',
+        pincode: '',
+      });
+      setGstEnabled(true);
+      setPlaceOfSupply({ state: '', stateCode: '' });
+      setReverseCharge(false);
+      setTaxType('Auto');
+      setItems([
+        {
+          id: Math.random().toString(36).substring(2, 9),
+          isGroupHeader: false,
+          itemName: '',
+          description: '',
+          hsnSac: '',
+          gstRate: 18,
+          quantity: 1,
+          unit: 'PCS',
+          rate: 0,
+          discountType: 'NONE',
+          discountValue: 0,
+          productType: 'PRODUCT',
+        },
+      ]);
+      setEnableDocDiscount(false);
+      setDocDiscountType('PERCENTAGE');
+      setDocDiscountValue(0);
+      setAdditionalCharges([]);
+      setEnableRoundOff(true);
+      setSummarizeTotalQuantity(false);
+      setShowSignatureArea(false);
+      setSignatoryName('');
+      setSignatoryDesignation('');
+      setSignatureBase64('');
+      setShowTermsArea(false);
+      setTerms('');
+      setShowNotesArea(false);
+      setNotes('');
+      setShowFooterArea(false);
+      setFooter('');
+      setShowAttachmentsArea(false);
+      setAttachments([]);
+      setShowAdditionalInfo(false);
+      setAdditionalInfo([]);
+      setShowContactDetails(false);
+      setContactDetails({ name: '', phone: '', email: '' });
+      setIsRecurring(false);
+    }
+
     try {
       // 1. Business Profile
       const profileRes = await api.get('/business');
@@ -340,8 +410,7 @@ export default function InvoiceEditor({ mode, documentId }: InvoiceEditorProps) 
 
           if (mode === 'create' || (mode === 'edit' && storedTime > backendTime)) {
             setShowRecoveryBanner(true);
-            // Apply it for preview but keep clean state to discard
-            applyRecoveredState(stored.data);
+            setRecoveredData(stored.data);
             setHasLoadedFromRecovery(true);
           }
         }
@@ -628,6 +697,15 @@ export default function InvoiceEditor({ mode, documentId }: InvoiceEditorProps) 
     showToast('Restored draft discarded.', 'info');
   };
 
+  const handleApplyRecovery = () => {
+    if (recoveredData) {
+      applyRecoveredState(recoveredData);
+      setShowRecoveryBanner(false);
+      setHasLoadedFromRecovery(false);
+      showToast('Draft changes recovered successfully.', 'success');
+    }
+  };
+
   // Autosave/debounce logic to localStorage
   useEffect(() => {
     if (loading || !businessProfile) return;
@@ -881,7 +959,7 @@ export default function InvoiceEditor({ mode, documentId }: InvoiceEditorProps) 
 
   const handleRemoveRow = (index: number) => {
     if (items.length === 1) {
-      showToast('At least one line item is required.', 'warning');
+      showToast('At least one line item is required.', 'info');
       return;
     }
     const list = [...items];
@@ -1123,21 +1201,21 @@ export default function InvoiceEditor({ mode, documentId }: InvoiceEditorProps) 
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <p className="font-medium">
-              We restored your unsaved changes from your last visit.
+              An unsaved draft from your last visit was found. Would you like to recover it?
             </p>
           </div>
           <div className="flex gap-2">
             <button
-              onClick={() => setShowRecoveryBanner(false)}
+              onClick={handleApplyRecovery}
               className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold transition-colors"
             >
-              Continue Editing
+              Recover Draft
             </button>
             <button
               onClick={handleDiscardRecovery}
               className="px-3 py-1.5 border border-indigo-300 hover:bg-indigo-100/50 text-indigo-700 rounded-lg font-bold transition-colors"
             >
-              Discard & Start Fresh
+              Discard Draft
             </button>
           </div>
         </div>

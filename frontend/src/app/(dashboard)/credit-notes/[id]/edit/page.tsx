@@ -6,5 +6,5 @@ import CreditNoteEditor from '@/components/CreditNoteEditor';
 
 export default function EditCreditNoteRoutePage() {
   const { id } = useParams();
-  return <CreditNoteEditor initialId={id as string} />;
+  return <CreditNoteEditor key={id} initialId={id as string} />;
 }

@@ -761,6 +761,7 @@ export default function ProformaInvoiceDetailsPage({ params }: ProformaInvoiceDe
               </div>
             )}
           </div>
+        </div>
 
         {/* Right side: settings accordions panel */}
         <div className="xl:col-span-1 space-y-4 print:hidden">
