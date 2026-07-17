@@ -158,9 +158,36 @@ body {
     padding: 0 !important;
     border: none !important;
     box-shadow: none !important;
-    background: transparent !important;
+    background: #ffffff !important;
     border-radius: 0 !important;
     font-family: inherit !important;
+    color: #0f172a !important;
+  }
+
+  .invoice-print-shell {
+    padding: 0 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    font-size: 11pt !important;
+  }
+
+  .invoice-header-section,
+  .invoice-print-shell table,
+  .invoice-print-shell .rounded-\[18px\],
+  .invoice-print-shell .rounded-\[14px\],
+  .invoice-print-shell .rounded-\[20px\] {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .invoice-print-shell .invoice-logo {
+    width: 120px !important;
+    height: 120px !important;
+  }
+
+  .invoice-print-shell th,
+  .invoice-print-shell td {
+    padding: 7px 8px !important;
   }
 
   /* Keep table structure intact, repeat header, avoid break inside rows */
