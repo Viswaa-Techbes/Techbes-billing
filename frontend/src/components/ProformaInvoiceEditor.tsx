@@ -408,8 +408,8 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
           });
 
           // Currency
-          setCurrency(doc.currency?.currencyCode || 'INR');
-          setNumberFormat(doc.currency?.currencyLocale || 'en-IN');
+          setCurrency(typeof doc.currency === 'string' ? doc.currency : doc.currency?.currencyCode || 'INR');
+          setNumberFormat(typeof doc.currency === 'string' ? 'en-IN' : doc.currency?.currencyLocale || 'en-IN');
 
           // Parse line items
           if (doc.items && doc.items.length > 0) {
@@ -841,11 +841,7 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
         placeOfSupply,
         
         shippingDetails: enableShipping ? shippingAddress : null,
-        currency: {
-          currencyCode: currency,
-          currencySymbol: currency === 'INR' ? '₹' : '$',
-          currencyLocale: numberFormat,
-        },
+        currency,
         gstConfiguration: {
           gstEnabled,
           placeOfSupply,

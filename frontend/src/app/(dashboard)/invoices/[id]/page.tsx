@@ -933,24 +933,19 @@ export default function InvoiceDetailsPage({ params }: InvoiceDetailsProps) {
                 )}
               </div>
 
-              {/* 3. Bank and UPI details status info */}
+              {/* 3. Invoice status info */}
               <div className="border border-slate-200 rounded-xl overflow-hidden">
                 <button
                   onClick={() => setExpandedSection(expandedSection === 'payments' ? null : 'payments')}
                   className="w-full bg-slate-50 hover:bg-slate-100 px-4 py-2.5 flex items-center justify-between text-slate-805 font-bold border-b border-slate-200"
                 >
-                  <span>3. Bank and UPI Details</span>
+                  <span>3. Invoice Status</span>
                   <span className="font-bold">{expandedSection === 'payments' ? '−' : '+'}</span>
                 </button>
                 {expandedSection === 'payments' && (
                   <div className="p-4 space-y-2 bg-white text-slate-650">
                     <p>Status: <span className="font-bold text-emerald-600">{document.bankDetails?.accountNumber ? 'Enabled' : 'Not enabled'}</span></p>
-                    <Link
-                      href={`/invoices/${document._id}/payment-setup`}
-                      className="text-xs text-blue-600 hover:text-blue-700 font-bold block"
-                    >
-                      Configure credential snapshots →
-                    </Link>
+                    <p className="text-[11px] text-slate-500">Bank and UPI details are handled directly while editing the invoice.</p>
                   </div>
                 )}
               </div>

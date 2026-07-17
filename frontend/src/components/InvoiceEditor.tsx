@@ -156,6 +156,21 @@ export default function InvoiceEditor({ mode, documentId }: InvoiceEditorProps) 
   const [showFooterArea, setShowFooterArea] = useState(false);
   const [footer, setFooter] = useState('');
 
+  const [showBankDetails, setShowBankDetails] = useState(false);
+  const [bankDetails, setBankDetails] = useState({
+    accountHolderName: '',
+    bankName: '',
+    accountNumber: '',
+    ifsc: '',
+    branchName: '',
+    accountType: 'Current',
+  });
+  const [upiDetails, setUpiDetails] = useState({
+    upiId: '',
+    displayName: '',
+    showPaymentQr: true,
+  });
+
   const [showAttachmentsArea, setShowAttachmentsArea] = useState(false);
   const [attachments, setAttachments] = useState<{ fileName: string; fileUrl: string; mimeType: string; fileSize: number }[]>([]);
 
@@ -326,6 +341,20 @@ export default function InvoiceEditor({ mode, documentId }: InvoiceEditorProps) 
       setNotes('');
       setShowFooterArea(false);
       setFooter('');
+      setShowBankDetails(false);
+      setBankDetails({
+        accountHolderName: '',
+        bankName: '',
+        accountNumber: '',
+        ifsc: '',
+        branchName: '',
+        accountType: 'Current',
+      });
+      setUpiDetails({
+        upiId: '',
+        displayName: '',
+        showPaymentQr: true,
+      });
       setShowAttachmentsArea(false);
       setAttachments([]);
       setShowAdditionalInfo(false);
@@ -362,6 +391,22 @@ export default function InvoiceEditor({ mode, documentId }: InvoiceEditorProps) 
             setFooter(profile.defaultFooter);
             setShowFooterArea(true);
           }
+
+          const hasBankProfile = Boolean(profile.bankName || profile.accountNumber || profile.upiId);
+          setShowBankDetails(hasBankProfile);
+          setBankDetails({
+            accountHolderName: profile.accountName || profile.businessName || '',
+            bankName: profile.bankName || '',
+            accountNumber: profile.accountNumber || '',
+            ifsc: profile.ifsc || '',
+            branchName: profile.branchName || '',
+            accountType: 'Current',
+          });
+          setUpiDetails({
+            upiId: profile.upiId || '',
+            displayName: profile.businessName || '',
+            showPaymentQr: true,
+          });
         }
         
         // Determine readiness status
@@ -492,6 +537,21 @@ export default function InvoiceEditor({ mode, documentId }: InvoiceEditorProps) 
     setShowFooterArea(!!data.footer);
     setShowNotesArea(!!data.notes);
 
+    setShowBankDetails(data.showBankDetails || !!(data.bankDetails?.accountNumber || data.upiDetails?.upiId));
+    setBankDetails(data.bankDetails || {
+      accountHolderName: '',
+      bankName: '',
+      accountNumber: '',
+      ifsc: '',
+      branchName: '',
+      accountType: 'Current',
+    });
+    setUpiDetails(data.upiDetails || {
+      upiId: '',
+      displayName: '',
+      showPaymentQr: true,
+    });
+
     setAttachments(data.attachments || []);
     setShowAttachmentsArea(!!data.attachments?.length);
 
@@ -544,8 +604,8 @@ export default function InvoiceEditor({ mode, documentId }: InvoiceEditorProps) 
       pincode: '',
     });
 
-    setCurrency(doc.currency?.currencyCode || 'INR');
-    setNumberFormat(doc.currency?.currencyLocale || 'en-IN');
+    setCurrency(typeof doc.currency === 'string' ? doc.currency : doc.currency?.currencyCode || 'INR');
+    setNumberFormat(typeof doc.currency === 'string' ? 'en-IN' : doc.currency?.currencyLocale || 'en-IN');
 
     // Parse items
     if (doc.items && doc.items.length > 0) {
@@ -590,6 +650,21 @@ export default function InvoiceEditor({ mode, documentId }: InvoiceEditorProps) 
 
     setFooter(doc.footer || '');
     setShowFooterArea(!!doc.footer);
+
+    setShowBankDetails(!!(doc.bankDetails?.accountNumber || doc.bankDetails?.bankName || doc.upiDetails?.upiId));
+    setBankDetails(doc.bankDetails || {
+      accountHolderName: '',
+      bankName: '',
+      accountNumber: '',
+      ifsc: '',
+      branchName: '',
+      accountType: 'Current',
+    });
+    setUpiDetails(doc.upiDetails || {
+      upiId: '',
+      displayName: '',
+      showPaymentQr: true,
+    });
 
     setAttachments(doc.attachments || []);
     setShowAttachmentsArea(!!doc.attachments?.length);
@@ -759,6 +834,9 @@ export default function InvoiceEditor({ mode, documentId }: InvoiceEditorProps) 
           terms,
           notes,
           footer,
+          showBankDetails,
+          bankDetails,
+          upiDetails,
           attachments,
           additionalInfo,
           contactDetails,
@@ -1050,7 +1128,7 @@ export default function InvoiceEditor({ mode, documentId }: InvoiceEditorProps) 
   };
 
   // Save document core handler
-  const handleSaveDocument = async (draftOnly: boolean, redirectSetup: boolean) => {
+  const handleSaveDocument = async (draftOnly: boolean) => {
     if (!selectedClientId) {
       showToast('Please select a client before saving.', 'error');
       return;
@@ -1112,11 +1190,7 @@ export default function InvoiceEditor({ mode, documentId }: InvoiceEditorProps) 
         placeOfSupply: resolvedPlaceOfSupply,
         
         shippingDetails: enableShipping ? shippingAddress : null,
-        currency: {
-          currencyCode: currency,
-          currencySymbol: currency === 'INR' ? '₹' : '$',
-          currencyLocale: numberFormat,
-        },
+        currency,
         gstConfiguration: {
           gstEnabled,
           placeOfSupply: resolvedPlaceOfSupply,
@@ -1131,6 +1205,8 @@ export default function InvoiceEditor({ mode, documentId }: InvoiceEditorProps) 
         terms,
         notes,
         footer,
+        bankDetails: showBankDetails ? bankDetails : null,
+        upiDetails: showBankDetails ? upiDetails : null,
         attachments,
         additionalInfo,
         contactDetails,
@@ -1192,11 +1268,7 @@ export default function InvoiceEditor({ mode, documentId }: InvoiceEditorProps) 
 
         setSaving(false);
 
-        if (redirectSetup) {
-          router.push(`/invoices/${docId}/payment-setup`);
-        } else {
-          router.push(`/invoices/${docId}`);
-        }
+        router.push(`/invoices/${docId}`);
         return;
       } else {
         showToast(response.data?.message || 'Save completed but no document ID was returned. Please try again.', 'error');
@@ -1266,7 +1338,7 @@ export default function InvoiceEditor({ mode, documentId }: InvoiceEditorProps) 
         </div>
       )}
 
-      {/* Breadcrumb / Step Indicator */}
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
         <div>
           <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">SALES & INVOICES / INVOICES</span>
@@ -1275,26 +1347,8 @@ export default function InvoiceEditor({ mode, documentId }: InvoiceEditorProps) 
           </h1>
         </div>
 
-        {/* Step Indicator */}
-        <div className="flex items-center gap-2.5 text-xs">
-          <div className="flex items-center gap-1.5 font-bold text-blue-600">
-            <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">1</span>
-            <span>Invoice Details</span>
-          </div>
-          <svg className="w-4 h-4 text-slate-350" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-          <div className="flex items-center gap-1.5 text-slate-400 font-semibold">
-            <span className="w-5 h-5 rounded-full border border-slate-300 text-slate-450 flex items-center justify-center text-[10px]">2</span>
-            <span>Bank & UPI Details</span>
-          </div>
-          <svg className="w-4 h-4 text-slate-350" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-          <div className="flex items-center gap-1.5 text-slate-400 font-semibold">
-            <span className="w-5 h-5 rounded-full border border-slate-300 text-slate-450 flex items-center justify-center text-[10px]">3</span>
-            <span>Customise & Share</span>
-          </div>
+        <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-semibold text-slate-600">
+          Single-page editor • preview updates instantly
         </div>
       </div>
 
@@ -2299,6 +2353,136 @@ export default function InvoiceEditor({ mode, documentId }: InvoiceEditorProps) 
             </div>
           </div>
 
+          {/* Bank details section */}
+          <div className="border-t border-slate-100 pt-6 space-y-4">
+            <button
+              type="button"
+              onClick={() => setShowBankDetails(!showBankDetails)}
+              className="flex items-center justify-between w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-left text-sm font-bold text-slate-800"
+            >
+              <span>Bank Details</span>
+              <span className="text-[10px] uppercase tracking-wider text-slate-500">{showBankDetails ? 'Hide' : 'Show'}</span>
+            </button>
+
+            {showBankDetails && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-2xl border border-slate-200 bg-slate-50/60 p-4 text-xs">
+                <div className="md:col-span-2">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Bank Account Holder</label>
+                  <input
+                    type="text"
+                    value={bankDetails.accountHolderName}
+                    onChange={(e) => setBankDetails({ ...bankDetails, accountHolderName: e.target.value })}
+                    placeholder="Account holder name"
+                    className="w-full form-input text-xs text-slate-900 bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Bank Name</label>
+                  <input
+                    type="text"
+                    value={bankDetails.bankName}
+                    onChange={(e) => setBankDetails({ ...bankDetails, bankName: e.target.value })}
+                    placeholder="Bank name"
+                    className="w-full form-input text-xs text-slate-900 bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Account Number</label>
+                  <input
+                    type="text"
+                    value={bankDetails.accountNumber}
+                    onChange={(e) => setBankDetails({ ...bankDetails, accountNumber: e.target.value })}
+                    placeholder="Account number"
+                    className="w-full form-input text-xs text-slate-900 bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">IFSC</label>
+                  <input
+                    type="text"
+                    value={bankDetails.ifsc}
+                    onChange={(e) => setBankDetails({ ...bankDetails, ifsc: e.target.value.toUpperCase() })}
+                    placeholder="IFSC"
+                    className="w-full form-input text-xs text-slate-900 bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Branch</label>
+                  <input
+                    type="text"
+                    value={bankDetails.branchName}
+                    onChange={(e) => setBankDetails({ ...bankDetails, branchName: e.target.value })}
+                    placeholder="Branch name"
+                    className="w-full form-input text-xs text-slate-900 bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">UPI ID</label>
+                  <input
+                    type="text"
+                    value={upiDetails.upiId}
+                    onChange={(e) => setUpiDetails({ ...upiDetails, upiId: e.target.value })}
+                    placeholder="name@upi"
+                    className="w-full form-input text-xs text-slate-900 bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">UPI Display Name</label>
+                  <input
+                    type="text"
+                    value={upiDetails.displayName}
+                    onChange={(e) => setUpiDetails({ ...upiDetails, displayName: e.target.value })}
+                    placeholder="Display name"
+                    className="w-full form-input text-xs text-slate-900 bg-white"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="flex items-center gap-2 cursor-pointer select-none text-slate-700">
+                    <input
+                      type="checkbox"
+                      checked={upiDetails.showPaymentQr}
+                      onChange={(e) => setUpiDetails({ ...upiDetails, showPaymentQr: e.target.checked })}
+                      className="rounded text-blue-600 border-slate-300 w-4 h-4"
+                    />
+                    <span>Show QR payment option</span>
+                  </label>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Live preview */}
+          <div className="border-t border-slate-100 pt-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-slate-900">Live Preview</h3>
+              <span className="text-[10px] uppercase tracking-wider text-slate-500">Updates instantly</span>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 text-xs text-slate-700 space-y-3">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                <div>
+                  <p className="font-black text-slate-900 text-sm">{docTitle || 'Invoice'}</p>
+                  {docSubtitle && <p className="text-[11px] text-slate-500">{docSubtitle}</p>}
+                </div>
+                <div className="text-right">
+                  <p className="font-semibold text-slate-900">{documentNumber || 'Auto-generated'}</p>
+                  <p className="text-slate-500">{selectedClient?.businessName || selectedClient?.clientName || 'Choose client'}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px]">
+                <div>
+                  <p className="font-semibold text-slate-500 uppercase tracking-wider mb-1">Items</p>
+                  <p>{items.filter((item) => !item.isGroupHeader).length} line item(s)</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-slate-500 uppercase tracking-wider mb-1">Amount</p>
+                  <p className="font-black text-slate-900">₹{calculated.grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+                </div>
+              </div>
+              {terms && <p className="text-slate-500">Terms: {terms}</p>}
+              {notes && <p className="text-slate-500">Notes: {notes}</p>}
+            </div>
+          </div>
+
           {/* Recurring details configuration panel */}
           <div className="border-t border-slate-100 pt-6 space-y-4">
             <label className="flex items-center gap-2 cursor-pointer select-none">
@@ -2529,14 +2713,14 @@ export default function InvoiceEditor({ mode, documentId }: InvoiceEditorProps) 
           {/* Flow actions */}
           <div className="card-panel p-5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col gap-3">
             <button
-              onClick={() => handleSaveDocument(false, true)}
+              onClick={() => handleSaveDocument(false)}
               disabled={saving}
               className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-sm flex items-center justify-center gap-2 text-xs"
             >
               {saving ? 'Saving...' : 'Save & Continue'}
             </button>
             <button
-              onClick={() => handleSaveDocument(true, false)}
+              onClick={() => handleSaveDocument(true)}
               disabled={saving}
               className="w-full py-2.5 border border-slate-350 bg-white hover:bg-slate-50 font-bold rounded-xl text-xs text-slate-700 transition-all flex items-center justify-center"
             >
