@@ -10,6 +10,7 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 const IMPORT_TYPES = [
   { value: 'CLIENT', label: 'Clients / Prospects' },
+  { value: 'ITEM', label: 'Item Master' },
   { value: 'QUOTATION', label: 'Quotations & Estimates' },
   { value: 'PROFORMA_INVOICE', label: 'Proforma Invoices' },
   { value: 'INVOICE', label: 'Invoices' },
@@ -31,6 +32,15 @@ const FIELDS_BY_TYPE: Record<string, { key: string; label: string; required?: bo
     { key: 'state', label: 'State' },
     { key: 'pincode', label: 'Pincode' },
     { key: 'country', label: 'Country' }
+  ],
+  ITEM: [
+    { key: 'itemName', label: 'Item Name', required: true },
+    { key: 'sku', label: 'SKU' },
+    { key: 'description', label: 'Description' },
+    { key: 'hsnSac', label: 'HSN / SAC Code' },
+    { key: 'gstRate', label: 'GST Rate (%)' },
+    { key: 'rate', label: 'Selling Price (Rate)', required: true },
+    { key: 'category', label: 'Category' }
   ],
   PAYMENT_RECEIPT: [
     { key: 'documentNumber', label: 'Receipt Number', required: true },
@@ -178,6 +188,8 @@ export default function DataImportPage() {
             } else {
               detectedType = 'CLIENT';
             }
+          } else if (headersStr.includes('sku') || headersStr.includes('item name') || headersStr.includes('selling price')) {
+            detectedType = 'ITEM';
           } else {
             detectedType = 'INVOICE'; // fallback default
           }
@@ -241,6 +253,7 @@ export default function DataImportPage() {
         setImportSummary(res.data.data);
         setStep(8);
         fetchHistory();
+        router.refresh();
         showToast('Historical data imported successfully!', 'success');
       }
     } catch (err: any) {
@@ -373,6 +386,12 @@ export default function DataImportPage() {
                     className="px-2.5 py-1.5 border border-slate-200 hover:border-slate-400 rounded-lg text-[10px] font-semibold text-slate-600 bg-white"
                   >
                     Clients Template
+                  </button>
+                  <button
+                    onClick={() => handleDownloadTemplate('ITEM')}
+                    className="px-2.5 py-1.5 border border-slate-200 hover:border-slate-400 rounded-lg text-[10px] font-semibold text-slate-600 bg-white"
+                  >
+                    Items Template
                   </button>
                   <button
                     onClick={() => handleDownloadTemplate('INVOICE')}

@@ -602,8 +602,12 @@ export default function CreditNoteEditor({ initialId }: CreditNoteEditorProps) {
         gstEnabled: true,
         placeOfSupply: {
           state: selectedClient.billingAddress?.state || 'Default State',
-          stateCode: '00',
+          stateCode: selectedClient.billingAddress?.stateCode || '00',
         },
+      },
+      placeOfSupply: {
+        state: selectedClient.billingAddress?.state || 'Default State',
+        stateCode: selectedClient.billingAddress?.stateCode || '00',
       },
     };
 

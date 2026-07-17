@@ -189,7 +189,7 @@ const validateImport = async (businessId, importType, rows, columnMapping, clien
       const existingItem = await Item.findOne(dupQuery);
 
       if (existingItem) {
-        duplicates.push({ rowNumber: rowNum, status: 'DUPLICATE_ITEM', message: `Item already exists: ${existingItem.itemName}`, data: rawData });
+        duplicates.push({ rowNumber: rowNum, status: 'DUPLICATE_ITEM', message: `Item already exists: ${existingItem.itemName}`, data: rawData, matchedId: existingItem._id });
       } else {
         valid.push({ rowNumber: rowNum, status: 'VALID', data: rawData });
       }
@@ -221,7 +221,7 @@ const validateImport = async (businessId, importType, rows, columnMapping, clien
       const existingClient = await Client.findOne(dupQuery);
 
       if (existingClient) {
-        duplicates.push({ rowNumber: rowNum, status: 'DUPLICATE_CLIENT', message: `Possible duplicate client matches: ${existingClient.clientName}`, data: rawData });
+        duplicates.push({ rowNumber: rowNum, status: 'DUPLICATE_CLIENT', message: `Possible duplicate client matches: ${existingClient.clientName}`, data: rawData, matchedId: existingClient._id });
       } else {
         valid.push({ rowNumber: rowNum, status: 'VALID', data: rawData });
       }
@@ -505,9 +505,17 @@ const executeImport = async (businessId, userId, importType, rows, columnMapping
   } else if (duplicatePolicy === 'OVERWRITE') {
     for (const dup of validation.duplicates) {
       if (importType === 'CLIENT') {
-        await Client.deleteMany({ businessId, clientName: dup.data.clientName, isDeleted: false });
+        if (dup.matchedId) {
+          await Client.deleteOne({ _id: dup.matchedId });
+        } else {
+          await Client.deleteMany({ businessId, clientName: dup.data.clientName, isDeleted: false });
+        }
       } else if (importType === 'ITEM') {
-        await Item.deleteMany({ businessId, itemName: dup.data.itemName });
+        if (dup.matchedId) {
+          await Item.deleteOne({ _id: dup.matchedId });
+        } else {
+          await Item.deleteMany({ businessId, itemName: dup.data.itemName });
+        }
       } else if (importType === 'PAYMENT_RECEIPT') {
         await PaymentReceipt.deleteMany({ businessId, receiptNumber: dup.documentNumber });
       } else {

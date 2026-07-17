@@ -1011,6 +1011,7 @@ export default function InvoiceEditor({ mode, documentId }: InvoiceEditorProps) 
         validTill: new Date(dueDate).toISOString(),
         clientId: selectedClientId,
         customFields,
+        placeOfSupply,
         
         shippingDetails: enableShipping ? shippingAddress : null,
         currency: {
@@ -2425,7 +2426,7 @@ export default function InvoiceEditor({ mode, documentId }: InvoiceEditorProps) 
           {/* Flow actions */}
           <div className="card-panel p-5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col gap-3">
             <button
-              onClick={() => handleSaveDocument(true, true)}
+              onClick={() => handleSaveDocument(false, true)}
               disabled={saving}
               className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-sm flex items-center justify-center gap-2 text-xs"
             >
