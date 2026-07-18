@@ -649,7 +649,7 @@ const deleteDocument = async (id, userId) => {
 
   const document = await SalesDocument.findOne({ _id: id, businessId: business._id });
   if (!document) {
-    throw ApiError.notFound('Document not found.');
+    throw ApiError.notFound('Document not found or already deleted.');
   }
 
   if ((document.payments && document.payments.length > 0) || (document.amountPaid || 0) > 0) {

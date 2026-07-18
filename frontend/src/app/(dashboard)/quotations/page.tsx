@@ -81,10 +81,12 @@ export default function QuotationsPage() {
       const response = await api.delete(`/documents/${id}`);
       if (response.data?.success) {
         showToast(`Quotation ${num} deleted successfully.`, 'success');
-        fetchQuotations();
+        setQuotations(prev => prev.filter(q => q._id !== id));
+      } else {
+        throw new Error(response.data?.message || 'Failed to delete quotation.');
       }
     } catch (err: any) {
-      showToast(err.response?.data?.message || 'Failed to delete quotation.', 'error');
+      showToast(err.response?.data?.message || err.message || 'Failed to delete quotation.', 'error');
     }
   };
 
@@ -335,7 +337,11 @@ export default function QuotationsPage() {
                           </button>
                           {(
                             <button
-                              onClick={() => handleDelete(quotation._id, quotation.documentNumber)}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleDelete(quotation._id, quotation.documentNumber);
+                              }}
                               className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-colors"
                               title="Delete Quotation"
                             >

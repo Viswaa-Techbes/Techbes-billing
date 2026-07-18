@@ -103,10 +103,12 @@ export default function InvoicesPage() {
       const response = await api.delete(`/documents/${id}`);
       if (response.data?.success) {
         showToast(`Invoice ${num} deleted successfully.`, 'success');
-        fetchInvoices();
+        setInvoices(prev => prev.filter(inv => inv._id !== id));
+      } else {
+        throw new Error(response.data?.message || 'Failed to delete invoice.');
       }
     } catch (err: any) {
-      showToast(err.response?.data?.message || 'Failed to delete invoice.', 'error');
+      showToast(err.response?.data?.message || err.message || 'Failed to delete invoice.', 'error');
     }
   };
 
@@ -416,7 +418,11 @@ export default function InvoicesPage() {
 
                           {
                             <button
-                              onClick={() => handleDeleteInvoice(invoice._id, invoice.documentNumber)}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleDeleteInvoice(invoice._id, invoice.documentNumber);
+                              }}
                               className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-colors"
                               title="Delete Invoice"
                             >

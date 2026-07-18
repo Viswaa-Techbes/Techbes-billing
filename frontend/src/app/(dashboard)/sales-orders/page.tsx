@@ -67,10 +67,12 @@ export default function SalesOrdersListPage() {
       const res = await api.delete(`/documents/${id}`);
       if (res.data?.success) {
         showToast(`Draft sales order ${num} deleted successfully.`, 'success');
-        fetchOrders();
+        setOrders(prev => prev.filter(order => order._id !== id));
+      } else {
+        throw new Error(res.data?.message || 'Failed to delete draft.');
       }
     } catch (err: any) {
-      showToast(err.response?.data?.message || 'Failed to delete draft.', 'error');
+      showToast(err.response?.data?.message || err.message || 'Failed to delete draft.', 'error');
     }
   };
 
@@ -270,7 +272,11 @@ export default function SalesOrdersListPage() {
                                 </Link>
 
                                 <button
-                                  onClick={() => handleDeleteDraft(order._id, order.documentNumber)}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleDeleteDraft(order._id, order.documentNumber);
+                                  }}
                                   className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-colors"
                                   title="Delete Draft"
                                 >

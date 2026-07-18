@@ -66,10 +66,12 @@ export default function DeliveryChallansListPage() {
       const res = await api.delete(`/documents/${id}`);
       if (res.data?.success) {
         showToast(`Draft delivery challan ${num} deleted successfully.`, 'success');
-        fetchChallans();
+        setChallans(prev => prev.filter(c => c._id !== id));
+      } else {
+        throw new Error(res.data?.message || 'Failed to delete draft.');
       }
     } catch (err: any) {
-      showToast(err.response?.data?.message || 'Failed to delete draft.', 'error');
+      showToast(err.response?.data?.message || err.message || 'Failed to delete draft.', 'error');
     }
   };
 
@@ -265,7 +267,11 @@ export default function DeliveryChallansListPage() {
                                 </Link>
 
                                 <button
-                                  onClick={() => handleDeleteDraft(challan._id, challan.documentNumber)}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleDeleteDraft(challan._id, challan.documentNumber);
+                                  }}
                                   className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-colors"
                                   title="Delete Draft"
                                 >

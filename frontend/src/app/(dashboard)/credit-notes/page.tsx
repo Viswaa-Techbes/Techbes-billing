@@ -71,10 +71,12 @@ export default function CreditNotesListPage() {
       const res = await api.delete(`/documents/${id}`);
       if (res.data?.success) {
         showToast(`Draft credit note ${num} deleted successfully.`, 'success');
-        fetchCreditNotes();
+        setCreditNotes(prev => prev.filter(cn => cn._id !== id));
+      } else {
+        throw new Error(res.data?.message || 'Failed to delete draft.');
       }
     } catch (err: any) {
-      showToast(err.response?.data?.message || 'Failed to delete draft.', 'error');
+      showToast(err.response?.data?.message || err.message || 'Failed to delete draft.', 'error');
     }
   };
 
@@ -303,15 +305,19 @@ export default function CreditNotesListPage() {
                                 </svg>
                               </Link>
 
-                              <button
-                                onClick={() => handleDeleteDraft(cn._id, cn.documentNumber)}
-                                className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-colors"
-                                title="Delete Draft"
-                              >
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                              </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleDeleteDraft(cn._id, cn.documentNumber);
+                                  }}
+                                  className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-colors"
+                                  title="Delete Draft"
+                                >
+                                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  </svg>
+                                </button>
                             </>
                           )}
                         </div>

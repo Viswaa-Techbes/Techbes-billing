@@ -83,10 +83,12 @@ export default function PaymentReceiptsListPage() {
       const res = await api.delete(`/payment-receipts/${id}`);
       if (res.data?.success) {
         showToast(`Draft receipt ${num} deleted.`, 'success');
-        fetchReceipts();
+        setReceipts(prev => prev.filter(r => r._id !== id));
+      } else {
+        throw new Error(res.data?.message || 'Failed to delete draft.');
       }
     } catch (err: any) {
-      showToast(err.response?.data?.message || 'Failed to delete draft.', 'error');
+      showToast(err.response?.data?.message || err.message || 'Failed to delete draft.', 'error');
     }
   };
 
@@ -292,7 +294,11 @@ export default function PaymentReceiptsListPage() {
 
                           {receipt.status === 'DRAFT' && (
                             <button
-                              onClick={() => handleDeleteDraft(receipt._id, receipt.receiptNumber)}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleDeleteDraft(receipt._id, receipt.receiptNumber);
+                              }}
                               className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-colors"
                               title="Delete Draft"
                             >

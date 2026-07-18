@@ -203,9 +203,11 @@ export default function InvoiceDetailsPage({ params }: InvoiceDetailsProps) {
       if (res.data?.success) {
         showToast('Invoice deleted successfully.', 'success');
         router.push('/invoices');
+      } else {
+        throw new Error(res.data?.message || 'Failed to delete document.');
       }
     } catch (err: any) {
-      showToast(err.response?.data?.message || 'Failed to delete document.', 'error');
+      showToast(err.response?.data?.message || err.message || 'Failed to delete document.', 'error');
     }
   };
 
