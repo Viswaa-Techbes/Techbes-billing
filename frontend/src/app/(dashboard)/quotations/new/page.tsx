@@ -252,11 +252,10 @@ function NewQuotationForm() {
           if (numRes.data?.success) {
             if (numRes.data.data.exists) {
               setDocumentNumber(numRes.data.data.nextNumber);
-              setIsNumberEditable(false);
             } else {
               setDocumentNumber('');
-              setIsNumberEditable(true);
             }
+            setIsNumberEditable(true);
           }
         } catch (e) {
           console.error("Error fetching next document number:", e);
@@ -390,26 +389,6 @@ function NewQuotationForm() {
         discountType: 'NONE',
         discountValue: 0,
         productType: 'PRODUCT',
-      },
-    ]);
-  };
-
-  const addGroupHeader = () => {
-    setItems((prev) => [
-      ...prev,
-      {
-        id: Math.random().toString(36).substring(2, 9),
-        isGroupHeader: true,
-        groupTitle: 'New Group Section',
-        itemName: '',
-        description: '',
-        hsnSac: '',
-        gstRate: 0,
-        quantity: 0,
-        unit: '',
-        rate: 0,
-        discountType: 'NONE',
-        discountValue: 0,
       },
     ]);
   };
@@ -873,11 +852,8 @@ function NewQuotationForm() {
                     type="text"
                     value={documentNumber}
                     onChange={(e) => setDocumentNumber(e.target.value)}
-                    disabled={!isNumberEditable}
-                    placeholder={isNumberEditable ? "Enter Quotation No" : "Auto-generated"}
-                    className={`border border-slate-300 rounded px-2 py-0.5 w-28 bg-white font-sans text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none ${
-                      !isNumberEditable ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : 'text-slate-900'
-                    }`}
+                    placeholder="Enter Quotation No"
+                    className="border border-slate-300 rounded px-2 py-0.5 w-28 bg-white font-sans text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none text-slate-900"
                   />
                 </div>
                 
@@ -1176,13 +1152,6 @@ function NewQuotationForm() {
                 <div className="flex gap-2">
                   <button
                     type="button"
-                    onClick={addGroupHeader}
-                    className="px-3 py-1.5 border border-slate-300 text-slate-700 hover:bg-slate-50 text-[10px] font-bold rounded-lg uppercase tracking-wider transition-colors"
-                  >
-                    Add New Group
-                  </button>
-                  <button
-                    type="button"
                     onClick={addLineItem}
                     className="px-3 py-1.5 bg-blue-600 hover:bg-blue-750 text-white text-[10px] font-bold rounded-lg uppercase tracking-wider transition-colors"
                   >
@@ -1206,36 +1175,6 @@ function NewQuotationForm() {
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {items.map((item, idx) => {
-                      if (item.isGroupHeader) {
-                        return (
-                          <tr key={item.id} className="bg-blue-50/40 align-middle">
-                            <td colSpan={displayOptions.showHsnSac ? (gstEnabled ? 7 : 6) : (gstEnabled ? 6 : 5)} className="p-3">
-                              <div className="flex items-center gap-3">
-                                <span className="text-[10px] font-bold text-blue-800 uppercase tracking-widest">Group Header:</span>
-                                <input
-                                  type="text"
-                                  value={item.groupTitle}
-                                  onChange={(e) => handleItemFieldChange(item.id, 'groupTitle', e.target.value)}
-                                  className="form-input text-xs text-slate-900 bg-white font-bold max-w-sm py-1 border-slate-200"
-                                  placeholder="Enter group heading (e.g. Phase 1 Services)"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() => deleteLineItem(item.id)}
-                                  className="text-rose-600 hover:text-rose-800 transition-colors p-1"
-                                  title="Delete Group"
-                                >
-                                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                  </svg>
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      }
-
-                      // Dynamic amounts
                       const computedAmt = Math.round(item.quantity * item.rate * 100) / 100;
                       let compDisc = 0;
                       if (item.discountType === 'PERCENTAGE') {

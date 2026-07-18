@@ -209,145 +209,197 @@ export default function PaymentReceiptDetailPage() {
         <div className="xl:col-span-3 space-y-6">
           <div
             ref={printRef}
-            className="invoice-print-shell printable-document invoice-doc card-panel rounded-xl bg-white shadow-[0_8px_30px_rgba(15,23,42,0.06)] border border-slate-200 min-h-[1100px] max-w-[794px] mx-auto flex flex-col"
+            className={`invoice-print-shell printable-document invoice-doc card-panel rounded-xl bg-white shadow-[0_8px_30px_rgba(15,23,42,0.06)] border border-slate-200 min-h-[1100px] max-w-[794px] mx-auto flex flex-col ${
+              localSettings.design.tableStyle === 'Striped' ? 'striped' : ''
+            }`}
+            style={{
+              fontFamily: localSettings.design.fontFamily === 'Courier' ? 'Courier New, monospace' : 'inherit',
+              ...(localSettings.design.primaryColor ? { '--invoice-accent': localSettings.design.primaryColor } as React.CSSProperties : {}),
+            }}
           >
-            {/* Header Billed By */}
-            <div className="flex justify-between items-start border-b border-slate-200 pb-8">
-              {receipt.businessSnapshot?.logo && (
-                <div className="mb-4">
-                  <img src={receipt.businessSnapshot.logo} alt="Logo" className="w-32 max-h-20 object-contain" />
+            <div className="invoice-doc-accent-bar" />
+
+            {/* Header */}
+            <div className="invoice-doc-header print-avoid-break">
+              <div className="invoice-doc-brand">
+                {receipt.businessSnapshot?.logo ? (
+                  <img
+                    src={formatImageSrc(receipt.businessSnapshot.logo)}
+                    alt="Logo"
+                    className="invoice-doc-logo"
+                  />
+                ) : (
+                  <div className="invoice-doc-logo-placeholder" />
+                )}
+                <div>
+                  <h2 className="invoice-doc-company-name">{receipt.businessSnapshot?.businessName}</h2>
+                  <div className="invoice-doc-company-detail">
+                    {receipt.businessSnapshot?.address?.addressLine1 && <p>{receipt.businessSnapshot.address.addressLine1}</p>}
+                    {receipt.businessSnapshot?.address?.addressLine2 && <p>{receipt.businessSnapshot.address.addressLine2}</p>}
+                    <p>
+                      {receipt.businessSnapshot?.address?.city}, {receipt.businessSnapshot?.address?.state} – {receipt.businessSnapshot?.address?.pincode}
+                    </p>
+                    {receipt.businessSnapshot?.gstin && <p><strong>GSTIN:</strong> {receipt.businessSnapshot.gstin}</p>}
+                    {receipt.businessSnapshot?.pan && <p><strong>PAN:</strong> {receipt.businessSnapshot.pan}</p>}
+                    <p>{receipt.businessSnapshot?.email} &nbsp;|&nbsp; {receipt.businessSnapshot?.phone}</p>
+                  </div>
                 </div>
-              )}
-              <div className="space-y-1 text-slate-600 text-right">
-                <h2 className="text-lg font-black text-slate-900">{receipt.businessSnapshot?.businessName}</h2>
-                <p>{receipt.businessSnapshot?.address?.addressLine1}</p>
-                <p>{receipt.businessSnapshot?.address?.city}, {receipt.businessSnapshot?.address?.state} - {receipt.businessSnapshot?.address?.pincode}</p>
-                {receipt.businessSnapshot?.gstin && <p><span className="font-bold text-slate-400 uppercase">GSTIN:</span> {receipt.businessSnapshot.gstin}</p>}
-                <p className="text-slate-400">{receipt.businessSnapshot?.email} | {receipt.businessSnapshot?.phone}</p>
               </div>
-            </div>
 
-            {/* Title receipt specs */}
-            <div className="grid grid-cols-2 gap-8 border-b border-slate-200 py-6">
-              <div>
-                <h1 className="text-xl font-black text-slate-900">Payment Receipt</h1>
-                <div className="mt-4 space-y-1 text-slate-600">
-                  <p className="font-bold text-slate-900 uppercase text-[9px] tracking-wider mb-1">RECEIVED FROM</p>
-                  <p className="font-bold text-slate-900">{receipt.clientSnapshot?.clientName}</p>
-                  {receipt.clientSnapshot?.businessName && <p>{receipt.clientSnapshot.businessName}</p>}
-                  <p>{receipt.clientSnapshot?.billingAddress?.addressLine1}</p>
-                  <p>{receipt.clientSnapshot?.billingAddress?.city}, {receipt.clientSnapshot?.billingAddress?.state} - {receipt.clientSnapshot?.billingAddress?.pincode}</p>
+              <div className="invoice-doc-meta">
+                <h1 className="invoice-doc-title">Payment Receipt</h1>
+                <div className="invoice-doc-meta-grid">
+                  <div className="invoice-doc-meta-row">
+                    <span className="invoice-doc-meta-label">Receipt No</span>
+                    <span className="invoice-doc-meta-value">{receipt.receiptNumber}</span>
+                  </div>
+                  <div className="invoice-doc-meta-row">
+                    <span className="invoice-doc-meta-label">Receipt Date</span>
+                    <span className="invoice-doc-meta-value">
+                      {new Date(receipt.receiptDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                    </span>
+                  </div>
+                  <div className="invoice-doc-meta-row">
+                    <span className="invoice-doc-meta-label">Currency</span>
+                    <span className="invoice-doc-meta-value">{receipt.currency}</span>
+                  </div>
                 </div>
               </div>
+            </div>
 
-              <div className="text-right space-y-1 text-slate-600">
-                <p><span className="font-bold text-slate-900">Receipt No:</span> {receipt.receiptNumber}</p>
-                <p>
-                  <span className="font-bold text-slate-900">Receipt Date:</span>{' '}
-                  {new Date(receipt.receiptDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
-                </p>
-                <p><span className="font-bold text-slate-900">Currency:</span> {receipt.currency}</p>
+            {/* Received From */}
+            <div className="invoice-doc-section print-avoid-break">
+              <div className="invoice-doc-parties">
+                <div className="invoice-doc-party-box">
+                  <p className="invoice-doc-section-label">Received From</p>
+                  <p className="invoice-doc-party-name">{receipt.clientSnapshot?.clientName}</p>
+                  <div className="invoice-doc-party-detail">
+                    {receipt.clientSnapshot?.businessName && <p>{receipt.clientSnapshot.businessName}</p>}
+                    <p>{receipt.clientSnapshot?.billingAddress?.addressLine1}</p>
+                    <p>
+                      {receipt.clientSnapshot?.billingAddress?.city}, {receipt.clientSnapshot?.billingAddress?.state} – {receipt.clientSnapshot?.billingAddress?.pincode}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Payment Records entries */}
-            <div className="py-6">
-              <h3 className="font-bold text-slate-900 text-xs mb-3 uppercase tracking-wider text-[9.5px]">Payment Breakdown</h3>
-              <table className="w-full border-collapse text-left text-xs">
-                <thead>
-                  <tr className="border-b border-slate-200 text-slate-500 font-semibold bg-slate-50">
-                    <th className="px-4 py-2">Payment Method</th>
-                    <th className="px-4 py-2">Reference ID</th>
-                    <th className="px-4 py-2 text-right">Amount Received</th>
-                    <th className="px-4 py-2 text-right">TDS Withheld</th>
-                    <th className="px-4 py-2 text-right">Charges</th>
-                    <th className="px-4 py-2 text-right">Settleable Amount</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-slate-700 bg-white">
-                  {receipt.paymentRecords?.map((rec: any, idx: number) => (
-                    <tr key={idx}>
-                      <td className="px-4 py-2.5 font-bold uppercase text-slate-800">{rec.paymentMethod}</td>
-                      <td className="px-4 py-2.5 font-mono">{rec.referenceId || '—'}</td>
-                      <td className="px-4 py-2.5 text-right">₹{rec.amountReceived?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-                      <td className="px-4 py-2.5 text-right">₹{rec.tdsWithheld?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-                      <td className="px-4 py-2.5 text-right">₹{rec.transactionCharge?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-                      <td className="px-4 py-2.5 text-right font-semibold text-slate-905">₹{rec.settleableAmount?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Invoice Settlement allocations */}
-            {receipt.settlements?.length > 0 && (
-              <div className="py-6 border-t border-slate-100">
-                <h3 className="font-bold text-slate-900 text-xs mb-3 uppercase tracking-wider text-[9.5px]">Invoice Settlements Allocations</h3>
-                <table className="w-full border-collapse text-left text-xs">
+            {/* Payment Records Table */}
+            <div className="invoice-doc-section">
+              <p className="invoice-doc-section-label" style={{ marginBottom: 12 }}>Payment Breakdown</p>
+              <div className="invoice-doc-table-wrap">
+                <table className={`invoice-doc-table ${localSettings.design.tableStyle === 'Striped' ? 'striped' : ''}`}>
                   <thead>
-                    <tr className="border-b border-slate-200 text-slate-500 font-semibold bg-slate-50">
-                      <th className="px-4 py-2">Invoice Number</th>
-                      <th className="px-4 py-2 text-right">Invoice Total</th>
-                      <th className="px-4 py-2 text-right">Outstanding Before</th>
-                      <th className="px-4 py-2 text-right">Settlement Amount</th>
-                      <th className="px-4 py-2 text-right">Outstanding After</th>
+                    <tr>
+                      <th>Payment Method</th>
+                      <th>Reference ID</th>
+                      <th className="text-right">Amount Received</th>
+                      <th className="text-right">TDS Withheld</th>
+                      <th className="text-right">Charges</th>
+                      <th className="text-right">Settleable Amount</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 text-slate-700 bg-white">
-                    {receipt.settlements.map((s: any, idx: number) => (
+                  <tbody>
+                    {receipt.paymentRecords?.map((rec: any, idx: number) => (
                       <tr key={idx}>
-                        <td className="px-4 py-2.5 font-mono font-bold text-slate-800">{s.invoiceNumberSnapshot}</td>
-                        <td className="px-4 py-2.5 text-right">₹{s.invoiceTotalSnapshot?.toLocaleString('en-IN')}</td>
-                        <td className="px-4 py-2.5 text-right">₹{s.outstandingBefore?.toLocaleString('en-IN')}</td>
-                        <td className="px-4 py-2.5 text-right font-bold text-emerald-600">₹{s.settlementAmount?.toLocaleString('en-IN')}</td>
-                        <td className="px-4 py-2.5 text-right">₹{s.outstandingAfter?.toLocaleString('en-IN')}</td>
+                        <td style={{ fontWeight: 600, textTransform: 'uppercase' }}>{rec.paymentMethod}</td>
+                        <td style={{ fontFamily: 'monospace' }}>{rec.referenceId || '—'}</td>
+                        <td style={{ textAlign: 'right' }}>₹{rec.amountReceived?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                        <td style={{ textAlign: 'right' }}>₹{rec.tdsWithheld?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                        <td style={{ textAlign: 'right' }}>₹{rec.transactionCharge?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                        <td style={{ textAlign: 'right', fontWeight: 600 }}>₹{rec.settleableAmount?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
+            </div>
+
+            {/* Invoice Settlements */}
+            {receipt.settlements?.length > 0 && (
+              <div className="invoice-doc-section">
+                <p className="invoice-doc-section-label" style={{ marginBottom: 12 }}>Invoice Settlements Allocations</p>
+                <div className="invoice-doc-table-wrap">
+                  <table className={`invoice-doc-table ${localSettings.design.tableStyle === 'Striped' ? 'striped' : ''}`}>
+                    <thead>
+                      <tr>
+                        <th>Invoice Number</th>
+                        <th className="text-right">Invoice Total</th>
+                        <th className="text-right">Outstanding Before</th>
+                        <th className="text-right">Settlement Amount</th>
+                        <th className="text-right">Outstanding After</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {receipt.settlements.map((s: any, idx: number) => (
+                        <tr key={idx}>
+                          <td style={{ fontFamily: 'monospace', fontWeight: 600 }}>{s.invoiceNumberSnapshot}</td>
+                          <td style={{ textAlign: 'right' }}>₹{s.invoiceTotalSnapshot?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                          <td style={{ textAlign: 'right' }}>₹{s.outstandingBefore?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                          <td style={{ textAlign: 'right', fontWeight: 600, color: 'var(--invoice-accent, #10b981)' }}>₹{s.settlementAmount?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                          <td style={{ textAlign: 'right' }}>₹{s.outstandingAfter?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             )}
 
-            {/* Totals Summary card */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-slate-200 pt-6">
-              <div className="space-y-4">
-                {receipt.notes && (
-                  <div>
-                    <h4 className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Remarks / Notes</h4>
-                    <p className="text-slate-600 text-[10px] whitespace-pre-wrap leading-relaxed">{receipt.notes}</p>
-                  </div>
-                )}
+            {/* Totals */}
+            <div className="invoice-doc-section totals-section print-avoid-break">
+              <div className="invoice-doc-totals-grid">
+                <div>
+                  {receipt.notes && (
+                    <div className="invoice-doc-notes-box">
+                      <p className="invoice-doc-section-label" style={{ marginBottom: 8 }}>Remarks / Notes</p>
+                      <p className="invoice-doc-terms-text">{receipt.notes}</p>
+                    </div>
+                  )}
+                  {receipt.contactDetails?.email && (
+                    <div className="invoice-doc-notes-box" style={{ marginTop: 12 }}>
+                      <p className="invoice-doc-section-label" style={{ marginBottom: 8 }}>Contact details</p>
+                      <p className="invoice-doc-terms-text">{receipt.contactDetails.email} | {receipt.contactDetails.phoneCountryCode} {receipt.contactDetails.phoneNumber}</p>
+                    </div>
+                  )}
+                </div>
 
-                {receipt.contactDetails?.email && (
-                  <div>
-                    <h4 className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Contact details</h4>
-                    <p className="text-slate-600 text-[10px]">{receipt.contactDetails.email} | {receipt.contactDetails.phoneCountryCode} {receipt.contactDetails.phoneNumber}</p>
+                <div className="invoice-doc-totals-panel">
+                  <div className="invoice-doc-totals-rows">
+                    <div className="invoice-doc-total-row">
+                      <span>Gross Available pool</span>
+                      <span>₹{receipt.totals?.availableForSettlement?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="invoice-doc-total-row">
+                      <span>Allocated to Invoices</span>
+                      <span>₹{receipt.totals?.allocatedToInvoices?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                  </div>
+                  <div className="invoice-doc-grand-total">
+                    <span className="invoice-doc-grand-total-label">Advance / Unapplied balance</span>
+                    <span className="invoice-doc-grand-total-value" style={{ color: 'var(--invoice-accent, #10b981)' }}>₹{receipt.totals?.advancePayment?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="invoice-doc-footer print-avoid-break">
+              <div className="invoice-doc-footer-grid">
+                <div />
+                {receipt.signature?.signatureUrl && (
+                  <div className="invoice-doc-signature">
+                    <img src={formatImageSrc(receipt.signature.signatureUrl)} alt="Authorized Signature" />
+                    <div className="invoice-doc-signature-line">
+                      <p className="invoice-doc-signature-name">{receipt.signature.label || 'Authorized Signatory'}</p>
+                    </div>
                   </div>
                 )}
               </div>
 
-              <div className="space-y-3 text-right text-slate-600 max-w-md ml-auto w-full">
-                <div className="flex justify-between">
-                  <span>Gross Available pool:</span>
-                  <span className="font-semibold text-slate-900">₹{receipt.totals?.availableForSettlement?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Allocated to Invoices:</span>
-                  <span className="font-semibold text-slate-900">₹{receipt.totals?.allocatedToInvoices?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                </div>
-                <div className="flex justify-between border-t border-slate-250 pt-2 text-sm font-black text-slate-900">
-                  <span>Advance / Unapplied balance:</span>
-                  <span className="text-emerald-600">₹{receipt.totals?.advancePayment?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                </div>
-
-                {receipt.signature?.signatureUrl && (
-                  <div className="pt-8 flex flex-col items-end space-y-2">
-                    <img src={receipt.signature.signatureUrl} alt="Authorised Signature" className="h-10 object-contain pr-4" />
-                    <div className="text-center w-48 border-t border-slate-200 pt-1">
-                      <p className="font-bold text-slate-900">{receipt.signature.label}</p>
-                    </div>
-                  </div>
-                )}
+              <div className="invoice-doc-page-footer">
+                <span>{receipt.businessSnapshot?.website || 'www.techbes.com'}</span>
+                <span className="page-number" />
               </div>
             </div>
           </div>

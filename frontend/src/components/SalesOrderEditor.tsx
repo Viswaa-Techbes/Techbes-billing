@@ -141,11 +141,10 @@ export default function SalesOrderEditor({ initialId }: SalesOrderEditorProps) {
           if (numRes.data?.success) {
             if (numRes.data.data.exists) {
               setDocumentNumber(numRes.data.data.nextNumber);
-              setIsNumberEditable(false);
             } else {
               setDocumentNumber('');
-              setIsNumberEditable(true);
             }
+            setIsNumberEditable(true);
           }
         } catch (e) {
           console.error("Error fetching next document number:", e);
@@ -682,11 +681,8 @@ export default function SalesOrderEditor({ initialId }: SalesOrderEditorProps) {
                   type="text"
                   value={documentNumber}
                   onChange={(e) => setDocumentNumber(e.target.value)}
-                  disabled={!isNumberEditable}
-                  placeholder={isNumberEditable ? "Enter Sales Order No (e.g. SO-1001)" : "Auto-generated"}
-                  className={`w-full form-input ${
-                    !isNumberEditable ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-900'
-                  }`}
+                  placeholder="Enter Sales Order No (e.g. SO-1001)"
+                  className="w-full form-input bg-white text-slate-900"
                 />
               </div>
               <div>

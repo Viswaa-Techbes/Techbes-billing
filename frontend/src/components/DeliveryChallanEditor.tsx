@@ -138,11 +138,10 @@ export default function DeliveryChallanEditor({ initialId }: DeliveryChallanEdit
           if (numRes.data?.success) {
             if (numRes.data.data.exists) {
               setDocumentNumber(numRes.data.data.nextNumber);
-              setIsNumberEditable(false);
             } else {
               setDocumentNumber('');
-              setIsNumberEditable(true);
             }
+            setIsNumberEditable(true);
           }
         } catch (e) {
           console.error("Error fetching next document number:", e);
@@ -667,11 +666,8 @@ export default function DeliveryChallanEditor({ initialId }: DeliveryChallanEdit
                   type="text"
                   value={documentNumber}
                   onChange={(e) => setDocumentNumber(e.target.value)}
-                  disabled={!isNumberEditable}
-                  placeholder={isNumberEditable ? "Enter Challan No (e.g. DC-001)" : "Auto-generated"}
-                  className={`w-full form-input ${
-                    !isNumberEditable ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-900'
-                  }`}
+                  placeholder="Enter Challan No (e.g. DC-001)"
+                  className="w-full form-input bg-white text-slate-900"
                 />
               </div>
               <div>

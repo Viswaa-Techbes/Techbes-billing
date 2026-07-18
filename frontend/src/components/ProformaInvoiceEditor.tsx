@@ -359,11 +359,10 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
           if (numRes.data?.success) {
             if (numRes.data.data.exists) {
               setDocumentNumber(numRes.data.data.nextNumber);
-              setIsNumberEditable(false);
             } else {
               setDocumentNumber('');
-              setIsNumberEditable(true);
             }
+            setIsNumberEditable(true);
           }
         } catch (e) {
           console.error("Error fetching next document number:", e);
@@ -663,26 +662,6 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
         discountType: 'NONE',
         discountValue: 0,
         productType: 'PRODUCT',
-      },
-    ]);
-  };
-
-  const handleAddGroupRow = () => {
-    setItems([
-      ...items,
-      {
-        id: Math.random().toString(36).substring(2, 9),
-        isGroupHeader: true,
-        groupTitle: 'New Group Section',
-        itemName: '',
-        description: '',
-        hsnSac: '',
-        gstRate: 0,
-        quantity: 1,
-        unit: '',
-        rate: 0,
-        discountType: 'NONE',
-        discountValue: 0,
       },
     ]);
   };
@@ -1113,13 +1092,8 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
                     type="text"
                     value={documentNumber}
                     onChange={(e) => setDocumentNumber(e.target.value)}
-                    disabled={!isNumberEditable}
-                    placeholder={isNumberEditable ? "Enter Invoice Number (e.g. INV-1001)" : "Auto-generated"}
-                    className={`w-full form-input text-xs font-semibold ${
-                      !isNumberEditable
-                        ? 'text-slate-500 bg-slate-50 cursor-not-allowed'
-                        : 'text-slate-900 bg-white'
-                    }`}
+                    placeholder="Enter Invoice Number (e.g. INV-1001)"
+                    className="w-full form-input text-xs font-semibold text-slate-900 bg-white"
                   />
                 </div>
                 <div>
@@ -1439,34 +1413,6 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-700">
                   {items.map((item, i) => {
-                    if (item.isGroupHeader) {
-                      return (
-                        <tr key={item.id} className="bg-blue-50/20 font-semibold border-y border-blue-100">
-                          <td colSpan={7} className="px-4 py-3">
-                            <div className="flex items-center gap-3">
-                              <span className="text-[10px] font-extrabold uppercase bg-blue-100 text-blue-700 px-2 py-0.5 rounded">Group Header</span>
-                              <input
-                                type="text"
-                                value={item.groupTitle}
-                                onChange={(e) => handleUpdateItemRow(i, { groupTitle: e.target.value })}
-                                className="flex-1 form-input text-xs font-bold text-slate-900 py-1 bg-white border-blue-200 max-w-md focus:border-blue-600 focus:ring-0"
-                                placeholder="Enter Section / Group title (e.g. Services)"
-                              />
-                              <button
-                                onClick={() => handleRemoveRow(i)}
-                                className="p-1 text-slate-400 hover:text-rose-600 transition-colors ml-auto"
-                                title="Remove Group Section"
-                              >
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    }
-
                     return (
                       <tr key={item.id} className="hover:bg-slate-50/20 items-start">
                         {/* Item Details */}
@@ -1629,15 +1575,6 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                 </svg>
                 Add Line Item
-              </button>
-              <button
-                onClick={handleAddGroupRow}
-                className="px-4 py-2 border border-blue-200 bg-white hover:bg-blue-50/20 font-bold rounded-xl text-xs text-blue-600 transition-colors flex items-center gap-1.5"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
-                Add Group Section
               </button>
             </div>
           </div>

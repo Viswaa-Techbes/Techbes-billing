@@ -1017,26 +1017,6 @@ export default function InvoiceEditor({ mode, documentId }: InvoiceEditorProps) 
     ]);
   };
 
-  const handleAddGroupRow = () => {
-    setItems([
-      ...items,
-      {
-        id: Math.random().toString(36).substring(2, 9),
-        isGroupHeader: true,
-        groupTitle: 'New Group Section',
-        itemName: '',
-        description: '',
-        hsnSac: '',
-        gstRate: 0,
-        quantity: 1,
-        unit: '',
-        rate: 0,
-        discountType: 'NONE',
-        discountValue: 0,
-      },
-    ]);
-  };
-
   const handleUpdateItemRow = (index: number, updatedFields: Partial<LineItem>) => {
     const list = [...items];
     list[index] = { ...list[index], ...updatedFields };
@@ -1788,34 +1768,6 @@ export default function InvoiceEditor({ mode, documentId }: InvoiceEditorProps) 
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-700 bg-white">
                   {items.map((item, i) => {
-                    if (item.isGroupHeader) {
-                      return (
-                        <tr key={item.id} className="bg-blue-50/20 font-semibold border-y border-blue-100">
-                          <td colSpan={7} className="px-4 py-3">
-                            <div className="flex items-center gap-3">
-                              <span className="text-[10px] font-extrabold uppercase bg-blue-100 text-blue-700 px-2 py-0.5 rounded">Group Header</span>
-                              <input
-                                type="text"
-                                value={item.groupTitle}
-                                onChange={(e) => handleUpdateItemRow(i, { groupTitle: e.target.value })}
-                                className="flex-1 form-input text-xs font-bold text-slate-900 py-1 bg-white border-blue-200 max-w-md focus:border-blue-600 focus:ring-0"
-                                placeholder="Enter Section / Group title"
-                              />
-                              <button
-                                onClick={() => handleRemoveRow(i)}
-                                className="p-1 text-slate-400 hover:text-rose-600 transition-colors ml-auto"
-                                title="Remove Group Section"
-                              >
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    }
-
                     return (
                       <tr key={item.id} className="hover:bg-slate-50/20">
                         <td className="px-4 py-3 space-y-2">
@@ -1971,15 +1923,6 @@ export default function InvoiceEditor({ mode, documentId }: InvoiceEditorProps) 
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                 </svg>
                 Add Line Item
-              </button>
-              <button
-                onClick={handleAddGroupRow}
-                className="px-4 py-2 border border-blue-200 bg-white hover:bg-blue-50/20 font-bold rounded-xl text-xs text-blue-600 transition-colors flex items-center gap-1.5"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
-                Add Group Section
               </button>
             </div>
           </div>
