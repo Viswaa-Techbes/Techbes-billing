@@ -11,7 +11,7 @@ const importHistorySchema = new mongoose.Schema(
     importType: {
       type: String,
       required: true,
-      enum: ['CLIENT', 'QUOTATION', 'PROFORMA_INVOICE', 'INVOICE', 'PAYMENT_RECEIPT', 'SALES_ORDER', 'DELIVERY_CHALLAN', 'CREDIT_NOTE'],
+      enum: ['CLIENT', 'ITEM', 'QUOTATION', 'PROFORMA_INVOICE', 'INVOICE', 'PAYMENT_RECEIPT', 'SALES_ORDER', 'DELIVERY_CHALLAN', 'CREDIT_NOTE'],
     },
     originalFileName: {
       type: String,

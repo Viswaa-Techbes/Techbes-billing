@@ -21,6 +21,7 @@ const uploadAndPreview = asyncHandler(async (req, res) => {
 
   const { sheetName } = req.body;
   const result = importService.parseExcel(req.file.buffer, sheetName);
+  console.log(`[Import] File parsed, found ${result.rows.length} rows`);
   
   // Get auto-detected mappings based on parsed headers
   const autoMapping = importService.autoMapColumns(result.headers);
@@ -68,6 +69,7 @@ const validateImport = asyncHandler(async (req, res) => {
  */
 const confirmImport = asyncHandler(async (req, res) => {
   const { importType, rows, columnMapping, duplicatePolicy = 'SKIP', calculatePolicy = 'SYSTEM', clientResolutions = {}, autoCreateClients = false } = req.body;
+  console.log(`[Import] Request received for type: ${importType}`);
 
   if (!importType || !rows || !columnMapping) {
     throw ApiError.badRequest('importType, rows, and columnMapping are required.');

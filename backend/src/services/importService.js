@@ -494,6 +494,7 @@ const executeImport = async (businessId, userId, importType, rows, columnMapping
   businessSnapshot.signature = business.signatureUrl || business.signature;
 
   const validation = await validateImport(businessId, importType, rows, columnMapping, clientResolutions);
+  console.log(`[Import] Records validated: ${validation.valid.length} valid, ${validation.warnings.length} warnings, ${validation.errors.length} errors, ${validation.duplicates.length} duplicates`);
   
   let importedCount = 0;
   let skippedCount = 0;
@@ -836,6 +837,9 @@ const executeImport = async (businessId, userId, importType, rows, columnMapping
     status: validation.errors.length > 0 ? 'COMPLETED_WITH_ERRORS' : 'COMPLETED',
     createdBy: userId,
   });
+
+  console.log(`[Import] Records inserted/updated: ${importedCount}`);
+  console.log(`[Import] Import summary generated for ${importType}`);
 
   return {
     success: true,
