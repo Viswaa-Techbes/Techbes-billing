@@ -287,7 +287,7 @@ export default function SalesOrderEditor({ initialId }: SalesOrderEditorProps) {
 
   const handleAddNewClient = async () => {
     if (!newClient.clientName) {
-      showToast('Client name is required.', 'warning');
+      showToast('Client name is required.', 'info');
       return;
     }
     try {
@@ -336,7 +336,7 @@ export default function SalesOrderEditor({ initialId }: SalesOrderEditorProps) {
         country: 'India',
       });
     } else {
-      showToast('No billing address available on client profile.', 'warning');
+      showToast('No billing address available on client profile.', 'info');
     }
   };
 
@@ -361,7 +361,7 @@ export default function SalesOrderEditor({ initialId }: SalesOrderEditorProps) {
 
   const handleDeleteItemLine = (index: number) => {
     if (items.length === 1) {
-      showToast('At least one item line is required.', 'warning');
+      showToast('Please select a client to link this invoice.', 'info');
       return;
     }
     setItems(items.filter((_, idx) => idx !== index));
@@ -491,14 +491,14 @@ export default function SalesOrderEditor({ initialId }: SalesOrderEditorProps) {
   // Form submit handler
   const handleSaveSalesOrder = async (targetStatus: 'DRAFT' | 'ISSUED', andCreateNew = false) => {
     if (!selectedClient) {
-      showToast('Please select a client.', 'warning');
+      showToast('Please select a client.', 'info');
       return;
     }
 
     // Basic item validation
     const invalidItems = items.filter((item) => !item.itemName || item.quantity <= 0 || item.rate < 0);
     if (invalidItems.length > 0) {
-      showToast('Verify item names, rates, and quantities are correct.', 'warning');
+      showToast('Verify item names, rates, and quantities are correct.', 'info');
       return;
     }
 
@@ -564,12 +564,12 @@ export default function SalesOrderEditor({ initialId }: SalesOrderEditorProps) {
         gstEnabled: true,
         placeOfSupply: {
           state: selectedClient.billingAddress?.state || 'Default State',
-          stateCode: selectedClient.billingAddress?.stateCode || '00',
+          // stateCode: selectedClient.billingAddress?.stateCode || '00',
         },
       },
       placeOfSupply: {
         state: selectedClient.billingAddress?.state || 'Default State',
-        stateCode: selectedClient.billingAddress?.stateCode || '00',
+        // stateCode: selectedClient.billingAddress?.stateCode || '00',
       },
     };
 
@@ -1193,7 +1193,7 @@ export default function SalesOrderEditor({ initialId }: SalesOrderEditorProps) {
                 disabled={loading}
                 className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-sm disabled:opacity-50 text-xs"
               >
-                {loading ? <LoadingSpinner size="xs" /> : 'Finalize & Continue'}
+                {loading ? <LoadingSpinner size="sm" /> : 'Finalize & Continue'}
               </button>
             </div>
           </div>

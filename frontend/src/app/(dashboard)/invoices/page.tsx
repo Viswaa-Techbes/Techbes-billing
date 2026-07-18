@@ -414,7 +414,7 @@ export default function InvoicesPage() {
                             </button>
                           )}
 
-                          {(
+                          {
                             <button
                               onClick={() => handleDeleteInvoice(invoice._id, invoice.documentNumber)}
                               className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-colors"
