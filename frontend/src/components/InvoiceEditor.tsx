@@ -430,9 +430,18 @@ export default function InvoiceEditor({ mode, documentId }: InvoiceEditorProps) 
         setClients(clientsRes.data.data.clients || []);
       }
 
-      // Invoice numbers are always user-editable and are not auto-sequenced.
+      // Fetch next document number suggestion
       if (mode === 'create') {
-        setDocumentNumber('');
+        try {
+          const nextRes = await api.get('/documents/next-number?type=INVOICE');
+          if (nextRes.data?.success && nextRes.data.data?.nextNumber) {
+            setDocumentNumber(nextRes.data.data.nextNumber);
+          } else {
+            setDocumentNumber('');
+          }
+        } catch (e) {
+          setDocumentNumber('');
+        }
         setIsNumberEditable(true);
       }
 

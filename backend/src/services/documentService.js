@@ -95,6 +95,30 @@ const generateDocumentNumber = async (businessId, documentType, userSubmittedNum
 };
 
 /**
+ * Updates the counter for a given document type based on a user-submitted number.
+ */
+const updateCounterForDocumentNumber = async (businessId, documentType, userSubmittedNumber) => {
+  if (!userSubmittedNumber || userSubmittedNumber === 'Auto-generated') return;
+
+  const match = userSubmittedNumber.match(/(\d+)(?!.*\d)/);
+  if (!match) return; // No numbers found, don't update counter
+
+  const numStr = match[1];
+  const index = match.index;
+  const prefix = userSubmittedNumber.substring(0, index);
+  const suffix = userSubmittedNumber.substring(index + numStr.length);
+  const seq = parseInt(numStr, 10);
+  const padding = numStr.length;
+
+  const counterId = `${businessId.toString()}_${documentType}`;
+  await Counter.findOneAndUpdate(
+    { _id: counterId },
+    { prefix, suffix, seq, padding },
+    { upsert: true, new: true }
+  );
+};
+
+/**
  * Get next document number preview
  */
 const getNextNumber = async (userId, documentType) => {
@@ -372,6 +396,11 @@ const createDocument = async (userId, data) => {
     ? await ensureUniqueDocumentNumber(business._id, documentType, data.documentNumber)
     : await generateDocumentNumber(business._id, documentType, data.documentNumber);
 
+  if (documentType === 'INVOICE' && docNum) {
+    await updateCounterForDocumentNumber(business._id, documentType, docNum);
+  }
+
+
   let availableCredit = 0;
   if (documentType === 'CREDIT_NOTE') {
     availableCredit = (data.status !== 'DRAFT') ? calculations.grandTotal : 0;
@@ -572,6 +601,7 @@ const updateDocument = async (id, userId, data) => {
       data.documentNumber,
       document._id
     );
+    await updateCounterForDocumentNumber(business._id, document.documentType, document.documentNumber);
   }
 
   // Update fields
@@ -607,6 +637,32 @@ const updateDocument = async (id, userId, data) => {
   return document.toObject();
 };
 
+/**
+ * Delete a document scoped to the current business.
+ * Documents with payments or linked references are blocked to avoid orphaning related records.
+ */
+const deleteDocument = async (id, userId) => {
+  const business = await BusinessProfile.findOne({ userId });
+  if (!business) {
+    throw ApiError.badRequest('Business profile not found.');
+  }
+
+  const document = await SalesDocument.findOne({ _id: id, businessId: business._id });
+  if (!document) {
+    throw ApiError.notFound('Document not found.');
+  }
+
+  if ((document.payments && document.payments.length > 0) || (document.amountPaid || 0) > 0) {
+    throw ApiError.badRequest('This document has payment records and cannot be deleted. Cancel it instead.');
+  }
+
+  if (document.linkedDocuments && document.linkedDocuments.length > 0) {
+    throw ApiError.badRequest('This document is linked to another document and cannot be deleted.');
+  }
+
+  await SalesDocument.deleteOne({ _id: document._id, businessId: business._id });
+  return true;
+};
 /**
  * Update document status
  */
@@ -1046,3 +1102,4 @@ module.exports = {
   settleCredit,
   getNextNumber,
 };
+

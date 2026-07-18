@@ -209,7 +209,7 @@ export default function PaymentReceiptDetailPage() {
         <div className="xl:col-span-3 space-y-6">
           <div
             ref={printRef}
-            className="card-panel p-12 sm:p-16 rounded-2xl bg-white shadow-md border border-slate-250 min-h-[1100px] text-xs leading-relaxed max-w-4A mx-auto"
+            className="invoice-print-shell printable-document invoice-doc card-panel rounded-xl bg-white shadow-[0_8px_30px_rgba(15,23,42,0.06)] border border-slate-200 min-h-[1100px] max-w-[794px] mx-auto flex flex-col"
           >
             {/* Header Billed By */}
             <div className="flex justify-between items-start border-b border-slate-200 pb-8">
@@ -464,3 +464,5 @@ export default function PaymentReceiptDetailPage() {
     </div>
   );
 }
+
+

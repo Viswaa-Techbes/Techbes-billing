@@ -97,12 +97,12 @@ export default function InvoicesPage() {
     setPage(1);
   };
 
-  const handleDeleteDraft = async (id: string, num: string) => {
-    if (!window.confirm(`Are you sure you want to permanently delete draft invoice ${num}?`)) return;
+  const handleDeleteInvoice = async (id: string, num: string) => {
+    if (!window.confirm(`Are you sure you want to permanently delete invoice ${num}?`)) return;
     try {
       const response = await api.delete(`/documents/${id}`);
       if (response.data?.success) {
-        showToast(`Draft invoice ${num} deleted successfully.`, 'success');
+        showToast(`Invoice ${num} deleted successfully.`, 'success');
         fetchInvoices();
       }
     } catch (err: any) {
@@ -381,11 +381,11 @@ export default function InvoicesPage() {
                               <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                             </svg>
                           </Link>
-                          {invoice.status === 'DRAFT' && (
+                          {(
                             <Link
                               href={`/invoices/${invoice._id}/edit`}
                               className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded-lg transition-colors"
-                              title="Edit Draft"
+                              title="Edit Invoice"
                             >
                               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -414,19 +414,16 @@ export default function InvoicesPage() {
                             </button>
                           )}
 
-                          {invoice.status === 'DRAFT' ? (
+                          {(
                             <button
-                              onClick={() => handleDeleteDraft(invoice._id, invoice.documentNumber)}
+                              onClick={() => handleDeleteInvoice(invoice._id, invoice.documentNumber)}
                               className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-colors"
-                              title="Delete Draft"
+                              title="Delete Invoice"
                             >
                               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                               </svg>
-                            </button>
-                          ) : (
-                            <div className="w-8 h-8 flex-shrink-0" /> // empty spacer placeholder to match layout
-                          )}
+                            </button>}
                         </div>
                       </td>
                     </tr>
@@ -463,3 +460,5 @@ export default function InvoicesPage() {
     </div>
   );
 }
+
+

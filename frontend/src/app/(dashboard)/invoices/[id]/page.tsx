@@ -195,13 +195,13 @@ export default function InvoiceDetailsPage({ params }: InvoiceDetailsProps) {
     }
   };
 
-  // Delete draft
+  // Delete document
   const handleDeleteDocument = async () => {
-    if (!window.confirm(`Are you sure you want to delete draft invoice ${document.documentNumber}?`)) return;
+    if (!window.confirm(`Are you sure you want to delete invoice ${document.documentNumber}?`)) return;
     try {
       const res = await api.delete(`/documents/${docId}`);
       if (res.data?.success) {
-        showToast('Draft deleted successfully.', 'success');
+        showToast('Invoice deleted successfully.', 'success');
         router.push('/invoices');
       }
     } catch (err: any) {
@@ -358,7 +358,7 @@ export default function InvoiceDetailsPage({ params }: InvoiceDetailsProps) {
 
       {/* Action Buttons row */}
       <div className="flex flex-wrap gap-2.5 border-b border-slate-100 pb-6 print:hidden">
-        {document.status === 'DRAFT' && (
+        {(
           <Link
             href={`/invoices/${document._id}/edit`}
             className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors flex items-center gap-1.5 shadow-sm text-xs"
@@ -441,13 +441,13 @@ export default function InvoiceDetailsPage({ params }: InvoiceDetailsProps) {
           >
             Duplicate
           </button>
-          {document.status === 'DRAFT' && (
+          {(
             <button
               onClick={handleDeleteDocument}
               className="px-3.5 py-2.5 border border-rose-200 text-rose-600 hover:bg-rose-50 font-bold rounded-xl transition-colors text-xs"
               title="Delete"
             >
-              Delete Draft
+              Delete Invoice
             </button>
           )}
         </div>
@@ -1271,3 +1271,4 @@ export default function InvoiceDetailsPage({ params }: InvoiceDetailsProps) {
     </div>
   );
 }
+

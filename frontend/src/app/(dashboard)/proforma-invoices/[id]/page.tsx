@@ -477,7 +477,7 @@ export default function ProformaInvoiceDetailsPage({ params }: ProformaInvoiceDe
         <div className="xl:col-span-3 space-y-6">
           <div
             ref={printRef}
-            className={`printable-document card-panel p-12 sm:p-16 rounded-2xl bg-white shadow-md border border-slate-255 min-h-[1100px] text-xs leading-relaxed max-w-4xl mx-auto flex flex-col justify-between ${
+            className={`invoice-print-shell printable-document invoice-doc card-panel rounded-xl bg-white shadow-[0_8px_30px_rgba(15,23,42,0.06)] border border-slate-200 min-h-[1100px] max-w-[794px] mx-auto flex flex-col ${
               localSettings.design.tableStyle === 'Striped' ? 'print-striped' : ''
             }`}
             style={{ fontFamily: localSettings.design.fontFamily === 'Courier' ? 'Courier New, monospace' : 'inherit' }}
@@ -1175,3 +1175,4 @@ export default function ProformaInvoiceDetailsPage({ params }: ProformaInvoiceDe
     </div>
   );
 }
+

@@ -29,6 +29,8 @@ router.post('/:id/e-way-bill', documentController.generateEWayBill);
 
 router.get('/:id', documentController.getDocumentById);
 router.put('/:id', validate(createDocumentRules), documentController.updateDocument);
+router.delete('/:id', documentController.deleteDocument);
 router.patch('/:id/status', documentController.updateDocumentStatus);
 
 module.exports = router;
+

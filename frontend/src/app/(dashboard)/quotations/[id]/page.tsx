@@ -162,9 +162,9 @@ export default function QuotationDetailPage() {
     }
   };
 
-  // Delete document draft
+  // Delete document
   const handleDeleteDocument = async () => {
-    if (!window.confirm(`Are you sure you want to delete draft quotation ${document.documentNumber}?`)) return;
+    if (!window.confirm(`Are you sure you want to delete quotation ${document.documentNumber}?`)) return;
     try {
       const res = await api.delete(`/documents/${id}`);
       if (res.data?.success) {
@@ -316,7 +316,7 @@ export default function QuotationDetailPage() {
 
       {/* Action Buttons row */}
       <div className="flex flex-wrap gap-2.5 border-b border-slate-100 pb-6 print:hidden">
-        {document.status === 'DRAFT' && (
+        {(
           <Link
             href={`/quotations/${document._id}/edit`}
             className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors flex items-center gap-1.5 shadow-sm text-xs"
@@ -397,13 +397,13 @@ export default function QuotationDetailPage() {
           >
             Duplicate
           </button>
-          {document.status === 'DRAFT' && (
+          {(
             <button
               onClick={handleDeleteDocument}
               className="px-3.5 py-2.5 border border-rose-200 text-rose-600 hover:bg-rose-50 font-bold rounded-xl transition-colors text-xs"
-              title="Delete Draft"
+              title="Delete Quotation"
             >
-              Delete Draft
+              Delete Quotation
             </button>
           )}
         </div>
@@ -443,7 +443,7 @@ export default function QuotationDetailPage() {
         <div className="xl:col-span-3 space-y-6">
           <div
             ref={printRef}
-            className={`printable-document card-panel p-12 sm:p-16 rounded-2xl bg-white shadow-md border border-slate-255 min-h-[1100px] text-xs leading-relaxed max-w-4xl mx-auto flex flex-col justify-between ${
+            className={`invoice-print-shell printable-document invoice-doc card-panel rounded-xl bg-white shadow-[0_8px_30px_rgba(15,23,42,0.06)] border border-slate-200 min-h-[1100px] max-w-[794px] mx-auto flex flex-col ${
               localSettings.design.tableStyle === 'Striped' ? 'print-striped' : ''
             }`}
             style={{ fontFamily: localSettings.design.fontFamily === 'Courier' ? 'Courier New, monospace' : 'inherit' }}
@@ -1075,3 +1075,5 @@ export default function QuotationDetailPage() {
     </div>
   );
 }
+
+

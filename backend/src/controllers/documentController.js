@@ -35,6 +35,13 @@ const updateDocument = asyncHandler(async (req, res) => {
   });
 });
 
+const deleteDocument = asyncHandler(async (req, res) => {
+  await documentService.deleteDocument(req.params.id, req.user.id);
+  res.status(200).json({
+    success: true,
+    message: 'Document deleted successfully',
+  });
+});
 const updateDocumentStatus = asyncHandler(async (req, res) => {
   const { status } = req.body;
   if (!status) {
@@ -198,3 +205,4 @@ module.exports = {
   settleCredit,
   getNextNumber,
 };
+

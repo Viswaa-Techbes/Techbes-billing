@@ -587,6 +587,59 @@ body {
 }
 
 /* Print Media Styles */
+
+/* Shared invoice-style layout for all printable documents that keep their own fields. */
+.invoice-doc table:not(.invoice-doc-table) {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  border: 1px solid var(--invoice-border);
+  border-radius: 8px;
+}
+
+.invoice-doc table:not(.invoice-doc-table) thead tr {
+  background: var(--invoice-accent-light);
+  color: var(--invoice-accent);
+}
+
+.invoice-doc table:not(.invoice-doc-table) th {
+  padding: 10px 12px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--invoice-border);
+}
+
+.invoice-doc table:not(.invoice-doc-table) td {
+  padding: 11px 12px;
+  border-bottom: 1px solid #edf2f7;
+  vertical-align: top;
+}
+
+.invoice-doc table:not(.invoice-doc-table) tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.invoice-doc .totals-section {
+  border-top: 2px solid var(--invoice-border) !important;
+  padding-top: 22px !important;
+}
+
+.invoice-doc .totals-section > div:last-child,
+.invoice-doc .totals-section .w-full.md\:w-80 {
+  border: 1px solid var(--invoice-border);
+  border-radius: 8px;
+  padding: 16px;
+  background: #ffffff;
+}
+
+.invoice-doc h1,
+.invoice-doc h2,
+.invoice-doc h3 {
+  letter-spacing: 0;
+}
 @media print {
   @page {
     size: A4 portrait;
@@ -799,4 +852,5 @@ body {
     content: "Page " counter(page);
   }
 }
+
 

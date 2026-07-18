@@ -95,11 +95,6 @@ export default function EditQuotationPage() {
         if (documentRes.data?.success) {
           const doc = documentRes.data.data;
           
-          if (doc.status !== 'DRAFT') {
-            showToast('Only DRAFT quotations can be edited.', 'error');
-            router.push(`/quotations/${id}`);
-            return;
-          }
 
           setDocumentNumber(doc.documentNumber);
           setSelectedClientId(doc.clientId);
@@ -415,6 +410,7 @@ export default function EditQuotationPage() {
     setSaving(true);
     try {
       const payload = {
+        documentType: 'QUOTATION',
         clientId: selectedClientId,
         poNumber,
         issueDate: new Date(issueDate).toISOString(),
@@ -1443,3 +1439,5 @@ function toIndianWordsLocal(num: number) {
   }
   return words + ' Only';
 }
+
+
