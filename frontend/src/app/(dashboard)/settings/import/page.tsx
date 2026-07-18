@@ -27,10 +27,10 @@ const FIELDS_BY_TYPE: Record<string, { key: string; label: string; required?: bo
     { key: 'email', label: 'Email Address' },
     { key: 'phone', label: 'Phone Number' },
     { key: 'gstin', label: 'GSTIN' },
-    { key: 'addressLine1', label: 'Billing Address' },
+    { key: 'address', label: 'Billing Address' },
     { key: 'city', label: 'City' },
     { key: 'state', label: 'State' },
-    { key: 'pincode', label: 'Pincode' },
+    { key: 'postalCode', label: 'Pincode' },
     { key: 'country', label: 'Country' }
   ],
   ITEM: [
@@ -99,6 +99,7 @@ export default function DataImportPage() {
 
   // Column Mapping states
   const [columnMapping, setColumnMapping] = useState<Record<string, string>>({});
+  const [mappingErrors, setMappingErrors] = useState<string[]>([]);
 
   // Validation states
   const [validationResults, setValidationResults] = useState<any | null>(null);
@@ -218,6 +219,23 @@ export default function DataImportPage() {
   };
 
   const handleValidate = async () => {
+    // Client-side mapping validation
+    const fields = FIELDS_BY_TYPE[importType] || FIELDS_BY_TYPE.DOCUMENT;
+    const missing: string[] = [];
+    fields.forEach(f => {
+      if (f.required && !columnMapping[f.key]) {
+        missing.push(f.key);
+      }
+    });
+
+    if (missing.length > 0) {
+      setMappingErrors(missing);
+      const labels = missing.map(k => fields.find(f => f.key === k)?.label || k).join(', ');
+      showToast(`Required fields missing mapping: ${labels}`, 'error');
+      return;
+    }
+
+    setMappingErrors([]);
     setLoadingValidation(true);
     try {
       const res = await api.post('/imports/validate', {
@@ -272,6 +290,7 @@ export default function DataImportPage() {
     setFile(null);
     setUploadData(null);
     setColumnMapping({});
+    setMappingErrors([]);
     setValidationResults(null);
     setClientResolutions({});
     setImportSummary(null);
@@ -552,27 +571,43 @@ export default function DataImportPage() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[400px] overflow-y-auto pr-2">
-                {(FIELDS_BY_TYPE[importType] || FIELDS_BY_TYPE.DOCUMENT).map(f => (
-                  <div key={f.key} className="p-4 border border-slate-100 rounded-xl bg-slate-50/30 flex items-center justify-between gap-4">
-                    <div className="space-y-0.5">
-                      <span className="text-xs font-bold text-slate-700">
-                        {f.label} {f.required && <span className="text-rose-500">*</span>}
-                      </span>
-                      <span className="block text-[10px] font-mono text-slate-400">Database: {f.key}</span>
-                    </div>
-
-                    <select
-                      value={columnMapping[f.key] || ''}
-                      onChange={(e) => setColumnMapping(prev => ({ ...prev, [f.key]: e.target.value }))}
-                      className="form-input text-xs w-48 bg-white pr-8 text-slate-700"
+                {(FIELDS_BY_TYPE[importType] || FIELDS_BY_TYPE.DOCUMENT).map(f => {
+                  const isError = mappingErrors.includes(f.key);
+                  return (
+                    <div 
+                      key={f.key} 
+                      className={`p-4 border rounded-xl flex items-center justify-between gap-4 transition-colors ${
+                        isError ? 'border-rose-350 bg-rose-50/20' : 'border-slate-100 bg-slate-50/30'
+                      }`}
                     >
-                      <option value="">-- Ignored / Not Mapped --</option>
-                      {uploadData.headers.map((h: string) => (
-                        <option key={h} value={h}>{h}</option>
-                      ))}
-                    </select>
-                  </div>
-                ))}
+                      <div className="space-y-0.5">
+                        <span className={`text-xs font-bold ${isError ? 'text-rose-700' : 'text-slate-700'}`}>
+                          {f.label} {f.required && <span className="text-rose-500">*</span>}
+                        </span>
+                        <span className={`block text-[10px] font-mono ${isError ? 'text-rose-400' : 'text-slate-400'}`}>Database: {f.key}</span>
+                      </div>
+
+                      <select
+                        value={columnMapping[f.key] || ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setColumnMapping(prev => ({ ...prev, [f.key]: val }));
+                          if (val) {
+                            setMappingErrors(prev => prev.filter(k => k !== f.key));
+                          }
+                        }}
+                        className={`form-input text-xs w-48 bg-white pr-8 text-slate-700 ${
+                          isError ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-500 bg-rose-50/10' : ''
+                        }`}
+                      >
+                        <option value="">-- Ignored / Not Mapped --</option>
+                        {uploadData.headers.map((h: string) => (
+                          <option key={h} value={h}>{h}</option>
+                        ))}
+                      </select>
+                    </div>
+                  );
+                })}
               </div>
 
               <div className="flex items-center justify-between pt-4 border-t border-slate-100">

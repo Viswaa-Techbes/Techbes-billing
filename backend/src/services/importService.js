@@ -14,11 +14,13 @@ const ALIASES = {
   companyName: ['company name', 'company', 'organization', 'org', 'business name', 'business'],
   email: ['email', 'email address', 'mail', 'mail id', 'email id'],
   phone: ['phone', 'mobile', 'mobile number', 'phone number', 'contact', 'contact number'],
-  gstin: ['gstin', 'gst', 'gst number', 'tax id', 'gst registration'],
+  gstin: ['gstin', 'gst', 'gst number', 'tax id', 'gst registration', 'gst no'],
+  address: ['address', 'address line 1', 'billing address', 'street', 'address 1'],
   addressLine1: ['address', 'address line 1', 'billing address', 'street', 'address 1'],
   city: ['city', 'town'],
   state: ['state', 'region'],
-  pincode: ['pincode', 'pin', 'zip', 'zipcode', 'pin code'],
+  postalCode: ['postalcode', 'pin', 'pincode', 'postal code', 'zip', 'zipcode', 'pin code'],
+  pincode: ['postalcode', 'pin', 'pincode', 'postal code', 'zip', 'zipcode', 'pin code'],
   country: ['country'],
   documentNumber: ['invoice number', 'invoice no', 'bill number', 'bill no', 'document number', 'document no', 'quotation number', 'quotation no', 'estimate number', 'estimate no', 'challan number', 'challan no', 'challan', 'order number', 'order no', 'receipt number', 'receipt no', 'receipt', 'credit note number', 'credit note no', 'note number', 'note no', 'no', 'number'],
   issueDate: ['invoice date', 'date', 'issue date', 'billing date', 'date of issue', 'document date', 'challan date', 'order date', 'receipt date'],
@@ -207,9 +209,8 @@ const validateImport = async (businessId, importType, rows, columnMapping, clien
         continue;
       }
 
-      if (rawData.gstin && !gstRegex.test(rawData.gstin.trim())) {
-        errors.push({ rowNumber: rowNum, status: 'INVALID_GSTIN', message: `GSTIN '${rawData.gstin}' is invalid.`, data: rawData });
-        continue;
+      if (rawData.gstin && rawData.gstin.trim() && !gstRegex.test(rawData.gstin.trim())) {
+        warnings.push({ rowNumber: rowNum, status: 'INVALID_GSTIN_FORMAT', message: `GSTIN '${rawData.gstin}' is invalid format. It will be imported.`, data: rawData });
       }
 
       // Check duplicates
@@ -395,9 +396,8 @@ const validateImport = async (businessId, importType, rows, columnMapping, clien
         continue;
       }
 
-      if (firstRow.gstin && !gstRegex.test(firstRow.gstin.trim())) {
-        errors.push({ ...statusDetails, status: 'INVALID_GSTIN', message: `GSTIN '${firstRow.gstin}' is invalid.` });
-        continue;
+      if (firstRow.gstin && firstRow.gstin.trim() && !gstRegex.test(firstRow.gstin.trim())) {
+        warnings.push({ ...statusDetails, status: 'INVALID_GSTIN_FORMAT', message: `GSTIN '${firstRow.gstin}' is invalid format. It will be imported.` });
       }
 
       // Check duplicate document
@@ -576,10 +576,10 @@ const executeImport = async (businessId, userId, importType, rows, columnMapping
         phone: d.phone || '',
         gstin: d.gstin || '',
         billingAddress: {
-          addressLine1: d.addressLine1 || '',
+          addressLine1: d.address || d.addressLine1 || '',
           city: d.city || '',
           state: d.state || '',
-          pincode: d.pincode || '',
+          pincode: d.postalCode || d.pincode || '',
           country: d.country || 'India',
         },
         createdBy: userId,
@@ -606,10 +606,10 @@ const executeImport = async (businessId, userId, importType, rows, columnMapping
           phone: d.phone || '',
           gstin: d.gstin || '',
           billingAddress: {
-            addressLine1: d.addressLine1 || '',
+            addressLine1: d.address || d.addressLine1 || '',
             city: d.city || '',
             state: d.state || '',
-            pincode: d.pincode || '',
+            pincode: d.postalCode || d.pincode || '',
             country: d.country || 'India',
           },
           createdBy: userId,
@@ -707,10 +707,10 @@ const executeImport = async (businessId, userId, importType, rows, columnMapping
           phone: d.phone || '',
           gstin: d.gstin || '',
           billingAddress: {
-            addressLine1: d.addressLine1 || '',
+            addressLine1: d.address || d.addressLine1 || '',
             city: d.city || '',
             state: d.state || '',
-            pincode: d.pincode || '',
+            pincode: d.postalCode || d.pincode || '',
             country: d.country || 'India',
           },
           createdBy: userId,
@@ -744,7 +744,7 @@ const executeImport = async (businessId, userId, importType, rows, columnMapping
         documentType: importType,
         documentNumber: rec.documentNumber,
         issueDate: d.issueDate ? new Date(d.issueDate) : new Date(),
-        validTill: d.validTill ? new Date(d.validTill) : undefined,
+        validTill: d.validTill && !isNaN(Date.parse(d.validTill)) ? new Date(d.validTill) : undefined,
         poNumber: d.poNumber || '',
         clientSnapshot,
         businessSnapshot,
