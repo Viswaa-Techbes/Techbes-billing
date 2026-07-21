@@ -106,19 +106,24 @@ const ALIASES = {
   postalCode: ['postalcode', 'pin', 'pincode', 'postal code', 'zip', 'zipcode', 'pin code'],
   pincode: ['postalcode', 'pin', 'pincode', 'postal code', 'zip', 'zipcode', 'pin code'],
   country: ['country'],
-  documentNumber: ['invoice', 'invoice number', 'invoice no', 'bill number', 'bill no', 'document number', 'document no', 'quotation number', 'quotation no', 'estimate number', 'estimate no', 'challan number', 'challan no', 'challan', 'order number', 'order no', 'receipt number', 'receipt no', 'receipt', 'credit note number', 'credit note no', 'note number', 'note no', 'no', 'number'],
+  documentNumber: ['invoice number', 'invoice no', 'bill number', 'bill no', 'document number', 'document no', 'quotation number', 'quotation no', 'estimate number', 'estimate no', 'challan number', 'challan no', 'challan', 'order number', 'order no', 'receipt number', 'receipt no', 'receipt', 'credit note number', 'credit note no', 'note number', 'note no', 'invoice', 'no', 'number'],
   issueDate: ['invoice date', 'date', 'issue date', 'billing date', 'date of issue', 'document date', 'challan date', 'order date', 'receipt date'],
   validTill: ['valid till', 'due date', 'expiry date', 'validity', 'valid until'],
   poNumber: ['po number', 'po no', 'po ref', 'purchase order', 'reference'],
   itemName: ['item name', 'item', 'description', 'product name', 'product', 'service', 'item description'],
   description: ['item details', 'long description', 'notes', 'remarks'],
   hsnSac: ['hsn', 'sac', 'hsn/sac', 'hsn code', 'sac code'],
-  gstRate: ['gst %', 'gst rate', 'tax %', 'tax rate', 'gst percentage'],
-  quantity: ['quantity', 'qty', 'quantity/unit', 'units', 'volume'],
-  rate: ['rate', 'price', 'unit price', 'rate (rs)', 'price (rs)', 'taxable value', 'taxable amount', 'sub total', 'subtotal'],
-  discountType: ['discount type', 'disc type'],
-  discountValue: ['discount', 'discount value', 'disc', 'item discount'],
-  grandTotal: ['total', 'grand total', 'amount', 'invoice amount in inr', 'invoice amount', 'invoice value', 'bill value', 'receipt amount', 'payment amount', 'amount paid', 'paid amount', 'paid'],
+  gstRate: ['gst %', 'gst rate', 'tax %', 'tax rate', 'gst percentage', 'tax rate %'],
+  quantity: ['quantity', 'qty', 'quantity/unit', 'units', 'volume', 'count'],
+  unit: ['unit', 'uom', 'unit of measure'],
+  rate: ['unit price', 'unit rate', 'rate', 'price', 'rate (rs)', 'price (rs)', 'item rate', 'cost'],
+  taxableAmount: ['taxable value', 'taxable amount', 'sub total', 'subtotal', 'taxable', 'base amount'],
+  discountType: ['item discount type', 'discount type', 'disc type'],
+  discountValue: ['item discount', 'item discount amount', 'discount value', 'discount', 'disc'],
+  documentDiscountType: ['doc discount type', 'document discount type'],
+  documentDiscountValue: ['doc discount', 'document discount', 'invoice discount', 'overall discount'],
+  additionalCharges: ['additional charges', 'shipping charges', 'freight', 'shipping', 'other charges', 'extra charges'],
+  grandTotal: ['grand total', 'invoice total', 'total amount', 'total invoice value', 'net amount', 'total', 'bill value', 'invoice value', 'invoice amount', 'amount'],
   paymentMethod: ['payment method', 'payment mode', 'mode', 'method'],
   referenceNumber: ['reference number', 'transaction id', 'reference no', 'ref no', 'ref number', 'txn id', 'transaction reference', 'ref'],
   reason: ['reason', 'return reason', 'credit reason'],
@@ -181,10 +186,18 @@ const autoMapColumns = (headers) => {
   const mapping = {};
   for (const field of Object.keys(ALIASES)) {
     const aliasList = ALIASES[field];
-    const match = headers.find(h => {
+    // First try exact match
+    let match = headers.find(h => {
       const normH = normalize(h);
-      return aliasList.some(alias => normalize(alias) === normH || normH.includes(normalize(alias)));
+      return aliasList.some(alias => normalize(alias) === normH);
     });
+    // Fallback to substring match
+    if (!match) {
+      match = headers.find(h => {
+        const normH = normalize(h);
+        return aliasList.some(alias => normH.includes(normalize(alias)));
+      });
+    }
     if (match) {
       mapping[field] = match;
     }
@@ -450,12 +463,34 @@ const validateImport = async (businessId, importType, rows, columnMapping, clien
 
         const rawQty = row.quantity;
         const qty = (rawQty === undefined || rawQty === '' || isNaN(parseFloat(rawQty))) ? 1 : parseFloat(rawQty);
-
-        const rawRate = row.rate;
-        const grandTotalVal = parseFloat(row.grandTotal) || 0;
-        const rate = (rawRate === undefined || rawRate === '' || isNaN(parseFloat(rawRate))) ? grandTotalVal : parseFloat(rawRate);
-
         const gstRate = parseGstRate(row.gstRate);
+
+        const discountType = row.discountType ? String(row.discountType).toUpperCase() : 'NONE';
+        const discountValue = Math.max(0, parseFloat(row.discountValue) || 0);
+
+        let rate = 0;
+        const parsedRate = parseFloat(row.rate);
+        const parsedTaxable = parseFloat(row.taxableAmount);
+        const parsedRowTotal = parseFloat(row.grandTotal);
+        const parsedDocTotal = parseFloat(firstRow.grandTotal);
+
+        if (!isNaN(parsedRate) && parsedRate > 0) {
+          rate = parsedRate;
+        } else if (!isNaN(parsedTaxable) && parsedTaxable > 0) {
+          let baseAmount = parsedTaxable;
+          if (discountType === 'FIXED' && discountValue > 0) {
+            baseAmount = parsedTaxable + discountValue;
+          } else if (discountType === 'PERCENTAGE' && discountValue > 0 && discountValue < 100) {
+            baseAmount = parsedTaxable / (1 - discountValue / 100);
+          }
+          rate = baseAmount / Math.max(0.0001, qty);
+        } else if (!isNaN(parsedRowTotal) && parsedRowTotal > 0) {
+          const taxable = parsedRowTotal / (1 + gstRate / 100);
+          rate = taxable / Math.max(0.0001, qty);
+        } else if (!isNaN(parsedDocTotal) && parsedDocTotal > 0 && group.rows.length === 1) {
+          const taxable = parsedDocTotal / (1 + gstRate / 100);
+          rate = taxable / Math.max(0.0001, qty);
+        }
 
         items.push({
           itemName: row.itemName || 'Item Details',
@@ -464,11 +499,22 @@ const validateImport = async (businessId, importType, rows, columnMapping, clien
           gstRate,
           quantity: qty,
           rate,
-          unit: 'PCS',
+          unit: row.unit || 'PCS',
+          discountType,
+          discountValue,
         });
 
-        totalExcelGrandTotal += parseFloat(row.grandTotal) || (qty * rate * (1 + gstRate / 100));
+        totalExcelGrandTotal += !isNaN(parsedRowTotal) && parsedRowTotal > 0
+          ? parsedRowTotal
+          : (qty * rate * (1 + gstRate / 100));
       }
+
+      const documentDiscountType = firstRow.documentDiscountType ? String(firstRow.documentDiscountType).toUpperCase() : 'NONE';
+      const documentDiscountValue = Math.max(0, parseFloat(firstRow.documentDiscountValue) || 0);
+      const parsedAddCharges = parseFloat(firstRow.additionalCharges);
+      const additionalCharges = (!isNaN(parsedAddCharges) && parsedAddCharges > 0)
+        ? [{ chargeName: 'Shipping & Additional Charges', amount: parsedAddCharges, isTaxable: false }]
+        : [];
 
       const statusDetails = {
         rowNumber: group.firstRowNum,
@@ -478,6 +524,9 @@ const validateImport = async (businessId, importType, rows, columnMapping, clien
         data: {
           ...firstRow,
           items,
+          documentDiscountType,
+          documentDiscountValue,
+          additionalCharges,
         },
       };
 
@@ -501,14 +550,9 @@ const validateImport = async (businessId, importType, rows, columnMapping, clien
 
       let hasInvalidQty = false;
       let hasInvalidRate = false;
-      for (const row of group.rows) {
-        const rawQty = row.quantity;
-        const qty = (rawQty === undefined || rawQty === '' || isNaN(parseFloat(rawQty))) ? 1 : parseFloat(rawQty);
-        const rawRate = row.rate;
-        const grandTotalVal = parseFloat(row.grandTotal) || 0;
-        const rate = (rawRate === undefined || rawRate === '' || isNaN(parseFloat(rawRate))) ? grandTotalVal : parseFloat(rawRate);
-        if (qty < 0) hasInvalidQty = true;
-        if (rate < 0) hasInvalidRate = true;
+      for (const item of items) {
+        if (item.quantity < 0) hasInvalidQty = true;
+        if (item.rate < 0) hasInvalidRate = true;
       }
 
       if (hasInvalidQty) {
@@ -556,6 +600,9 @@ const validateImport = async (businessId, importType, rows, columnMapping, clien
         // Run pricing calculation verification
         const calculations = documentService.calculateDocumentTotals({
           items,
+          documentDiscountType,
+          documentDiscountValue,
+          additionalCharges,
           placeOfSupply: client.billingAddress || business.address,
           gstEnabled: true,
         }, business.address?.stateCode || 'DL');
@@ -583,17 +630,28 @@ const validateImport = async (businessId, importType, rows, columnMapping, clien
           calculatedTotals: calculations,
         };
 
+        const hasZeroRate = items.some(item => item.rate === 0);
+
         if (numberingFormatConflict) {
           warnings.push({
             ...payload,
             status: 'NUMBERING_FORMAT_WARNING',
             message: `Document number format '${docNum}' does not match the active counter prefix '${counter ? counter.prefix : ''}'.`,
           });
+        } else if (hasZeroRate && excelTotal > 0) {
+          warnings.push({
+            ...payload,
+            status: 'MISSING_ITEM_RATES',
+            message: `Line item rate or taxable value could not be extracted from CSV for document ${docNum}. Calculated System Total: ₹${calculatedTotal.toFixed(2)} vs CSV Total: ₹${excelTotal.toFixed(2)}.`,
+          });
         } else if (Math.abs(calculatedTotal - excelTotal) > 1.0) {
+          const subtotalStr = calculations.subtotal.toFixed(2);
+          const taxSumStr = (calculations.cgstTotal + calculations.sgstTotal + calculations.igstTotal).toFixed(2);
+          const chargesStr = calculations.additionalChargesTotal.toFixed(2);
           warnings.push({
             ...payload,
             status: 'TOTAL_MISMATCH',
-            message: `Grand Total mismatch. Excel: ₹${excelTotal.toFixed(2)}, System: ₹${calculatedTotal.toFixed(2)}`,
+            message: `Grand Total mismatch for document ${docNum}. CSV Total: ₹${excelTotal.toFixed(2)}, System Calculated Total: ₹${calculatedTotal.toFixed(2)} (Subtotal: ₹${subtotalStr}, Tax: ₹${taxSumStr}, Charges: ₹${chargesStr}).`,
           });
         } else {
           valid.push({
@@ -879,8 +937,9 @@ const executeImport = async (businessId, userId, importType, rows, columnMapping
           stateCode: client.billingAddress?.stateCode || business.address?.stateCode || 'DL',
         },
         gstMode: calcs.gstMode || 'INTRA_STATE',
-        items: d.items,
         ...calcs,
+        items: (calcs && calcs.items && calcs.items.length > 0) ? calcs.items : d.items,
+        additionalCharges: (calcs && calcs.additionalCharges && calcs.additionalCharges.length > 0) ? calcs.additionalCharges : (d.additionalCharges || []),
         status: 'ISSUED',
         createdBy: userId,
         importSource: 'EXCEL',
