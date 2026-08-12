@@ -31,7 +31,28 @@ export const downloadDocumentPdf = async (
     throw new Error('Document preview is not available.');
   }
 
-  const html2pdf = (await import('html2pdf.js')).default;
+  const loadHtml2Pdf = async () => {
+    const existing = (window as any).html2pdf;
+    if (existing) return existing;
+
+    try {
+      const dynamicImport = new Function('specifier', 'return import(specifier)');
+      const module = await dynamicImport('html2pdf.js');
+      return module.default || module;
+    } catch {
+      await new Promise<void>((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+        script.async = true;
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error('PDF generator could not be loaded.'));
+        document.head.appendChild(script);
+      });
+      return (window as any).html2pdf;
+    }
+  };
+
+  const html2pdf = await loadHtml2Pdf();
   const clone = node.cloneNode(true) as HTMLElement;
   clone.classList.add('pdf-export-document');
   clone.querySelectorAll('.invoice-doc-page-footer, .page-number').forEach((el) => el.remove());
