@@ -379,7 +379,7 @@ export default function CreditNoteEditor({ initialId }: CreditNoteEditorProps) {
 
   // Items list modifiers
   const handleAddItemLine = () => {
-    setItems([...items, { itemName: '', gstRate: 18, quantity: 1, rate: 0, description: '', unit: 'PCS' }]);
+    setItems((prev) => withTrailingBlankItemLine([...prev, createBlankItemLine()]));
   };
 
   const handleItemLineChange = (index: number, field: string, value: any) => {
@@ -388,7 +388,7 @@ export default function CreditNoteEditor({ initialId }: CreditNoteEditorProps) {
       ...updated[index],
       [field]: value
     };
-    setItems(updated);
+    setItems(withTrailingBlankItemLine(updated));
   };
 
   const handleDuplicateItemLine = (index: number) => {
@@ -397,11 +397,7 @@ export default function CreditNoteEditor({ initialId }: CreditNoteEditorProps) {
   };
 
   const handleDeleteItemLine = (index: number) => {
-    if (items.length === 1) {
-      showToast('At least one line item is required.', 'warning');
-      return;
-    }
-    setItems(items.filter((_, idx) => idx !== index));
+    setItems((prev) => withTrailingBlankItemLine(prev.filter((_, idx) => idx !== index)));
   };
 
   const handleLineImageUpload = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -418,7 +414,7 @@ export default function CreditNoteEditor({ initialId }: CreditNoteEditorProps) {
 
   // Subtotal and tax formulas calculations
   const getSubtotal = () => {
-    return items.reduce((sum, item) => sum + (item.quantity * item.rate), 0);
+    return items.filter(isUsefulItemLine).reduce((sum, item) => sum + (item.quantity * item.rate), 0);
   };
 
   const getDiscountedSubtotal = () => {
@@ -433,7 +429,7 @@ export default function CreditNoteEditor({ initialId }: CreditNoteEditorProps) {
 
   const getGstTax = () => {
     const discountedSub = getDiscountedSubtotal();
-    return items.reduce((sum, item) => {
+    return items.filter(isUsefulItemLine).reduce((sum, item) => {
       const lineSub = item.quantity * item.rate;
       const proportion = lineSub / (getSubtotal() || 1);
       const allocatedLineSub = discountedSub * proportion;
@@ -557,7 +553,7 @@ export default function CreditNoteEditor({ initialId }: CreditNoteEditorProps) {
       } : undefined,
       reason,
       reasonDetails: (reason === 'OTHER' || reason === 'FAULT_OR_DEFECT') ? reasonDetails : undefined,
-      items: items.map((item) => ({
+      items: (typeof persistedItems !== 'undefined' ? persistedItems : items.filter(isUsefulItemLine)).map((item) => ({
         itemName: item.itemName,
         hsnSac: item.hsnSac || undefined,
         gstRate: item.gstRate,

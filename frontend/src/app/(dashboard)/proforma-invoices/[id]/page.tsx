@@ -8,6 +8,7 @@ import { useToast } from '@/context/ToastContext';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Modal from '@/components/ui/Modal';
 import PageHeader from '@/components/PageHeader';
+import { downloadDocumentPdf, formatImageSrc, getDocumentTitle } from '@/lib/pdf';
 
 interface ProformaInvoiceDetailsProps {
   params: {
@@ -21,13 +22,6 @@ export default function ProformaInvoiceDetailsPage({ params }: ProformaInvoiceDe
   const docId = params.id;
   const printRef = useRef<HTMLDivElement>(null);
 
-  const formatImageSrc = (src: string) => {
-    if (!src) return '';
-    if (src.startsWith('data:image/') || src.startsWith('http://') || src.startsWith('https://')) {
-      return src;
-    }
-    return `data:image/png;base64,${src}`;
-  };
 
   const [loading, setLoading] = useState(true);
   const [savingSettings, setSavingSettings] = useState(false);
@@ -267,15 +261,15 @@ export default function ProformaInvoiceDetailsPage({ params }: ProformaInvoiceDe
     }, 1000);
   };
 
-  // Download PDF simulation
   const handleDownloadPdf = async () => {
+    if (!document) return;
     try {
-      showToast('Preparing PDF download layout...', 'info');
-      setTimeout(() => {
-        handlePrint();
-      }, 500);
+      const cleanDocNum = document.documentNumber.replace(/\s+/g, '-');
+      const rawClient = document.clientSnapshot?.businessName || document.clientSnapshot?.clientName || 'Client';
+      const cleanClient = rawClient.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-_]/g, '');
+      await downloadDocumentPdf(printRef.current, `${getDocumentTitle(document.documentType).replace(/\s+/g, '-')}_${cleanDocNum}_${cleanClient}.pdf`);
     } catch (err: any) {
-      showToast('Failed to trigger PDF generator.', 'error');
+      showToast(err.message || 'Failed to generate PDF.', 'error');
     }
   };
 
@@ -526,7 +520,7 @@ export default function ProformaInvoiceDetailsPage({ params }: ProformaInvoiceDe
               </div>
 
               <div className="invoice-doc-meta">
-                <h1 className="invoice-doc-title">{document.title || 'Proforma Invoice'}</h1>
+                <h1 className="invoice-doc-title">{getDocumentTitle(document.documentType)}</h1>
                 {document.subtitle && <p className="invoice-doc-subtitle">{document.subtitle}</p>}
                 <div className="invoice-doc-meta-grid">
                   <div className="invoice-doc-meta-row">
@@ -797,11 +791,6 @@ export default function ProformaInvoiceDetailsPage({ params }: ProformaInvoiceDe
                   {document.footer}
                 </div>
               )}
-
-              <div className="invoice-doc-page-footer">
-                <span>{document.businessSnapshot?.website || 'www.techbes.com'}</span>
-                <span className="page-number" />
-              </div>
             </div>
           </div>
 

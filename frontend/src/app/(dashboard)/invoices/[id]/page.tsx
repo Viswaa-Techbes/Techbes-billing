@@ -8,6 +8,7 @@ import { useToast } from '@/context/ToastContext';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Modal from '@/components/ui/Modal';
 import PageHeader from '@/components/PageHeader';
+import { downloadDocumentPdf, formatImageSrc, getDocumentTitle } from '@/lib/pdf';
 
 interface InvoiceDetailsProps {
   params: {
@@ -21,13 +22,6 @@ export default function InvoiceDetailsPage({ params }: InvoiceDetailsProps) {
   const docId = params.id;
   const printRef = useRef<HTMLDivElement>(null);
 
-  const formatImageSrc = (src: string) => {
-    if (!src) return '';
-    if (src.startsWith('data:image/') || src.startsWith('http://') || src.startsWith('https://')) {
-      return src;
-    }
-    return `data:image/png;base64,${src}`;
-  };
 
   const [loading, setLoading] = useState(true);
   const [savingSettings, setSavingSettings] = useState(false);
@@ -274,6 +268,18 @@ export default function InvoiceDetailsPage({ params }: InvoiceDetailsProps) {
     }, 1000);
   };
 
+  const handleDownloadPdf = async () => {
+    if (!document) return;
+    try {
+      const cleanDocNum = document.documentNumber.replace(/\s+/g, '-');
+      const rawClient = document.clientSnapshot?.businessName || document.clientSnapshot?.clientName || 'Client';
+      const cleanClient = rawClient.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-_]/g, '');
+      await downloadDocumentPdf(printRef.current, `${getDocumentTitle(document.documentType).replace(/\s+/g, '-')}_${cleanDocNum}_${cleanClient}.pdf`);
+    } catch (err: any) {
+      showToast(err.message || 'Failed to generate PDF.', 'error');
+    }
+  };
+
   // Share helper
   const handleShare = (channel: 'email' | 'whatsapp') => {
     if (channel === 'email') {
@@ -401,7 +407,7 @@ export default function InvoiceDetailsPage({ params }: InvoiceDetailsProps) {
           Generate EWB
         </button>
         <button
-          onClick={handlePrint}
+          onClick={handleDownloadPdf}
           className="px-4 py-2.5 border border-slate-350 bg-white hover:bg-slate-50 font-bold rounded-xl text-slate-700 transition-colors text-xs"
         >
           Download PDF
@@ -568,7 +574,7 @@ export default function InvoiceDetailsPage({ params }: InvoiceDetailsProps) {
               </div>
 
               <div className="invoice-doc-meta">
-                <h1 className="invoice-doc-title">{document.title || 'Tax Invoice'}</h1>
+                <h1 className="invoice-doc-title">{getDocumentTitle(document.documentType)}</h1>
                 {document.subtitle && <p className="invoice-doc-subtitle">{document.subtitle}</p>}
                 <div className="invoice-doc-meta-grid">
                   <div className="invoice-doc-meta-row">
@@ -867,11 +873,6 @@ export default function InvoiceDetailsPage({ params }: InvoiceDetailsProps) {
                   {document.footer}
                 </div>
               )}
-
-              <div className="invoice-doc-page-footer">
-                <span>{document.businessSnapshot?.website || 'www.techbes.com'}</span>
-                <span className="page-number" />
-              </div>
             </div>
           </div>
 

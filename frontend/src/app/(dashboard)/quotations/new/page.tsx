@@ -366,31 +366,46 @@ function NewQuotationForm() {
     });
   };
 
-  // Line item manipulation helpers
+
+  const createBlankLineItem = (): LineItem => ({
+    id: Math.random().toString(36).substring(2, 9),
+    isGroupHeader: false,
+    itemName: '',
+    description: '',
+    hsnSac: '',
+    gstRate: 18,
+    quantity: 1,
+    unit: 'PCS',
+    rate: 0,
+    discountType: 'NONE',
+    discountValue: 0,
+    productType: 'PRODUCT',
+  });
+
+  const isUsefulLineItem = (item: LineItem) => Boolean(
+    item.isGroupHeader ||
+    item.itemName?.trim() ||
+    item.description?.trim() ||
+    item.hsnSac?.trim() ||
+    item.rate > 0 ||
+    item.discountValue > 0 ||
+    item.image
+  );
+
+  const withTrailingBlankLineItem = (list: LineItem[]) => {
+    const useful = list.filter(isUsefulLineItem);
+    return [...useful, createBlankLineItem()];
+  };
+
+  // Helper: line item manipulation
   const handleItemFieldChange = (id: string, field: keyof LineItem, value: any) => {
-    setItems((prev) =>
+    setItems((prev) => withTrailingBlankLineItem(
       prev.map((item) => (item.id === id ? { ...item, [field]: value } : item))
-    );
+    ));
   };
 
   const addLineItem = () => {
-    setItems((prev) => [
-      ...prev,
-      {
-        id: Math.random().toString(36).substring(2, 9),
-        isGroupHeader: false,
-        itemName: '',
-        description: '',
-        hsnSac: '',
-        gstRate: 18,
-        quantity: 1,
-        unit: 'PCS',
-        rate: 0,
-        discountType: 'NONE',
-        discountValue: 0,
-        productType: 'PRODUCT',
-      },
-    ]);
+    setItems((prev) => withTrailingBlankLineItem([...prev, createBlankLineItem()]));
   };
 
   const duplicateLineItem = (id: string) => {
@@ -405,8 +420,7 @@ function NewQuotationForm() {
   };
 
   const deleteLineItem = (id: string) => {
-    if (items.length <= 1) return;
-    setItems((prev) => prev.filter((item) => item.id !== id));
+    setItems((prev) => withTrailingBlankLineItem(prev.filter((item) => item.id !== id)));
   };
 
   // Additional Charges actions
@@ -595,7 +609,7 @@ function NewQuotationForm() {
     setSaving(true);
     try {
       // Serialize items: map group header rows to [GROUP] itemName tags so the backend validators pass
-      const serializedItems = items.map((item) => {
+      const serializedItems = items.filter(isUsefulLineItem).map((item) => {
         if (item.isGroupHeader) {
           return {
             itemName: `[GROUP] ${item.groupTitle || 'Group Section'}`,

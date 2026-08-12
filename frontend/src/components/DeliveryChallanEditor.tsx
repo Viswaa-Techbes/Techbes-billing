@@ -334,9 +334,20 @@ export default function DeliveryChallanEditor({ initialId }: DeliveryChallanEdit
     }
   };
 
+  const createBlankItemLine = (): LineItemType => ({ itemName: '', gstRate: 18, quantity: 1, rate: 0, description: '', unit: 'PCS' });
+
+  const isUsefulItemLine = (item: LineItemType) => Boolean(
+    item.itemName?.trim() || item.description?.trim() || item.hsnSac?.trim() || item.rate > 0 || item.image
+  );
+
+  const withTrailingBlankItemLine = (list: LineItemType[]) => {
+    const useful = list.filter(isUsefulItemLine);
+    return [...useful, createBlankItemLine()];
+  };
+
   // Line items handlers
   const handleAddItemLine = () => {
-    setItems([...items, { itemName: '', gstRate: 18, quantity: 1, rate: 0, description: '', unit: 'PCS' }]);
+    setItems((prev) => withTrailingBlankItemLine([...prev, createBlankItemLine()]));
   };
 
   const handleItemLineChange = (index: number, field: string, value: any) => {
@@ -345,7 +356,7 @@ export default function DeliveryChallanEditor({ initialId }: DeliveryChallanEdit
       ...updated[index],
       [field]: value
     };
-    setItems(updated);
+    setItems(withTrailingBlankItemLine(updated));
   };
 
   const handleDuplicateItemLine = (index: number) => {
@@ -354,11 +365,7 @@ export default function DeliveryChallanEditor({ initialId }: DeliveryChallanEdit
   };
 
   const handleDeleteItemLine = (index: number) => {
-    if (items.length === 1) {
-      showToast('At least one item line is required.', 'warning');
-      return;
-    }
-    setItems(items.filter((_, idx) => idx !== index));
+    setItems((prev) => withTrailingBlankItemLine(prev.filter((_, idx) => idx !== index)));
   };
 
   // Image Upload helper
@@ -376,7 +383,7 @@ export default function DeliveryChallanEditor({ initialId }: DeliveryChallanEdit
 
   // Live total calculations splits
   const getSubtotal = () => {
-    return items.reduce((sum, item) => sum + (item.quantity * item.rate), 0);
+    return items.filter(isUsefulItemLine).reduce((sum, item) => sum + (item.quantity * item.rate), 0);
   };
 
   const getDiscountedSubtotal = () => {
@@ -391,7 +398,7 @@ export default function DeliveryChallanEditor({ initialId }: DeliveryChallanEdit
 
   const getGstTax = () => {
     const discountedSub = getDiscountedSubtotal();
-    return items.reduce((sum, item) => {
+    return items.filter(isUsefulItemLine).reduce((sum, item) => {
       const lineSub = item.quantity * item.rate;
       const proportion = lineSub / (getSubtotal() || 1);
       const allocatedLineSub = discountedSub * proportion;
@@ -488,7 +495,8 @@ export default function DeliveryChallanEditor({ initialId }: DeliveryChallanEdit
       return;
     }
 
-    const invalidItems = items.filter((item) => !item.itemName || item.quantity <= 0 || item.rate < 0);
+    const persistedItems = items.filter(isUsefulItemLine);
+    const invalidItems = persistedItems.filter((item) => !item.itemName || item.quantity <= 0 || item.rate < 0);
     if (invalidItems.length > 0) {
       showToast('Verify item names, rates, and quantities are correct.', 'warning');
       return;
@@ -511,7 +519,7 @@ export default function DeliveryChallanEditor({ initialId }: DeliveryChallanEdit
         pincode: shippingDetails.pincode,
         country: shippingDetails.country,
       } : undefined,
-      items: items.map((item) => ({
+      items: (typeof persistedItems !== 'undefined' ? persistedItems : items.filter(isUsefulItemLine)).map((item) => ({
         itemName: item.itemName,
         hsnSac: item.hsnSac || undefined,
         gstRate: item.gstRate,

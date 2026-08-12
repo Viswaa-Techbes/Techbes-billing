@@ -187,6 +187,32 @@ export default function EditQuotationPage() {
     });
   };
 
+  const createBlankItemLine = () => ({
+    itemName: '',
+    description: '',
+    hsnSac: '',
+    gstRate: 18,
+    quantity: 1,
+    unit: 'PCS',
+    rate: 0,
+    discountType: 'NONE',
+    discountValue: 0,
+  });
+
+  const isUsefulItemLine = (item: any) => Boolean(
+    item.itemName?.trim() ||
+    item.description?.trim() ||
+    item.hsnSac?.trim() ||
+    Number(item.rate) > 0 ||
+    Number(item.discountValue) > 0 ||
+    item.image
+  );
+
+  const withTrailingBlankItemLine = (list: any[]) => {
+    const useful = list.filter(isUsefulItemLine);
+    return [...useful, createBlankItemLine()];
+  };
+
   // Line item manipulation helpers
   const handleItemFieldChange = (index: number, field: string, value: any) => {
     setItems(prev => {
@@ -277,7 +303,8 @@ export default function EditQuotationPage() {
     const gstMode = isIntraState ? 'INTRA_STATE' : 'INTER_STATE';
 
     let itemsSubtotal = 0;
-    const computedItems = items.map(item => {
+    const persistedItems = items.filter(isUsefulItemLine);
+    const computedItems = persistedItems.map(item => {
       const qty = Math.max(0, parseFloat(item.quantity) || 0);
       const rate = Math.max(0, parseFloat(item.rate) || 0);
       const discVal = Math.max(0, parseFloat(item.discountValue) || 0);

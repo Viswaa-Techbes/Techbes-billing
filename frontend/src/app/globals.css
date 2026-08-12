@@ -76,8 +76,16 @@ body {
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
 }
 
-.form-input::placeholder {
-  color: #94a3b8;
+
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
 }
 
 /* Shimmer/Skeleton Effect */
@@ -543,18 +551,7 @@ body {
 }
 
 .invoice-doc-page-footer {
-  position: absolute;
-  bottom: 15mm;
-  left: 20mm;
-  right: 20mm;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  font-size: 9px;
-  color: var(--invoice-muted);
-  border-top: 1px dashed var(--invoice-border);
-  padding-top: 12px;
-  box-sizing: border-box;
+  display: none !important;
 }
 
 @media (max-width: 768px) {
@@ -792,13 +789,9 @@ body {
 
 
 
-  .invoice-doc-page-footer {
-    position: fixed !important;
-    bottom: 15mm !important;
-    left: 20mm !important;
-    right: 20mm !important;
-    display: flex !important;
-    background: #ffffff !important;
+  .invoice-doc-page-footer,
+  .page-number {
+    display: none !important;
   }
 
   .invoice-print-shell.striped .invoice-doc-table tbody tr:nth-child(even):not(.group-row) {
@@ -838,9 +831,8 @@ body {
     break-inside: avoid !important;
   }
 
-  /* Page number counter */
   .page-number::after {
-    content: "Page " counter(page) " of " counter(pages);
+    content: none !important;
   }
 }
 
@@ -862,23 +854,21 @@ body {
   font-weight: 700 !important;
 }
 
-/* Quantity Input Styling: centers value, maintains spinner, ensures contrast & visibility */
+/* Quantity Input Styling: centers value, ensures contrast & visibility */
 .qty-input {
   text-align: center !important;
   padding-left: 0.375rem !important;
-  padding-right: 1.25rem !important; /* Prevent text overlap with spinner on the right */
+  padding-right: 0.375rem !important;
   color: #0f172a !important; /* High contrast text color */
   font-weight: 500 !important;
   background-color: #ffffff !important;
   min-width: 65px !important; /* Ensure input remains wide enough for content */
 }
 
-/* Keep the up/down spinner visible in Chrome, Safari, Edge, Opera */
 .qty-input::-webkit-outer-spin-button,
 .qty-input::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
   margin: 0 !important;
-  opacity: 1 !important;
-  display: block !important;
 }
 
 /* Disabled state styling for quantity inputs */
@@ -887,6 +877,7 @@ body {
   color: #64748b !important;
   cursor: not-allowed;
 }
+
 
 
 

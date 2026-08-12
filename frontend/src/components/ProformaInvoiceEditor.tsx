@@ -541,7 +541,7 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
     let subtotal = 0;
     let totalQuantity = 0;
 
-    const processedItems = items.map((item) => {
+    const processedItems = items.filter(isUsefulLineItem).map((item) => {
       if (item.isGroupHeader) {
         return { ...item, baseAmount: 0, taxableAmount: 0, cgst: 0, sgst: 0, igst: 0, total: 0 };
       }
@@ -645,31 +645,46 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
 
   const calculated = calculateTotals();
 
+
+  const createBlankLineItem = (): LineItem => ({
+    id: Math.random().toString(36).substring(2, 9),
+    isGroupHeader: false,
+    itemName: '',
+    description: '',
+    hsnSac: '',
+    gstRate: 18,
+    quantity: 1,
+    unit: 'PCS',
+    rate: 0,
+    discountType: 'NONE',
+    discountValue: 0,
+    productType: 'PRODUCT',
+  });
+
+  const isUsefulLineItem = (item: LineItem) => Boolean(
+    item.isGroupHeader ||
+    item.itemName?.trim() ||
+    item.description?.trim() ||
+    item.hsnSac?.trim() ||
+    item.rate > 0 ||
+    item.discountValue > 0 ||
+    item.image
+  );
+
+  const withTrailingBlankLineItem = (list: LineItem[]) => {
+    const useful = list.filter(isUsefulLineItem);
+    return [...useful, createBlankLineItem()];
+  };
+
   // Helper: line item manipulation
   const handleAddItemRow = () => {
-    setItems([
-      ...items,
-      {
-        id: Math.random().toString(36).substring(2, 9),
-        isGroupHeader: false,
-        itemName: '',
-        description: '',
-        hsnSac: '',
-        gstRate: 18,
-        quantity: 1,
-        unit: 'PCS',
-        rate: 0,
-        discountType: 'NONE',
-        discountValue: 0,
-        productType: 'PRODUCT',
-      },
-    ]);
+    setItems((prev) => withTrailingBlankLineItem([...prev, createBlankLineItem()]));
   };
 
   const handleUpdateItemRow = (index: number, updatedFields: Partial<LineItem>) => {
     const list = [...items];
     list[index] = { ...list[index], ...updatedFields };
-    setItems(list);
+    setItems(withTrailingBlankLineItem(list));
   };
 
   const handleDuplicateRow = (index: number) => {
@@ -684,13 +699,9 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
   };
 
   const handleRemoveRow = (index: number) => {
-    if (items.length === 1) {
-      showToast('At least one line item is required.', 'warning');
-      return;
-    }
     const list = [...items];
     list.splice(index, 1);
-    setItems(list);
+    setItems(withTrailingBlankLineItem(list));
   };
 
   // Image helpers
@@ -780,7 +791,7 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
     setSaving(true);
     try {
       // Serialize items (prefix group headers toitemName)
-      const serializedItems = items.map((item) => {
+      const serializedItems = items.filter(isUsefulLineItem).map((item) => {
         if (item.isGroupHeader) {
           return {
             itemName: `[GROUP] ${item.groupTitle || 'Group Section'}`,

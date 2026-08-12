@@ -892,7 +892,7 @@ export default function InvoiceEditor({ mode, documentId }: InvoiceEditorProps) 
     let subtotal = 0;
     let totalQuantity = 0;
 
-    const processedItems = items.map((item) => {
+    const processedItems = items.filter(isUsefulLineItem).map((item) => {
       if (item.isGroupHeader) {
         return { ...item, baseAmount: 0, taxableAmount: 0, cgst: 0, sgst: 0, igst: 0, total: 0 };
       }
@@ -995,6 +995,37 @@ export default function InvoiceEditor({ mode, documentId }: InvoiceEditorProps) 
   };
 
   const calculated = calculateTotals();
+
+
+  const createBlankLineItem = (): LineItem => ({
+    id: Math.random().toString(36).substring(2, 9),
+    isGroupHeader: false,
+    itemName: '',
+    description: '',
+    hsnSac: '',
+    gstRate: 18,
+    quantity: 1,
+    unit: 'PCS',
+    rate: 0,
+    discountType: 'NONE',
+    discountValue: 0,
+    productType: 'PRODUCT',
+  });
+
+  const isUsefulLineItem = (item: LineItem) => Boolean(
+    item.isGroupHeader ||
+    item.itemName?.trim() ||
+    item.description?.trim() ||
+    item.hsnSac?.trim() ||
+    item.rate > 0 ||
+    item.discountValue > 0 ||
+    item.image
+  );
+
+  const withTrailingBlankLineItem = (list: LineItem[]) => {
+    const useful = list.filter(isUsefulLineItem);
+    return [...useful, createBlankLineItem()];
+  };
 
   // Helper: line item manipulation
   const handleAddItemRow = () => {
@@ -1131,7 +1162,7 @@ export default function InvoiceEditor({ mode, documentId }: InvoiceEditorProps) 
       const resolvedPlaceOfSupply = getResolvedPlaceOfSupply();
 
       // Serialize items (prefix group headers to itemName)
-      const serializedItems = items.map((item) => {
+      const serializedItems = items.filter(isUsefulLineItem).map((item) => {
         if (item.isGroupHeader) {
           return {
             itemName: `[GROUP] ${item.groupTitle || 'Group Section'}`,
