@@ -289,14 +289,18 @@ export default function ProformaInvoicesPage() {
                         )}
                       </td>
                       <td className="px-6 py-4 text-slate-600">
-                        {new Date(invoice.issueDate).toLocaleDateString('en-IN', {
-                          day: '2-digit',
-                          month: 'short',
-                          year: 'numeric'
-                        })}
+                        {invoice.issueDate && !isNaN(new Date(invoice.issueDate).getTime()) ? (
+                          new Date(invoice.issueDate).toLocaleDateString('en-IN', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric'
+                          })
+                        ) : (
+                          <span className="text-slate-400">—</span>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-slate-600">
-                        {invoice.validTill ? (
+                        {invoice.validTill && !isNaN(new Date(invoice.validTill).getTime()) ? (
                           new Date(invoice.validTill).toLocaleDateString('en-IN', {
                             day: '2-digit',
                             month: 'short',
@@ -313,11 +317,15 @@ export default function ProformaInvoicesPage() {
                         {getStatusBadge(invoice.status)}
                       </td>
                       <td className="px-6 py-4 text-slate-400">
-                        {new Date(invoice.createdAt).toLocaleDateString('en-IN', {
-                          day: '2-digit',
-                          month: 'short',
-                          year: 'numeric'
-                        })}
+                        {invoice.createdAt && !isNaN(new Date(invoice.createdAt).getTime()) ? (
+                          new Date(invoice.createdAt).toLocaleDateString('en-IN', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric'
+                          })
+                        ) : (
+                          <span className="text-slate-400">—</span>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">

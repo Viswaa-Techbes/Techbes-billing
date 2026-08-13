@@ -576,7 +576,7 @@ export default function InvoiceEditor({ mode, documentId }: InvoiceEditorProps) 
     setDocTitle(doc.title || 'Invoice');
     setDocSubtitle(doc.subtitle || '');
     setShowSubtitleInput(!!doc.subtitle);
-    setDocumentNumber(doc.documentNumber);
+    setDocumentNumber(doc.documentNumber || '');
     setIsNumberEditable(true);
     setPoNumber(doc.poNumber || '');
     setIssueDate(doc.issueDate ? doc.issueDate.split('T')[0] : '');
@@ -615,7 +615,7 @@ export default function InvoiceEditor({ mode, documentId }: InvoiceEditorProps) 
           id: item._id || Math.random().toString(36).substring(2, 9),
           isGroupHeader: isGroup,
           groupTitle: isGroup ? item.itemName.substring(8) : '',
-          itemName: isGroup ? '' : item.itemName,
+          itemName: isGroup ? '' : (item.itemName || ''),
           description: item.description || '',
           hsnSac: item.hsnSac || '',
           gstRate: item.gstRate || 0,
@@ -1147,7 +1147,7 @@ export default function InvoiceEditor({ mode, documentId }: InvoiceEditorProps) 
     }
 
     for (const item of items) {
-      if (!item.isGroupHeader && !item.itemName.trim()) {
+      if (!item.isGroupHeader && !(item.itemName || '').trim()) {
         showToast('Line item name is required.', 'error');
         return;
       }
@@ -1194,7 +1194,7 @@ export default function InvoiceEditor({ mode, documentId }: InvoiceEditorProps) 
         status: draftOnly ? 'DRAFT' : 'SENT',
         title: docTitle,
         subtitle: docSubtitle,
-        documentNumber: documentNumber.trim(),
+        documentNumber: (documentNumber || '').trim(),
         poNumber,
         issueDate: issueDate ? new Date(issueDate).toISOString() : new Date().toISOString(),
         validTill: dueDate ? new Date(dueDate).toISOString() : undefined,

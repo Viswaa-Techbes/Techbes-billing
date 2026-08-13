@@ -216,11 +216,15 @@ export default function DeliveryChallansListPage() {
                           </span>
                         </td>
                         <td className="px-6 py-4 text-slate-600">
-                          {new Date(challan.issueDate).toLocaleDateString('en-IN', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric'
-                          })}
+                          {challan.issueDate && !isNaN(new Date(challan.issueDate).getTime()) ? (
+                            new Date(challan.issueDate).toLocaleDateString('en-IN', {
+                              day: '2-digit',
+                              month: 'short',
+                              year: 'numeric'
+                            })
+                          ) : (
+                            <span className="text-slate-400">—</span>
+                          )}
                         </td>
                         <td className="px-6 py-4 text-right font-bold text-slate-900">
                           ₹{challan.grandTotal?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}

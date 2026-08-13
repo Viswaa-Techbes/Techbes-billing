@@ -232,7 +232,7 @@ export default function PaymentReceiptDetailPage() {
           </div>
           <div>
             <span className="block font-semibold text-slate-400">Date:</span>
-            <span>{new Date(receipt.receiptDate).toLocaleDateString('en-IN')}</span>
+            <span>{receipt.receiptDate && !isNaN(new Date(receipt.receiptDate).getTime()) ? new Date(receipt.receiptDate).toLocaleDateString('en-IN') : '—'}</span>
           </div>
           <div>
             <span className="block font-semibold text-slate-400">Total Received:</span>
@@ -297,7 +297,11 @@ export default function PaymentReceiptDetailPage() {
                   <div className="invoice-doc-meta-row">
                     <span className="invoice-doc-meta-label">Receipt Date</span>
                     <span className="invoice-doc-meta-value">
-                      {new Date(receipt.receiptDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                      {receipt.receiptDate && !isNaN(new Date(receipt.receiptDate).getTime()) ? (
+                        new Date(receipt.receiptDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                      ) : (
+                        <span className="text-slate-400">—</span>
+                      )}
                     </span>
                   </div>
                   <div className="invoice-doc-meta-row">

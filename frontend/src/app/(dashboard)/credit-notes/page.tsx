@@ -249,11 +249,15 @@ export default function CreditNotesListPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-slate-600">
-                        {new Date(cn.issueDate).toLocaleDateString('en-IN', {
-                          day: '2-digit',
-                          month: 'short',
-                          year: 'numeric'
-                        })}
+                        {cn.issueDate && !isNaN(new Date(cn.issueDate).getTime()) ? (
+                          new Date(cn.issueDate).toLocaleDateString('en-IN', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric'
+                          })
+                        ) : (
+                          <span className="text-slate-400">—</span>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-slate-600">
                         {getReasonLabel(cn.reason)}

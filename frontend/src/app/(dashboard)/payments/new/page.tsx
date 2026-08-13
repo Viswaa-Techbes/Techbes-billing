@@ -785,7 +785,7 @@ export default function NewPaymentReceiptPage() {
                           <tr key={inv._id} className="hover:bg-slate-50/50">
                             <td className="px-4 py-3">
                               <p className="font-bold text-slate-900 font-mono">{inv.documentNumber}</p>
-                              <span className="text-[10px] text-slate-450">Issue: {new Date(inv.issueDate).toLocaleDateString('en-IN')}</span>
+                              <span className="text-[10px] text-slate-455">Issue: {inv.issueDate && !isNaN(new Date(inv.issueDate).getTime()) ? new Date(inv.issueDate).toLocaleDateString('en-IN') : '—'}</span>
                             </td>
                             <td className="px-4 py-3 text-right font-semibold">₹{inv.grandTotal.toLocaleString('en-IN')}</td>
                             <td className="px-4 py-3 text-right">

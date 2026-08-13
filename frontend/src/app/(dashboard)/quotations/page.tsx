@@ -273,14 +273,18 @@ export default function QuotationsPage() {
                         )}
                       </td>
                       <td className="px-6 py-4 text-slate-600">
-                        {new Date(quotation.issueDate).toLocaleDateString('en-IN', {
-                          day: '2-digit',
-                          month: 'short',
-                          year: 'numeric'
-                        })}
+                        {quotation.issueDate && !isNaN(new Date(quotation.issueDate).getTime()) ? (
+                          new Date(quotation.issueDate).toLocaleDateString('en-IN', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric'
+                          })
+                        ) : (
+                          <span className="text-slate-400">—</span>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-slate-600">
-                        {quotation.validTill ? (
+                        {quotation.validTill && !isNaN(new Date(quotation.validTill).getTime()) ? (
                           new Date(quotation.validTill).toLocaleDateString('en-IN', {
                             day: '2-digit',
                             month: 'short',
@@ -297,11 +301,15 @@ export default function QuotationsPage() {
                         {getStatusBadge(quotation.status)}
                       </td>
                       <td className="px-6 py-4 text-slate-400">
-                        {new Date(quotation.createdAt).toLocaleDateString('en-IN', {
-                          day: '2-digit',
-                          month: 'short',
-                          year: 'numeric'
-                        })}
+                        {quotation.createdAt && !isNaN(new Date(quotation.createdAt).getTime()) ? (
+                          new Date(quotation.createdAt).toLocaleDateString('en-IN', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric'
+                          })
+                        ) : (
+                          <span className="text-slate-400">—</span>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">

@@ -218,11 +218,15 @@ export default function SalesOrdersListPage() {
                           </span>
                         </td>
                         <td className="px-6 py-4 text-slate-600">
-                          {new Date(order.issueDate).toLocaleDateString('en-IN', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric'
-                          })}
+                          {order.issueDate && !isNaN(new Date(order.issueDate).getTime()) ? (
+                            new Date(order.issueDate).toLocaleDateString('en-IN', {
+                              day: '2-digit',
+                              month: 'short',
+                              year: 'numeric'
+                            })
+                          ) : (
+                            <span className="text-slate-400">—</span>
+                          )}
                         </td>
                         <td className="px-6 py-4 text-slate-550 font-mono">
                           {order.poNumber || '—'}

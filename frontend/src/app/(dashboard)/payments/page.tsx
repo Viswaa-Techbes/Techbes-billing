@@ -246,11 +246,15 @@ export default function PaymentReceiptsListPage() {
                         </span>
                       </td>
                       <td className="px-5 py-3 text-slate-500">
-                        {new Date(receipt.receiptDate).toLocaleDateString('en-IN', {
-                          day: '2-digit',
-                          month: 'short',
-                          year: 'numeric'
-                        })}
+                        {receipt.receiptDate && !isNaN(new Date(receipt.receiptDate).getTime()) ? (
+                          new Date(receipt.receiptDate).toLocaleDateString('en-IN', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric'
+                          })
+                        ) : (
+                          <span className="text-slate-400">—</span>
+                        )}
                       </td>
                       <td className="px-5 py-3 uppercase text-slate-450 font-mono text-[10px] truncate max-w-[120px]">
                         {methods || '—'}

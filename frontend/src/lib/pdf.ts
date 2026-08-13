@@ -52,25 +52,74 @@ export const downloadDocumentPdf = async (
     }
   };
 
+  const waitForImages = async (root: HTMLElement) => {
+    const images = Array.from(root.querySelectorAll('img'));
+    await Promise.all(images.map((image) => {
+      if (image.complete && image.naturalWidth > 0) return Promise.resolve();
+      return new Promise<void>((resolve) => {
+        image.onload = () => resolve();
+        image.onerror = () => resolve();
+      });
+    }));
+  };
+
   const html2pdf = await loadHtml2Pdf();
   const clone = node.cloneNode(true) as HTMLElement;
   clone.classList.add('pdf-export-document');
   clone.querySelectorAll('.invoice-doc-page-footer, .page-number').forEach((el) => el.remove());
 
-  await html2pdf()
-    .set({
-      filename,
-      margin: [0, 0, 0, 0],
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-      },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', '.print-avoid-break'] },
-    })
-    .from(clone)
-    .save();
+  const host = document.createElement('div');
+  host.setAttribute('aria-hidden', 'true');
+  host.style.position = 'absolute';
+  host.style.left = '0';
+  host.style.top = '0';
+  host.style.width = '210mm';
+  host.style.minHeight = '297mm';
+  host.style.background = '#ffffff';
+  host.style.zIndex = '-1';
+  host.style.pointerEvents = 'none';
+  host.style.overflow = 'visible';
+
+  clone.classList.remove('card-panel', 'rounded-xl', 'shadow-[0_8px_30px_rgba(15,23,42,0.06)]', 'border', 'border-slate-200', 'mx-auto');
+  clone.style.width = '210mm';
+  clone.style.maxWidth = '210mm';
+  clone.style.minHeight = '297mm';
+  clone.style.margin = '0';
+  clone.style.border = '0';
+  clone.style.borderRadius = '0';
+  clone.style.boxShadow = 'none';
+  clone.style.background = '#ffffff';
+
+  host.appendChild(clone);
+  document.body.appendChild(host);
+
+  try {
+    if (document.fonts?.ready) {
+      await document.fonts.ready;
+    }
+    await waitForImages(clone);
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+    await html2pdf()
+      .set({
+        filename,
+        margin: [0, 0, 0, 0],
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff',
+          logging: false,
+          windowWidth: clone.scrollWidth,
+          windowHeight: clone.scrollHeight,
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', '.print-avoid-break'] },
+      })
+      .from(clone)
+      .save();
+  } finally {
+    host.remove();
+  }
 };

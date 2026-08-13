@@ -590,13 +590,21 @@ export default function InvoiceDetailsPage({ params }: InvoiceDetailsProps) {
                   <div className="invoice-doc-meta-row">
                     <span className="invoice-doc-meta-label">Issue Date</span>
                     <span className="invoice-doc-meta-value">
-                      {new Date(document.issueDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                      {document.issueDate && !isNaN(new Date(document.issueDate).getTime()) ? (
+                        new Date(document.issueDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                      ) : (
+                        <span className="text-slate-400">—</span>
+                      )}
                     </span>
                   </div>
                   <div className="invoice-doc-meta-row">
                     <span className="invoice-doc-meta-label">Due Date</span>
                     <span className="invoice-doc-meta-value">
-                      {new Date(document.validTill).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                      {document.validTill && !isNaN(new Date(document.validTill).getTime()) ? (
+                        new Date(document.validTill).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                      ) : (
+                        <span className="text-slate-400">—</span>
+                      )}
                     </span>
                   </div>
                 </div>
@@ -794,10 +802,10 @@ export default function InvoiceDetailsPage({ params }: InvoiceDetailsProps) {
                         <span>₹{Number(document.additionalChargesTotal ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                       </div>
                     )}
-                    {document.roundOff !== 0 && (
+                    {document.roundOff !== undefined && document.roundOff !== null && document.roundOff !== 0 && (
                       <div className="invoice-doc-total-row">
                         <span>Round-off</span>
-                        <span>₹{document.roundOff > 0 ? '+' : ''}{document.roundOff.toFixed(2)}</span>
+                        <span>₹{document.roundOff > 0 ? '+' : ''}{Number(document.roundOff).toFixed(2)}</span>
                       </div>
                     )}
                   </div>

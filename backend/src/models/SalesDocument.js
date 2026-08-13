@@ -30,8 +30,18 @@ const additionalChargeSchema = new mongoose.Schema({
 
 const customFieldSchema = new mongoose.Schema({
   key: { type: String, required: true },
+  label: { type: String },
   value: { type: String, required: true },
 }, { _id: false });
+
+customFieldSchema.pre('validate', function(next) {
+  if (this.label && !this.key) {
+    this.key = this.label;
+  } else if (this.key && !this.label) {
+    this.label = this.key;
+  }
+  next();
+});
 
 const salesDocumentSchema = new mongoose.Schema(
   {
