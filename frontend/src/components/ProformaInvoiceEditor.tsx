@@ -536,6 +536,36 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
     }
   }, [selectedClientId, clients]);
 
+  const createBlankLineItem = (): LineItem => ({
+    id: Math.random().toString(36).substring(2, 9),
+    isGroupHeader: false,
+    itemName: '',
+    description: '',
+    hsnSac: '',
+    gstRate: 18,
+    quantity: 1,
+    unit: 'PCS',
+    rate: 0,
+    discountType: 'NONE',
+    discountValue: 0,
+    productType: 'PRODUCT',
+  });
+
+  const isUsefulLineItem = (item: LineItem) => Boolean(
+    item.isGroupHeader ||
+    item.itemName?.trim() ||
+    item.description?.trim() ||
+    item.hsnSac?.trim() ||
+    item.rate > 0 ||
+    item.discountValue > 0 ||
+    item.image
+  );
+
+  const withTrailingBlankLineItem = (list: LineItem[]) => {
+    const useful = list.filter(isUsefulLineItem);
+    return [...useful, createBlankLineItem()];
+  };
+
   // Calculations logic (copied from backend formulas for live estimates)
   const calculateTotals = () => {
     let subtotal = 0;
@@ -644,37 +674,6 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
   };
 
   const calculated = calculateTotals();
-
-
-  const createBlankLineItem = (): LineItem => ({
-    id: Math.random().toString(36).substring(2, 9),
-    isGroupHeader: false,
-    itemName: '',
-    description: '',
-    hsnSac: '',
-    gstRate: 18,
-    quantity: 1,
-    unit: 'PCS',
-    rate: 0,
-    discountType: 'NONE',
-    discountValue: 0,
-    productType: 'PRODUCT',
-  });
-
-  const isUsefulLineItem = (item: LineItem) => Boolean(
-    item.isGroupHeader ||
-    item.itemName?.trim() ||
-    item.description?.trim() ||
-    item.hsnSac?.trim() ||
-    item.rate > 0 ||
-    item.discountValue > 0 ||
-    item.image
-  );
-
-  const withTrailingBlankLineItem = (list: LineItem[]) => {
-    const useful = list.filter(isUsefulLineItem);
-    return [...useful, createBlankLineItem()];
-  };
 
   // Helper: line item manipulation
   const handleAddItemRow = () => {
