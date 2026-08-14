@@ -319,6 +319,22 @@ export default function InvoiceDetailsPage({ params }: InvoiceDetailsProps) {
   const showPlaceOfSupply = !localSettings.advanced.hidePlaceOfSupply;
   const taxSummaryView = localSettings.advanced.taxSummaryDisplay; // 'Do not show' | 'Summary' | 'Detailed'
 
+  const computePaymentStatus = () => {
+    // Use explicit paymentStatus if present, otherwise derive from amounts
+    if (document.paymentStatus) {
+      // Normalize possible values
+      const status = document.paymentStatus.toUpperCase();
+      if (status === 'PAID' || status === 'PARTIALLY_PAID' || status === 'UNPAID' || status === 'NOT_PAID') {
+        return status.replace('_', ' ');
+      }
+    }
+    const paid = Number(document.paidAmount ?? 0);
+    const total = Number(document.grandTotal ?? 0);
+    if (paid >= total && total > 0) return 'PAID';
+    if (paid > 0 && paid < total) return 'PARTIAL PAID';
+    return 'NOT PAID';
+  };
+
   const getStatusBadge = (status: string) => {
     const styles: Record<string, string> = {
       DRAFT: 'bg-slate-100 text-slate-700 border-slate-200',
@@ -487,11 +503,7 @@ export default function InvoiceDetailsPage({ params }: InvoiceDetailsProps) {
             <span>Issue: {document.issueDate && !isNaN(new Date(document.issueDate).getTime()) ? new Date(document.issueDate).toLocaleDateString('en-IN') : '—'} | Due: {document.validTill && !isNaN(new Date(document.validTill).getTime()) ? new Date(document.validTill).toLocaleDateString('en-IN') : '—'}</span>
           </div>
           <div>
-            <span className="block font-semibold text-slate-455">Payment status:</span>
-            <span className="font-bold text-slate-800 uppercase bg-slate-100 px-2 py-0.5 rounded">
-              {document.paymentStatus || 'UNPAID'}
-            </span>
-          </div>
+            
           <div>
             <span className="block font-semibold text-slate-450">Balance due:</span>
             <span className="font-bold text-slate-900 text-sm">
@@ -574,7 +586,8 @@ export default function InvoiceDetailsPage({ params }: InvoiceDetailsProps) {
               </div>
 
               <div className="invoice-doc-meta">
-                <h1 className="invoice-doc-title">{getDocumentTitle(document.documentType)}</h1>
+                <span className="payment-status-badge" data-status={computePaymentStatus()}>{computePaymentStatus()}</span>
+            <h1 className="invoice-doc-title">{getDocumentTitle(document.documentType)}</h1>
                 {document.subtitle && <p className="invoice-doc-subtitle">{document.subtitle}</p>}
                 <div className="invoice-doc-meta-grid">
                   <div className="invoice-doc-meta-row">
@@ -626,7 +639,7 @@ export default function InvoiceDetailsPage({ params }: InvoiceDetailsProps) {
                   </div>
 
                   {document.shippingDetails?.addressLine1 && (
-                    <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--invoice-border)' }}>
+                    <div style={{ margin: 10, paddingTop: 14, borderTop: '1px solid var(--invoice-border)' }}>
                       <p className="invoice-doc-section-label" style={{ marginBottom: 6 }}>Ship To</p>
                       <div className="invoice-doc-party-detail">
                         <p>{document.shippingDetails.addressLine1}</p>
