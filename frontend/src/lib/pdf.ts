@@ -73,17 +73,25 @@ export const downloadDocumentPdf = async (
   host.style.position = 'absolute';
   host.style.left = '0';
   host.style.top = '0';
-  host.style.width = '210mm';
-  host.style.minHeight = '297mm';
+  host.style.width = '794px';
   host.style.background = '#ffffff';
   host.style.zIndex = '-1';
   host.style.pointerEvents = 'none';
   host.style.overflow = 'visible';
 
-  clone.classList.remove('card-panel', 'rounded-xl', 'shadow-[0_8px_30px_rgba(15,23,42,0.06)]', 'border', 'border-slate-200', 'mx-auto');
-  clone.style.width = '210mm';
-  clone.style.maxWidth = '210mm';
-  clone.style.minHeight = '297mm';
+  clone.classList.remove(
+    'card-panel',
+    'rounded-xl',
+    'shadow-[0_8px_30px_rgba(15,23,42,0.06)]',
+    'border',
+    'border-slate-200',
+    'mx-auto',
+    'min-h-[1100px]',
+    'max-w-[794px]'
+  );
+  clone.style.width = '794px';
+  clone.style.maxWidth = '794px';
+  clone.style.minHeight = 'auto';
   clone.style.margin = '0';
   clone.style.border = '0';
   clone.style.borderRadius = '0';
@@ -111,8 +119,7 @@ export const downloadDocumentPdf = async (
           allowTaint: true,
           backgroundColor: '#ffffff',
           logging: false,
-          windowWidth: clone.scrollWidth,
-          windowHeight: clone.scrollHeight,
+          windowWidth: 794,
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', '.print-avoid-break'] },
