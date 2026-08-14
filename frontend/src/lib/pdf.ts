@@ -111,7 +111,7 @@ export const downloadDocumentPdf = async (
     await html2pdf()
       .set({
         filename,
-        margin: [0, 0, 0, 0],
+        margin: [8, 8, 8, 8],
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: {
           scale: 2,
@@ -122,7 +122,7 @@ export const downloadDocumentPdf = async (
           windowWidth: 794,
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', '.print-avoid-break'] },
+        pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', '.print-avoid-break', '.invoice-doc-footer', '.invoice-doc-words-box'] },
       })
       .from(clone)
       .save();

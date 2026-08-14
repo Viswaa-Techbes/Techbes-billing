@@ -503,8 +503,6 @@ export default function InvoiceDetailsPage({ params }: InvoiceDetailsProps) {
             <span>Issue: {document.issueDate && !isNaN(new Date(document.issueDate).getTime()) ? new Date(document.issueDate).toLocaleDateString('en-IN') : '—'} | Due: {document.validTill && !isNaN(new Date(document.validTill).getTime()) ? new Date(document.validTill).toLocaleDateString('en-IN') : '—'}</span>
           </div>
           <div>
-            
-          <div>
             <span className="block font-semibold text-slate-450">Balance due:</span>
             <span className="font-bold text-slate-900 text-sm">
               ₹{Number(document.balanceDue ?? document.grandTotal ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
@@ -558,8 +556,9 @@ export default function InvoiceDetailsPage({ params }: InvoiceDetailsProps) {
           >
             <div className="invoice-doc-accent-bar" />
 
-            {/* Header */}
+            {/* ─── HEADER ─── */}
             <div className="invoice-doc-header print-avoid-break">
+              {/* Left: logo + company info */}
               <div className="invoice-doc-brand">
                 {document.businessSnapshot?.logo ? (
                   <img
@@ -575,19 +574,43 @@ export default function InvoiceDetailsPage({ params }: InvoiceDetailsProps) {
                   <div className="invoice-doc-company-detail">
                     {document.businessSnapshot?.address?.addressLine1 && <p>{document.businessSnapshot.address.addressLine1}</p>}
                     {document.businessSnapshot?.address?.addressLine2 && <p>{document.businessSnapshot.address.addressLine2}</p>}
-                    <p>
-                      {document.businessSnapshot?.address?.city}, {document.businessSnapshot?.address?.state} – {document.businessSnapshot?.address?.pincode}
-                    </p>
+                    <p>{document.businessSnapshot?.address?.city}, {document.businessSnapshot?.address?.state} – {document.businessSnapshot?.address?.pincode}</p>
                     {document.businessSnapshot?.gstin && <p><strong>GSTIN:</strong> {document.businessSnapshot.gstin}</p>}
                     {document.businessSnapshot?.pan && <p><strong>PAN:</strong> {document.businessSnapshot.pan}</p>}
-                    <p>{document.businessSnapshot?.email} &nbsp;|&nbsp; {document.businessSnapshot?.phone}</p>
+                    {document.businessSnapshot?.msmeUdyam && <p><strong>MSME UDYAM:</strong> {document.businessSnapshot.msmeUdyam}</p>}
+                    <p>{document.businessSnapshot?.email}&nbsp;|&nbsp;{document.businessSnapshot?.phone}</p>
                   </div>
                 </div>
               </div>
 
+              {/* Right: title + payment badge + meta */}
               <div className="invoice-doc-meta">
-                <span className="payment-status-badge" data-status={computePaymentStatus()}>{computePaymentStatus()}</span>
-            <h1 className="invoice-doc-title">{getDocumentTitle(document.documentType)}</h1>
+                {/* Payment Status Badge — top-left of meta column (visually top-right of doc) */}
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+                  <span
+                    className="payment-status-badge"
+                    data-status={computePaymentStatus()}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      padding: '4px 12px',
+                      borderRadius: 6,
+                      fontSize: 11,
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      background:
+                        computePaymentStatus() === 'PAID' ? '#d1fae5' :
+                        computePaymentStatus() === 'PARTIAL PAID' ? '#fef3c7' : '#fee2e2',
+                      color:
+                        computePaymentStatus() === 'PAID' ? '#065f46' :
+                        computePaymentStatus() === 'PARTIAL PAID' ? '#92400e' : '#991b1b',
+                    }}
+                  >
+                    {computePaymentStatus()}
+                  </span>
+                </div>
+                <h1 className="invoice-doc-title">{getDocumentTitle(document.documentType)}</h1>
                 {document.subtitle && <p className="invoice-doc-subtitle">{document.subtitle}</p>}
                 <div className="invoice-doc-meta-grid">
                   <div className="invoice-doc-meta-row">
@@ -603,44 +626,59 @@ export default function InvoiceDetailsPage({ params }: InvoiceDetailsProps) {
                   <div className="invoice-doc-meta-row">
                     <span className="invoice-doc-meta-label">Issue Date</span>
                     <span className="invoice-doc-meta-value">
-                      {document.issueDate && !isNaN(new Date(document.issueDate).getTime()) ? (
-                        new Date(document.issueDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
-                      ) : (
-                        <span className="text-slate-400">—</span>
-                      )}
+                      {document.issueDate && !isNaN(new Date(document.issueDate).getTime())
+                        ? new Date(document.issueDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                        : <span style={{ color: '#94a3b8' }}>—</span>}
                     </span>
                   </div>
                   <div className="invoice-doc-meta-row">
                     <span className="invoice-doc-meta-label">Due Date</span>
                     <span className="invoice-doc-meta-value">
-                      {document.validTill && !isNaN(new Date(document.validTill).getTime()) ? (
-                        new Date(document.validTill).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
-                      ) : (
-                        <span className="text-slate-400">—</span>
-                      )}
+                      {document.validTill && !isNaN(new Date(document.validTill).getTime())
+                        ? new Date(document.validTill).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                        : <span style={{ color: '#94a3b8' }}>—</span>}
                     </span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Bill To / Invoice Details */}
+            {/* ─── BILL TO / INVOICE DETAILS ─── */}
             <div className="invoice-doc-section print-avoid-break">
               <div className="invoice-doc-parties">
+                {/* Billed By */}
                 <div className="invoice-doc-party-box">
-                  <p className="invoice-doc-section-label">Bill To</p>
+                  <p className="invoice-doc-section-label">Billed By</p>
+                  <p className="invoice-doc-party-name">{document.businessSnapshot?.businessName}</p>
+                  <div className="invoice-doc-party-detail">
+                    {document.businessSnapshot?.address?.addressLine1 && <p>{document.businessSnapshot.address.addressLine1}</p>}
+                    {document.businessSnapshot?.address?.addressLine2 && <p>{document.businessSnapshot.address.addressLine2}</p>}
+                    <p>{document.businessSnapshot?.address?.city}, {document.businessSnapshot?.address?.state} – {document.businessSnapshot?.address?.pincode}</p>
+                    {document.businessSnapshot?.gstin && <p><strong>GSTIN:</strong> {document.businessSnapshot.gstin}</p>}
+                    {document.businessSnapshot?.pan && <p><strong>PAN:</strong> {document.businessSnapshot.pan}</p>}
+                    <p>{document.businessSnapshot?.email}</p>
+                    <p>{document.businessSnapshot?.phone}</p>
+                    {document.businessSnapshot?.msmeUdyam && <p><strong>MSME UDYAM:</strong> {document.businessSnapshot.msmeUdyam}</p>}
+                  </div>
+                </div>
+
+                {/* Billed To */}
+                <div className="invoice-doc-party-box invoice-doc-party-box--white">
+                  <p className="invoice-doc-section-label">Billed To</p>
                   <p className="invoice-doc-party-name">{document.clientSnapshot?.businessName || document.clientSnapshot?.clientName}</p>
                   <div className="invoice-doc-party-detail">
-                    <p>{document.clientSnapshot?.billingAddress?.addressLine1}</p>
-                    <p>
-                      {document.clientSnapshot?.billingAddress?.city}, {document.clientSnapshot?.billingAddress?.state} – {document.clientSnapshot?.billingAddress?.pincode}
-                    </p>
+                    {document.clientSnapshot?.billingAddress?.addressLine1 && <p>{document.clientSnapshot.billingAddress.addressLine1}</p>}
+                    {document.clientSnapshot?.billingAddress?.city && (
+                      <p>{document.clientSnapshot.billingAddress.city}, {document.clientSnapshot.billingAddress.state} – {document.clientSnapshot.billingAddress.pincode}</p>
+                    )}
                     {document.clientSnapshot?.gstin && <p><strong>GSTIN:</strong> {document.clientSnapshot.gstin}</p>}
+                    {document.clientSnapshot?.pan && <p><strong>PAN:</strong> {document.clientSnapshot.pan}</p>}
+                    {document.clientSnapshot?.email && <p>{document.clientSnapshot.email}</p>}
+                    {document.clientSnapshot?.phone && <p>{document.clientSnapshot.phone}</p>}
                   </div>
-
                   {document.shippingDetails?.addressLine1 && (
-                    <div style={{ margin: 10, paddingTop: 14, borderTop: '1px solid var(--invoice-border)' }}>
-                      <p className="invoice-doc-section-label" style={{ marginBottom: 6 }}>Ship To</p>
+                    <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--invoice-border)' }}>
+                      <p className="invoice-doc-section-label" style={{ marginBottom: 4 }}>Ship To</p>
                       <div className="invoice-doc-party-detail">
                         <p>{document.shippingDetails.addressLine1}</p>
                         <p>{document.shippingDetails.city}, {document.shippingDetails.state} – {document.shippingDetails.pincode}</p>
@@ -648,73 +686,61 @@ export default function InvoiceDetailsPage({ params }: InvoiceDetailsProps) {
                     </div>
                   )}
                 </div>
-
-                <div className="invoice-doc-party-box invoice-doc-party-box--white">
-                  <p className="invoice-doc-section-label">Invoice Details</p>
-                  <div className="invoice-doc-detail-row">
-                    <span className="invoice-doc-detail-label">Invoice No</span>
-                    <span className="invoice-doc-detail-value">{document.documentNumber}</span>
-                  </div>
-                  {document.poNumber && (
-                    <div className="invoice-doc-detail-row">
-                      <span className="invoice-doc-detail-label">PO Ref</span>
-                      <span className="invoice-doc-detail-value">{document.poNumber}</span>
-                    </div>
-                  )}
-                  {showPlaceOfSupply && document.gstConfiguration?.placeOfSupply?.state && (
-                    <div className="invoice-doc-detail-row">
-                      <span className="invoice-doc-detail-label">Place of Supply</span>
-                      <span className="invoice-doc-detail-value">{document.gstConfiguration.placeOfSupply.state}</span>
-                    </div>
-                  )}
-                  {document.customFields?.map((field: any, index: number) => (
-                    <div key={index} className="invoice-doc-detail-row">
-                      <span className="invoice-doc-detail-label">{field.label}</span>
-                      <span className="invoice-doc-detail-value">{field.value}</span>
-                    </div>
-                  ))}
-                </div>
               </div>
             </div>
 
-            {/* Line Items Table */}
+            {/* ─── LINE ITEMS TABLE ─── */}
             <div className="invoice-doc-section">
               <div className="invoice-doc-table-wrap">
                 <table className={`invoice-doc-table ${localSettings.design.tableStyle === 'Striped' ? 'striped' : ''}`}>
                   <thead>
                     <tr>
-                      <th>Item Description</th>
-                      {localSettings.advanced.hsnColumnView !== 'Hide' && <th>HSN/SAC</th>}
-                      {document.gstConfiguration?.gstEnabled && <th>GST %</th>}
-                      <th className="text-right">Qty</th>
-                      <th className="text-right">Rate</th>
-                      <th className="text-right">Amount</th>
+                      <th style={{ width: '4%', textAlign: 'center' }}>#</th>
+                      <th style={{ width: localSettings.advanced.hsnColumnView !== 'Hide' ? '26%' : '34%' }}>Item / Description</th>
+                      {localSettings.advanced.hsnColumnView !== 'Hide' && <th style={{ width: '9%', textAlign: 'center' }}>HSN/SAC</th>}
+                      {localSettings.advanced.unitDisplay === 'Separate column' && <th style={{ width: '6%', textAlign: 'center' }}>Unit</th>}
+                      <th style={{ width: '7%', textAlign: 'center' }}>Qty</th>
+                      <th style={{ width: '12%', textAlign: 'right' }}>Rate</th>
+                      {document.gstConfiguration?.gstEnabled && <th style={{ width: '7%', textAlign: 'center' }}>GST%</th>}
+                      {document.gstConfiguration?.gstEnabled && <th style={{ width: '12%', textAlign: 'right' }}>Tax Amt</th>}
+                      <th style={{ width: '13%', textAlign: 'right' }}>Amount</th>
                     </tr>
                   </thead>
                   <tbody>
                     {document.items?.map((item: any, i: number) => {
                       const isGroup = item.itemName && item.itemName.startsWith('[GROUP] ');
                       if (isGroup) {
+                        const colCount = 3
+                          + (localSettings.advanced.hsnColumnView !== 'Hide' ? 1 : 0)
+                          + (localSettings.advanced.unitDisplay === 'Separate column' ? 1 : 0)
+                          + (document.gstConfiguration?.gstEnabled ? 2 : 0);
                         return (
                           <tr key={i} className="group-row">
-                            <td colSpan={6}>{item.itemName.substring(8)}</td>
+                            <td colSpan={colCount}>{item.itemName.substring(8)}</td>
                           </tr>
                         );
                       }
 
+                      const qty = Number(item.quantity ?? 0);
+                      const rate = Number(item.rate ?? 0);
+                      const itemDiscount = Number(item.itemDiscountAmount ?? 0);
+                      const lineAmt = qty * rate - itemDiscount;
+                      const gstRate = Number(item.gstRate ?? 0);
+                      const taxAmt = lineAmt * (gstRate / 100);
+
                       return (
                         <tr key={i}>
+                          <td style={{ textAlign: 'center', color: 'var(--invoice-label)', fontSize: 10 }}>{i + 1}</td>
                           <td className="item-name">
-                            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                            <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
                               {localSettings.advanced.showOriginalItemImages && item.image && (
-                                <img
-                                  src={formatImageSrc(item.image)}
-                                  alt="item"
-                                  style={{ width: 36, height: 36, objectFit: 'contain', border: '1px solid var(--invoice-border)', borderRadius: 4, flexShrink: 0 }}
-                                />
+                                <img src={formatImageSrc(item.image)} alt="item" style={{ width: 32, height: 32, objectFit: 'contain', border: '1px solid var(--invoice-border)', borderRadius: 4, flexShrink: 0 }} />
                               )}
                               <div>
                                 <span>{item.itemName}</span>
+                                {localSettings.advanced.showSKU && item.sku && (
+                                  <p style={{ fontSize: 9, color: 'var(--invoice-label)', marginTop: 2 }}>SKU: {item.sku}</p>
+                                )}
                                 {item.description && (
                                   <p style={{ marginTop: 3, fontSize: 10, color: 'var(--invoice-muted)', fontWeight: 400, whiteSpace: 'pre-wrap' }}>{item.description}</p>
                                 )}
@@ -722,16 +748,22 @@ export default function InvoiceDetailsPage({ params }: InvoiceDetailsProps) {
                             </div>
                           </td>
                           {localSettings.advanced.hsnColumnView !== 'Hide' && (
-                            <td style={{ fontFamily: 'monospace', fontSize: 11 }}>{item.hsnSac || '—'}</td>
+                            <td style={{ fontFamily: 'monospace', fontSize: 10, textAlign: 'center' }}>{item.hsnSac || '—'}</td>
                           )}
-                          {document.gstConfiguration?.gstEnabled && <td>{item.gstRate || 0}%</td>}
-                          <td style={{ textAlign: 'right' }}>
-                            {item.quantity} {localSettings.advanced.unitDisplay === 'Separate column' ? (item.unit || 'PCS') : ''}
+                          {localSettings.advanced.unitDisplay === 'Separate column' && (
+                            <td style={{ textAlign: 'center' }}>{item.unit || 'PCS'}</td>
+                          )}
+                          <td style={{ textAlign: 'center' }}>
+                            {item.quantity}{localSettings.advanced.unitDisplay !== 'Separate column' ? ` ${item.unit || 'PCS'}` : ''}
                           </td>
-                          <td style={{ textAlign: 'right' }}>₹{Number(item.rate ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-                          <td className="item-amount">
-                            ₹{Number(((item.quantity ?? 0) * (item.rate ?? 0)) - (item.itemDiscountAmount ?? 0)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                          </td>
+                          <td style={{ textAlign: 'right' }}>₹{rate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                          {document.gstConfiguration?.gstEnabled && (
+                            <td style={{ textAlign: 'center' }}>{gstRate}%</td>
+                          )}
+                          {document.gstConfiguration?.gstEnabled && (
+                            <td style={{ textAlign: 'right' }}>₹{taxAmt.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                          )}
+                          <td className="item-amount">₹{lineAmt.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                         </tr>
                       );
                     })}
@@ -740,9 +772,10 @@ export default function InvoiceDetailsPage({ params }: InvoiceDetailsProps) {
               </div>
             </div>
 
-            {/* Totals */}
+            {/* ─── TOTALS + BANK DETAILS ─── */}
             <div className="invoice-doc-section totals-section print-avoid-break">
               <div className="invoice-doc-totals-grid">
+                {/* Left: Notes + Bank */}
                 <div>
                   {document.notes && (
                     <div className="invoice-doc-notes-box">
@@ -750,107 +783,92 @@ export default function InvoiceDetailsPage({ params }: InvoiceDetailsProps) {
                       <p className="invoice-doc-terms-text">{document.notes}</p>
                     </div>
                   )}
-
                   {document.bankDetails?.accountNumber && (
                     <div className="invoice-doc-bank-box" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
-                        <p className="invoice-doc-section-label" style={{ marginBottom: 8, borderBottom: 'none', paddingBottom: 0 }}>Payment Details</p>
-                        <p><strong>Bank:</strong> {document.bankDetails.bankName}</p>
-                        <p><strong>A/C Holder:</strong> {document.bankDetails.accountHolderName}</p>
-                        <p><strong>A/C Number:</strong> <span style={{ fontFamily: 'monospace', fontWeight: 700 }}>{document.bankDetails.accountNumber}</span></p>
+                        <p className="invoice-doc-section-label" style={{ marginBottom: 8 }}>Bank Details</p>
+                        {document.bankDetails.bankName && <p><strong>Bank:</strong> {document.bankDetails.bankName}</p>}
+                        {document.bankDetails.accountHolderName && <p><strong>Account Name:</strong> {document.bankDetails.accountHolderName}</p>}
+                        <p><strong>Account Number:</strong> <span style={{ fontFamily: 'monospace', fontWeight: 700 }}>{document.bankDetails.accountNumber}</span></p>
                         <p><strong>IFSC:</strong> <span style={{ fontFamily: 'monospace', fontWeight: 700, textTransform: 'uppercase' }}>{document.bankDetails.ifsc}</span></p>
+                        {document.bankDetails.accountType && <p><strong>Account Type:</strong> {document.bankDetails.accountType}</p>}
                         {document.bankDetails.branchName && <p><strong>Branch:</strong> {document.bankDetails.branchName}</p>}
                       </div>
                       {(document.businessSnapshot?.qrCodeUrl || businessProfile?.qrCodeUrl) && (
-                        <div style={{ marginLeft: '16px', textAlign: 'center' }}>
-                          <img 
-                            src={document.businessSnapshot?.qrCodeUrl || businessProfile?.qrCodeUrl} 
-                            alt="UPI QR Code" 
-                            style={{ width: '80px', height: '80px', objectFit: 'contain' }}
+                        <div style={{ marginLeft: 16, textAlign: 'center', flexShrink: 0 }}>
+                          <img
+                            src={document.businessSnapshot?.qrCodeUrl || businessProfile?.qrCodeUrl}
+                            alt="UPI QR Code"
+                            style={{ width: 72, height: 72, objectFit: 'contain' }}
                           />
-                          <p style={{ fontSize: '9px', color: '#64748b', marginTop: '4px' }}>Scan to Pay</p>
+                          <p style={{ fontSize: 9, color: '#64748b', marginTop: 4 }}>Scan to Pay</p>
                         </div>
                       )}
                     </div>
                   )}
                 </div>
 
+                {/* Right: Totals panel */}
                 <div className="invoice-doc-totals-panel">
                   <div className="invoice-doc-totals-rows">
                     <div className="invoice-doc-total-row">
-                      <span>Subtotal</span>
+                      <span>Amount</span>
                       <span>₹{Number(document.subtotal ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                     </div>
-                    {document.documentDiscountAmount > 0 && (
+                    {Number(document.documentDiscountAmount ?? 0) > 0 && (
                       <div className="invoice-doc-total-row">
-                        <span>Discount</span>
-                        <span>− ₹{Number(document.documentDiscountAmount ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                        <span>Discounts</span>
+                        <span>−&nbsp;₹{Number(document.documentDiscountAmount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                       </div>
                     )}
                     {document.gstConfiguration?.gstEnabled && (
                       <>
-                        {document.cgstTotal > 0 && (
+                        {Number(document.cgstTotal ?? 0) > 0 && (
                           <div className="invoice-doc-total-row">
                             <span>CGST</span>
-                            <span>₹{Number(document.cgstTotal ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                            <span>₹{Number(document.cgstTotal).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                           </div>
                         )}
-                        {document.sgstTotal > 0 && (
+                        {Number(document.sgstTotal ?? 0) > 0 && (
                           <div className="invoice-doc-total-row">
                             <span>SGST</span>
-                            <span>₹{Number(document.sgstTotal ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                            <span>₹{Number(document.sgstTotal).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                           </div>
                         )}
-                        {document.igstTotal > 0 && (
+                        {Number(document.igstTotal ?? 0) > 0 && (
                           <div className="invoice-doc-total-row">
                             <span>IGST</span>
-                            <span>₹{Number(document.igstTotal ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                            <span>₹{Number(document.igstTotal).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                           </div>
                         )}
                       </>
                     )}
-                    {document.additionalChargesTotal > 0 && (
+                    {Number(document.additionalChargesTotal ?? 0) > 0 && (
                       <div className="invoice-doc-total-row">
                         <span>Shipping &amp; Charges</span>
-                        <span>₹{Number(document.additionalChargesTotal ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                        <span>₹{Number(document.additionalChargesTotal).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                       </div>
                     )}
                     {document.roundOff !== undefined && document.roundOff !== null && document.roundOff !== 0 && (
                       <div className="invoice-doc-total-row">
-                        <span>Round-off</span>
-                        <span>₹{document.roundOff > 0 ? '+' : ''}{Number(document.roundOff).toFixed(2)}</span>
+                        <span>Round on</span>
+                        <span>{document.roundOff > 0 ? '+' : ''}₹{Number(document.roundOff).toFixed(2)}</span>
                       </div>
                     )}
+                    <div className="invoice-doc-total-row">
+                      <span>Round Up</span>
+                      <span>₹0.00</span>
+                    </div>
                   </div>
                   <div className="invoice-doc-grand-total">
-                    <span className="invoice-doc-grand-total-label">Grand Total</span>
+                    <span className="invoice-doc-grand-total-label">Total (INR)</span>
                     <span className="invoice-doc-grand-total-value">₹{Number(document.grandTotal ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                   </div>
                   {document.documentType === 'INVOICE' && (
-                    <div className="p-3 bg-slate-50 border-t border-slate-200 text-xs space-y-1.5 print:bg-slate-50/50 print-avoid-break">
-                      <div className="flex justify-between text-slate-600">
-                        <span>Amount Paid:</span>
-                        <span className="font-semibold text-slate-800">₹{Number(document.amountPaid ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                      </div>
-                      <div className="flex justify-between text-slate-600">
-                        <span>Remaining Balance:</span>
-                        <span className="font-bold text-amber-700">₹{Number(document.balanceDue ?? document.grandTotal ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                      </div>
-                      <div className="flex justify-between items-center text-slate-600 pt-1 border-t border-slate-200">
-                        <span>Payment Status:</span>
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                          Number(document.balanceDue ?? document.grandTotal ?? 0) === 0 
-                            ? 'bg-emerald-100 text-emerald-800' 
-                            : (document.amountPaid || 0) > 0 
-                              ? 'bg-amber-100 text-amber-800' 
-                              : 'bg-rose-100 text-rose-800'
-                        }`}>
-                          {Number(document.balanceDue ?? document.grandTotal ?? 0) === 0 
-                            ? 'Paid' 
-                            : (document.amountPaid || 0) > 0 
-                              ? 'Partially Paid' 
-                              : 'Unpaid'}
-                        </span>
+                    <div style={{ padding: '10px 18px', background: '#f8fafc', borderTop: '1px solid var(--invoice-border)', fontSize: 11 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: 6 }}>
+                        <span style={{ color: 'var(--invoice-muted)' }}>Amount Paid</span>
+                        <span style={{ fontWeight: 700, color: 'var(--invoice-text)' }}>(₹{Number(document.amountPaid ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })})</span>
                       </div>
                     </div>
                   )}
@@ -858,21 +876,25 @@ export default function InvoiceDetailsPage({ params }: InvoiceDetailsProps) {
               </div>
             </div>
 
-            {/* Footer */}
-            <div className="invoice-doc-footer print-avoid-break">
+            {/* ─── FOOTER: Amount in Words + Terms + Signature ─── */}
+            <div
+              className="invoice-doc-footer print-avoid-break"
+              style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}
+            >
+              {document.grandTotalInWords && (
+                <div className="invoice-doc-words-box" style={{ marginBottom: 16 }}>
+                  <p className="invoice-doc-words-label">Amount in Words</p>
+                  <p className="invoice-doc-words-text">{document.grandTotalInWords}</p>
+                </div>
+              )}
+
               <div className="invoice-doc-footer-grid">
-                <div>
-                  {document.grandTotalInWords && (
-                    <div className="invoice-doc-words-box">
-                      <p className="invoice-doc-words-label">Amount in Words</p>
-                      <p className="invoice-doc-words-text">{document.grandTotalInWords}</p>
-                    </div>
-                  )}
+                <div style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                   {document.terms && (
-                    <div>
+                    <>
                       <p className="invoice-doc-terms-title">Terms &amp; Conditions</p>
                       <p className="invoice-doc-terms-text">{document.terms}</p>
-                    </div>
+                    </>
                   )}
                 </div>
 

@@ -105,7 +105,7 @@ input[type="number"] {
 
 /* ── Invoice Document (screen preview + print) ── */
 .invoice-print-shell {
-  padding: 15mm 20mm 25mm !important;
+  padding: 12mm 16mm 20mm !important;
   box-sizing: border-box;
   position: relative;
 }
@@ -146,19 +146,19 @@ input[type="number"] {
 
 .invoice-doc-logo {
   flex-shrink: 0;
-  width: 140px;
-  height: 140px;
+  width: 90px;
+  height: 90px;
   object-fit: contain;
   border: 1px solid var(--invoice-border);
   border-radius: 8px;
   background: #ffffff;
-  padding: 8px;
+  padding: 6px;
 }
 
 .invoice-doc-logo-placeholder {
   flex-shrink: 0;
-  width: 140px;
-  height: 140px;
+  width: 90px;
+  height: 90px;
   border: 1px dashed var(--invoice-border);
   border-radius: 8px;
   background: #f8fafc;
@@ -386,8 +386,8 @@ input[type="number"] {
 
 .invoice-doc-totals-grid {
   display: grid;
-  grid-template-columns: 1fr 340px;
-  gap: 24px;
+  grid-template-columns: 1fr 320px;
+  gap: 20px;
   align-items: start;
 }
 
@@ -462,9 +462,11 @@ input[type="number"] {
 }
 
 .invoice-doc-footer {
-  margin-top: 28px;
-  padding: 20px 0 0;
+  margin-top: 24px;
+  padding: 18px 0 0;
   border-top: 2px solid var(--invoice-border);
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
 }
 
 .invoice-doc-footer-grid {
@@ -548,6 +550,37 @@ input[type="number"] {
   letter-spacing: 0.08em;
   color: var(--invoice-label);
   margin-top: 2px;
+}
+
+/* Payment status badge — colored per status */
+.payment-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+
+.payment-status-badge[data-status="PAID"] {
+  background-color: #d1fae5 !important;
+  color: #065f46 !important;
+}
+
+.payment-status-badge[data-status="NOT PAID"],
+.payment-status-badge[data-status="UNPAID"],
+.payment-status-badge[data-status="NOT PAID"] {
+  background-color: #fee2e2 !important;
+  color: #991b1b !important;
+}
+
+.payment-status-badge[data-status="PARTIAL PAID"],
+.payment-status-badge[data-status="PARTIALLY PAID"] {
+  background-color: #fef3c7 !important;
+  color: #92400e !important;
 }
 
 .invoice-doc-page-footer {
@@ -713,10 +746,10 @@ input[type="number"] {
   }
 
   .invoice-print-shell {
-    padding: 15mm 20mm 25mm !important;
+    padding: 12mm 16mm 18mm !important;
     border: 0 !important;
     box-shadow: none !important;
-    font-size: 10.5pt !important;
+    font-size: 10pt !important;
     width: 210mm !important;
     min-height: 297mm !important;
     box-sizing: border-box !important;
@@ -749,8 +782,8 @@ input[type="number"] {
 
   .invoice-doc-logo,
   .invoice-doc-logo-placeholder {
-    width: 130px !important;
-    height: 130px !important;
+    width: 80px !important;
+    height: 80px !important;
   }
 
   .invoice-doc-company-name {
@@ -784,10 +817,18 @@ input[type="number"] {
   }
 
   .invoice-doc-grand-total-value {
-    font-size: 18pt !important;
+    font-size: 16pt !important;
   }
 
+  .invoice-doc-footer {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
 
+  .invoice-doc-words-box {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
 
   .invoice-doc-page-footer,
   .page-number {
