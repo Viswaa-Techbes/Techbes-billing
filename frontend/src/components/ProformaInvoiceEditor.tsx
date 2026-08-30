@@ -686,6 +686,18 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
     setItems(withTrailingBlankLineItem(list));
   };
 
+  const handleRemoveRow = (index: number) => {
+    const list = [...items];
+    list.splice(index, 1);
+    // Ensure at least one editable line item remains
+    if (list.length === 0) {
+      list.push(createBlankLineItem());
+      setItems(list);
+    } else {
+      setItems(withTrailingBlankLineItem(list));
+    }
+  };
+
   const handleDuplicateRow = (index: number) => {
     const list = [...items];
     const source = list[index];
@@ -695,12 +707,6 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
     };
     list.splice(index + 1, 0, clone);
     setItems(list);
-  };
-
-  const handleRemoveRow = (index: number) => {
-    const list = [...items];
-    list.splice(index, 1);
-    setItems(withTrailingBlankLineItem(list));
   };
 
   // Image helpers
@@ -1409,16 +1415,16 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
 
             {/* Dynamic Items Table */}
             <div className="overflow-x-auto border border-slate-200 rounded-2xl bg-white">
-              <table className="w-full border-collapse text-left text-xs min-w-[800px]">
+              <table className="w-full border-collapse text-left text-xs min-w-[1000px]">
                 <thead>
                   <tr className="border-b border-slate-200 bg-slate-50 text-slate-500 font-semibold uppercase text-[10px] tracking-wider">
-                    <th className="px-4 py-3 min-w-[200px]">Item Description</th>
-                    {columnVisibility.hsnSac && <th className="px-3 py-3 w-28">HSN/SAC</th>}
-                    {columnVisibility.gstRate && gstEnabled && <th className="px-3 py-3 w-24">GST %</th>}
-                    {columnVisibility.quantity && <th className="px-3 py-3 w-24">Qty</th>}
-                    {columnVisibility.rate && <th className="px-3 py-3 w-32">Rate</th>}
-                    {columnVisibility.amount && <th className="px-3 py-3 w-32">Base Amount</th>}
-                    <th className="px-3 py-3 w-24 text-right">Actions</th>
+                    <th className="px-4 py-3 min-w-[250px]">Item Description</th>
+                    {columnVisibility.hsnSac && <th className="px-3 py-3 w-32">HSN/SAC</th>}
+                    {columnVisibility.gstRate && gstEnabled && <th className="px-3 py-3 w-28">GST %</th>}
+                    {columnVisibility.quantity && <th className="px-3 py-3 w-28">Qty</th>}
+                    {columnVisibility.rate && <th className="px-3 py-3 w-40">Rate</th>}
+                    {columnVisibility.amount && <th className="px-3 py-3 w-36">Base Amount</th>}
+                    <th className="px-3 py-3 w-28 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-700">
@@ -2195,14 +2201,14 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
               disabled={saving}
               className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-sm flex items-center justify-center gap-2 text-xs"
             >
-              {saving ? 'Saving...' : 'Save & Continue'}
+              {saving ? <LoadingSpinner size="sm" /> : 'Save & Continue'}
             </button>
             <button
               onClick={() => handleSaveDocument(true, false)}
               disabled={saving}
               className="w-full py-2.5 border border-slate-350 bg-white hover:bg-slate-50 font-bold rounded-xl text-xs text-slate-700 transition-all flex items-center justify-center"
             >
-              Save as Draft
+              {saving ? <LoadingSpinner size="sm" /> : 'Save as Draft'}
             </button>
             <Link
               href="/proforma-invoices"
