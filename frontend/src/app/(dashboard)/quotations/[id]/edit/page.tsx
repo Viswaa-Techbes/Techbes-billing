@@ -111,191 +111,10 @@ export default function EditQuotationPage() {
             setShippingAddress(doc.shippingAddress);
           }
 
-          setItems(doc.items || []);
-          
-          if (doc.documentDiscountType !== 'NONE') {
-            setEnableDocDiscount(true);
-            setDocDiscountType(doc.documentDiscountType);
-            setDocDiscountValue(doc.documentDiscountValue || 0);
-          }
-
-          setAdditionalCharges(doc.additionalCharges || []);
-          setTerms(doc.terms || '');
-          setNotes(doc.notes || '');
-          setFooter(doc.footer || '');
-          setCustomFields(doc.customFields || []);
-          setSignatoryName(doc.signatoryName || '');
-          
-          if (doc.displayOptions) {
-            setDisplayOptions(doc.displayOptions);
-          }
-        }
-      } catch (err: any) {
-        showToast('Failed to load document details or configuration parameters.', 'error');
-        router.push('/quotations');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (id) {
-      loadConfigurationAndDocument();
-    }
-  }, [id]);
-
-  // Sync selectedClient state when selectedClientId or clients changes
-  useEffect(() => {
-    if (selectedClientId && clients.length > 0) {
-      const client = clients.find(c => c._id === selectedClientId);
-      setSelectedClient(client || null);
-    }
-  }, [selectedClientId, clients]);
-
-  // Handle client selection change
-  const handleClientChange = (clientId: string) => {
-    setSelectedClientId(clientId);
-    const client = clients.find(c => c._id === clientId);
-    setSelectedClient(client || null);
-    
-    if (client) {
-      if (client.billingAddress?.state) {
-        setPlaceOfSupply({
-          state: client.billingAddress.state,
-          stateCode: client.billingAddress.stateCode || '',
-        });
-      }
-      
-      if (client.shippingAddress) {
-        setShippingAddress({
-          addressLine1: client.shippingAddress.addressLine1 || '',
-          addressLine2: client.shippingAddress.addressLine2 || '',
-          city: client.shippingAddress.city || '',
-          state: client.shippingAddress.state || '',
-          stateCode: client.shippingAddress.stateCode || '',
-          country: client.shippingAddress.country || 'India',
-          pincode: client.shippingAddress.pincode || '',
-        });
-      }
-    }
-  };
-
-  const handlePlaceOfSupplyChange = (stateName: string) => {
-    const selected = INDIAN_STATES.find(s => s.name === stateName);
-    setPlaceOfSupply({
-'use client';
-
-import React, { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import Link from 'next/link';
-import api from '@/lib/api';
-import { useToast } from '@/context/ToastContext';
-import PageHeader from '@/components/PageHeader';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { INDIAN_STATES } from '@/lib/constants';
-import ItemAutocomplete from '@/components/ItemAutocomplete';
-
-export default function EditQuotationPage() {
-  const router = useRouter();
-  const { id } = useParams();
-  const { showToast } = useToast();
-
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [activeStep, setActiveStep] = useState<1 | 2>(1); // Step 1: Edit, Step 2: Review
-
-  // Core business & clients lists
-  const [businessProfile, setBusinessProfile] = useState<any>(null);
-  const [clients, setClients] = useState<any[]>([]);
-  const [selectedClientId, setSelectedClientId] = useState('');
-  const [selectedClient, setSelectedClient] = useState<any>(null);
-
-  // Form Fields
-  const [documentNumber, setDocumentNumber] = useState('');
-  const [poNumber, setPoNumber] = useState('');
-  const [issueDate, setIssueDate] = useState('');
-  const [validTill, setValidTill] = useState('');
-  
-  // Shipping details toggle & override values
-  const [enableShipping, setEnableShipping] = useState(false);
-  const [shippingAddress, setShippingAddress] = useState({
-    addressLine1: '',
-    addressLine2: '',
-    city: '',
-    state: '',
-    stateCode: '',
-    country: 'India',
-    pincode: '',
-  });
-
-  // GST Config
-  const [placeOfSupply, setPlaceOfSupply] = useState({
-    state: '',
-    stateCode: '',
-  });
-
-  // Line items
-  const [items, setItems] = useState<any[]>([]);
-
-  // Document discount
-  const [enableDocDiscount, setEnableDocDiscount] = useState(false);
-  const [docDiscountType, setDocDiscountType] = useState<'PERCENTAGE' | 'FIXED'>('PERCENTAGE');
-  const [docDiscountValue, setDocDiscountValue] = useState(0);
-
-  // Additional charges
-  const [additionalCharges, setAdditionalCharges] = useState<any[]>([]);
-
-  // Clauses & custom metadata
-  const [terms, setTerms] = useState('');
-  const [notes, setNotes] = useState('');
-  const [footer, setFooter] = useState('');
-  const [customFields, setCustomFields] = useState<any[]>([]);
-  const [signatoryName, setSignatoryName] = useState('');
-
-  // Advanced options toggles
-  const [displayOptions, setDisplayOptions] = useState({
-    showHsnSac: true,
-    showTaxSummary: true,
-    showItemDescriptions: true,
-    showTotalQuantity: true,
-  });
-
-  // Load configuration lists & document
-  useEffect(() => {
-    const loadConfigurationAndDocument = async () => {
-      try {
-        const [profileRes, clientsRes, documentRes] = await Promise.all([
-          api.get('/business'),
-          api.get('/clients?status=ACTIVE&limit=100'),
-          api.get(`/documents/${id}`),
-        ]);
-
-        if (profileRes.data?.success) {
-          setBusinessProfile(profileRes.data.data?.business || {});
-        }
-        if (clientsRes.data?.success) {
-          setClients(clientsRes.data.data.clients || []);
-        }
-
-        if (documentRes.data?.success) {
-          const doc = documentRes.data.data;
-          
-
-          setDocumentNumber(doc.documentNumber);
-          setSelectedClientId(doc.clientId);
-          setPoNumber(doc.poNumber || '');
-          setIssueDate(new Date(doc.issueDate).toISOString().split('T')[0]);
-          setValidTill(doc.validTill ? new Date(doc.validTill).toISOString().split('T')[0] : '');
-          
-          if (doc.placeOfSupply) {
-            setPlaceOfSupply(doc.placeOfSupply);
-          }
-
-          if (doc.shippingAddress && doc.shippingAddress.addressLine1) {
-            setEnableShipping(true);
-            setShippingAddress(doc.shippingAddress);
-          }
-
-          setItems(doc.items || []);
+          setItems((doc.items || []).map((item: any) => ({
+            ...item,
+            id: item.id || Math.random().toString(36).substring(2, 9),
+          })));
           
           if (doc.documentDiscountType !== 'NONE') {
             setEnableDocDiscount(true);
@@ -393,11 +212,41 @@ export default function EditQuotationPage() {
     item.image
   );
 
-  const withTrailingBlankItemLine = (list: any[]) => {
-    const useful = list.filter(isUsefulItemLine);
-    return [...useful, createBlankItemLine()];
+  // Line item manipulation helpers
+  const handleItemFieldChange = (id: string, field: string, value: any) => {
+    setItems(prev =>
+      prev.map(item => item.id === id ? { ...item, [field]: value } : item)
+    );
   };
 
+  const addItemLine = () => {
+    setItems(prev => [...prev, createBlankItemLine()]);
+  };
+
+  const duplicateItemLine = (id: string) => {
+    const targetIdx = items.findIndex((i) => i.id === id);
+    if (targetIdx === -1) return;
+    const copy = { ...items[targetIdx], id: Math.random().toString(36).substring(2, 9) };
+    setItems((prev) => {
+      const list = [...prev];
+      list.splice(targetIdx + 1, 0, copy);
+      return list;
+    });
+  };
+
+  const removeItemLine = (id: string) => {
+    setItems(prev => {
+      const filtered = prev.filter((item) => item.id !== id);
+      if (filtered.length === 0) {
+        return [createBlankItemLine()];
+      }
+      return filtered;
+    });
+  };
+
+  // Additional charges manipulation
+  const handleChargeFieldChange = (index: number, field: string, value: any) => {
+    setAdditionalCharges(prev => {
       const list = [...prev];
       list[index] = { ...list[index], [field]: value };
       return list;
@@ -569,8 +418,13 @@ export default function EditQuotationPage() {
       return;
     }
 
-    // Validate items
-    const invalidItem = items.some(item => !item.itemName.trim() || parseFloat(item.quantity) <= 0 || parseFloat(item.rate) < 0);
+    // IMPORTANT: validate only the useful (filled-in) items.
+    const usefulItems = items.filter(isUsefulItemLine);
+    if (usefulItems.length === 0) {
+      showToast('Please add at least one line item before saving.', 'error');
+      return;
+    }
+    const invalidItem = usefulItems.some(item => !item.itemName.trim() || parseFloat(item.quantity) <= 0 || parseFloat(item.rate) < 0);
     if (invalidItem) {
       showToast('Each line item must have a name, quantity > 0 and rate >= 0.', 'error');
       return;
@@ -578,6 +432,18 @@ export default function EditQuotationPage() {
 
     setSaving(true);
     try {
+      const serializedItems = usefulItems.map(item => ({
+        itemName: item.itemName,
+        description: item.description,
+        hsnSac: item.hsnSac,
+        gstRate: Number(item.gstRate) || 0,
+        quantity: Number(item.quantity) || 0,
+        unit: item.unit || 'PCS',
+        rate: Number(item.rate) || 0,
+        discountType: item.discountType || 'NONE',
+        discountValue: Number(item.discountValue) || 0,
+      }));
+
       const payload = {
         documentType: 'QUOTATION',
         clientId: selectedClientId,
@@ -585,10 +451,15 @@ export default function EditQuotationPage() {
         issueDate: new Date(issueDate).toISOString(),
         validTill: validTill ? new Date(validTill).toISOString() : undefined,
         placeOfSupply,
-        items,
+        items: serializedItems,
         documentDiscountType: enableDocDiscount ? docDiscountType : 'NONE',
-        documentDiscountValue: enableDocDiscount ? docDiscountValue : 0,
-        additionalCharges,
+        documentDiscountValue: enableDocDiscount ? Number(docDiscountValue) || 0 : 0,
+        additionalCharges: additionalCharges.map(charge => ({
+          chargeName: charge.chargeName,
+          amount: Number(charge.amount) || 0,
+          isTaxable: charge.isTaxable,
+          gstRate: Number(charge.gstRate) || 0,
+        })),
         terms,
         notes,
         footer,
@@ -607,7 +478,16 @@ export default function EditQuotationPage() {
         showToast(response.data?.message || 'Failed to update quotation. Please try again.', 'error');
       }
     } catch (err: any) {
-      showToast(err.response?.data?.message || 'Failed to update quotation.', 'error');
+      const apiErrorMsg = err.response?.data?.message;
+      const subErrors = err.response?.data?.errors;
+      if (subErrors && Array.isArray(subErrors) && subErrors.length > 0) {
+        const errorDetail = subErrors.map(e => `${e.field}: ${e.message}`).join(', ');
+        showToast(`Validation Error: ${errorDetail}`, 'error');
+      } else if (apiErrorMsg) {
+        showToast(apiErrorMsg, 'error');
+      } else {
+        showToast('Failed to update quotation.', 'error');
+      }
     } finally {
       setSaving(false);
     }
@@ -874,25 +754,25 @@ export default function EditQuotationPage() {
                     {items.map((item, idx) => {
                       const computedItem = totals.items[idx] || item;
                       return (
-                        <tr key={idx} className="align-top hover:bg-slate-55/20 transition-colors">
+                        <tr key={item.id || idx} className="align-top hover:bg-slate-55/20 transition-colors">
                           <td className="p-3">
                             <ItemAutocomplete
                               value={item.itemName}
-                              onChange={(val) => handleItemFieldChange(idx, 'itemName', val)}
+                              onChange={(val) => handleItemFieldChange(item.id, 'itemName', val)}
                               onSelect={(selected) => {
-                                handleItemFieldChange(idx, 'itemName', selected.itemName);
-                                handleItemFieldChange(idx, 'description', selected.description);
-                                handleItemFieldChange(idx, 'hsnSac', selected.hsnSac);
-                                handleItemFieldChange(idx, 'gstRate', selected.gstRate);
-                                handleItemFieldChange(idx, 'rate', selected.sellingPrice);
-                                handleItemFieldChange(idx, 'unit', selected.unit);
+                                handleItemFieldChange(item.id, 'itemName', selected.itemName);
+                                handleItemFieldChange(item.id, 'description', selected.description);
+                                handleItemFieldChange(item.id, 'hsnSac', selected.hsnSac);
+                                handleItemFieldChange(item.id, 'gstRate', selected.gstRate);
+                                handleItemFieldChange(item.id, 'rate', selected.sellingPrice);
+                                handleItemFieldChange(item.id, 'unit', selected.unit);
                               }}
                               placeholder="Search item or type name..."
                             />
                             {displayOptions.showItemDescriptions && (
                               <textarea
                                 value={item.description}
-                                onChange={(e) => handleItemFieldChange(idx, 'description', e.target.value)}
+                                onChange={(e) => handleItemFieldChange(item.id, 'description', e.target.value)}
                                 placeholder="Add description..."
                                 className="w-full form-input text-[11px] py-1 mt-1.5 h-10 min-h-[40px] resize-y"
                               />
@@ -903,7 +783,7 @@ export default function EditQuotationPage() {
                               <input
                                 type="text"
                                 value={item.hsnSac}
-                                onChange={(e) => handleItemFieldChange(idx, 'hsnSac', e.target.value)}
+                                onChange={(e) => handleItemFieldChange(item.id, 'hsnSac', e.target.value)}
                                 placeholder="HSN"
                                 className="w-full form-input text-xs py-1 text-center font-mono"
                               />
@@ -911,27 +791,27 @@ export default function EditQuotationPage() {
                           )}
                           <td className="p-3">
                             <input
-                              type="number"
-                              step="any"
-                              value={item.quantity}
-                              onChange={(e) => handleItemFieldChange(idx, 'quantity', parseFloat(e.target.value) || 0)}
-                              className="w-full form-input text-xs py-1 text-center qty-input"
+                                type="number"
+                                step="any"
+                                value={item.quantity}
+                                onChange={(e) => handleItemFieldChange(item.id, 'quantity', parseFloat(e.target.value) || 0)}
+                                className="w-full form-input text-xs py-1 text-center qty-input"
                             />
                           </td>
                           <td className="p-3">
                             <input
-                              type="number"
-                              step="any"
-                              value={item.rate}
-                              onChange={(e) => handleItemFieldChange(idx, 'rate', parseFloat(e.target.value) || 0)}
-                              className="w-full form-input text-xs py-1 text-right font-medium"
-                              placeholder="0.00"
+                                type="number"
+                                step="any"
+                                value={item.rate}
+                                onChange={(e) => handleItemFieldChange(item.id, 'rate', parseFloat(e.target.value) || 0)}
+                                className="w-full form-input text-xs py-1 text-right font-medium"
+                                placeholder="0.00"
                             />
                           </td>
                           <td className="p-3">
                             <select
                               value={item.gstRate}
-                              onChange={(e) => handleItemFieldChange(idx, 'gstRate', parseFloat(e.target.value) || 0)}
+                              onChange={(e) => handleItemFieldChange(item.id, 'gstRate', parseFloat(e.target.value) || 0)}
                               className="w-full form-input text-xs py-1 bg-white px-1"
                             >
                               {[0, 5, 12, 18, 28].map(r => (
@@ -946,7 +826,7 @@ export default function EditQuotationPage() {
                             <div className="flex items-center justify-center gap-1">
                               <button
                                 type="button"
-                                onClick={() => duplicateItemLine(idx)}
+                                onClick={() => duplicateItemLine(item.id)}
                                 className="p-1 text-slate-455 hover:text-blue-600 rounded hover:bg-slate-100"
                               >
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -955,9 +835,8 @@ export default function EditQuotationPage() {
                               </button>
                               <button
                                 type="button"
-                                disabled={items.length <= 1}
-                                onClick={() => removeItemLine(idx)}
-                                className="p-1 text-slate-455 hover:text-rose-500 rounded hover:bg-slate-100 disabled:opacity-30"
+                                onClick={() => removeItemLine(item.id)}
+                                className="p-1 text-slate-455 hover:text-rose-500 rounded hover:bg-slate-100 transition-colors"
                               >
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                   <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

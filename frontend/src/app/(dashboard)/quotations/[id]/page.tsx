@@ -16,6 +16,23 @@ export default function QuotationDetailPage() {
   const { showToast } = useToast();
   const printRef = useRef<HTMLDivElement>(null);
 
+  const getLogoSrc = () => {
+    // Check customFields for logo_url_override
+    const logoOverride = document?.customFields?.find(
+      (f: any) => f.key === 'logo_url_override' || f.label === 'logo_url_override'
+    )?.value;
+    if (logoOverride) return formatImageSrc(logoOverride);
+    
+    // Also check direct fields on document/businessSnapshot just in case
+    const logoDirect = document?.logoUrlOverride || document?.logo_url_override || document?.logoUrl || document?.logo_url || document?.logo;
+    if (logoDirect) return formatImageSrc(logoDirect);
+
+    const bizLogo = document?.businessSnapshot?.logoUrlOverride || document?.businessSnapshot?.logo_url_override || document?.businessSnapshot?.logoUrl || document?.businessSnapshot?.logo_url || document?.businessSnapshot?.logo;
+    if (bizLogo) return formatImageSrc(bizLogo);
+
+    return null;
+  };
+
 
   const [document, setDocument] = useState<any>(null);
   const [businessProfile, setBusinessProfile] = useState<any>(null);
