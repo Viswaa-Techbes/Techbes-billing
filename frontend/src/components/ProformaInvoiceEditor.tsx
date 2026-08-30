@@ -233,6 +233,24 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
     total: true,
   });
 
+  const getResolvedPlaceOfSupply = () => {
+    const fallbackState = businessProfile?.address?.state || 'Delhi';
+    const fallbackStateCode = (businessProfile?.address?.stateCode || 'DL').toUpperCase();
+    const currentStateCode = placeOfSupply?.stateCode?.trim();
+
+    if (currentStateCode) {
+      return {
+        state: placeOfSupply?.state?.trim() || fallbackState,
+        stateCode: currentStateCode.toUpperCase(),
+      };
+    }
+
+    return {
+      state: fallbackState,
+      stateCode: fallbackStateCode,
+    };
+  };
+
   // Load baseline profile & clients
   const loadInitialData = async () => {
     setLoading(true);
@@ -551,42 +569,27 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
     productType: 'PRODUCT',
   });
 
-  const isUsefulLineItem = (item: LineItem) => Boolean(
-    item.isGroupHeader ||
-    item.itemName?.trim() ||
-    item.description?.trim() ||
-    item.hsnSac?.trim() ||
-    item.rate > 0 ||
-    item.discountValue > 0 ||
-    item.image
-  );
-
-  const withTrailingBlankLineItem = (list: LineItem[]) => {
-    const useful = list.filter(isUsefulLineItem);
-    return [...useful, createBlankLineItem()];
-  };
-
-  // Calculations logic (copied from backend formulas for live estimates)
+  // Calculations logic (live estimates)
   const calculateTotals = () => {
     let subtotal = 0;
     let totalQuantity = 0;
 
-    const processedItems = items.filter(isUsefulLineItem).map((item) => {
+    const processedItems = items.map((item) => {
       if (item.isGroupHeader) {
         return { ...item, baseAmount: 0, taxableAmount: 0, cgst: 0, sgst: 0, igst: 0, total: 0 };
       }
 
-      const baseAmount = item.quantity * item.rate;
-      totalQuantity += item.quantity;
+      const baseAmount = (item.quantity || 0) * (item.rate || 0);
+      totalQuantity += (item.quantity || 0);
 
       let itemDiscountAmount = 0;
       if (item.discountType === 'PERCENTAGE') {
-        itemDiscountAmount = baseAmount * (item.discountValue / 100);
+        itemDiscountAmount = baseAmount * ((item.discountValue || 0) / 100);
       } else if (item.discountType === 'FIXED') {
-        itemDiscountAmount = Math.min(baseAmount, item.discountValue);
+        itemDiscountAmount = Math.min(baseAmount, item.discountValue || 0);
       }
 
-      const taxableAmount = baseAmount - itemDiscountAmount;
+      const taxableAmount = Math.max(0, baseAmount - itemDiscountAmount);
       subtotal += taxableAmount;
 
       return {
@@ -599,15 +602,16 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
     let documentDiscountAmount = 0;
     if (enableDocDiscount) {
       if (docDiscountType === 'PERCENTAGE') {
-        documentDiscountAmount = subtotal * (docDiscountValue / 100);
+        documentDiscountAmount = subtotal * ((docDiscountValue || 0) / 100);
       } else if (docDiscountType === 'FIXED') {
-        documentDiscountAmount = Math.min(subtotal, docDiscountValue);
+        documentDiscountAmount = Math.min(subtotal, docDiscountValue || 0);
       }
     }
 
-    const businessStateCode = businessProfile?.address?.stateCode || 'DL';
-    const supplyStateCode = placeOfSupply.stateCode || businessStateCode;
-    const isIntraState = taxType === 'CGST + SGST' || (taxType === 'Auto' && businessStateCode.toUpperCase() === supplyStateCode.toUpperCase());
+    const businessStateCode = (businessProfile?.address?.stateCode || 'DL').toUpperCase();
+    const resolvedPos = getResolvedPlaceOfSupply();
+    const supplyStateCode = resolvedPos.stateCode;
+    const isIntraState = taxType === 'CGST + SGST' || (taxType === 'Auto' && businessStateCode === supplyStateCode);
 
     let cgstTotal = 0;
     let sgstTotal = 0;
@@ -625,12 +629,12 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
 
       if (gstEnabled) {
         if (isIntraState) {
-          cgst = finalTaxable * ((item.gstRate / 2) / 100);
-          sgst = finalTaxable * ((item.gstRate / 2) / 100);
+          cgst = finalTaxable * (((item.gstRate || 0) / 2) / 100);
+          sgst = finalTaxable * (((item.gstRate || 0) / 2) / 100);
           cgstTotal += cgst;
           sgstTotal += sgst;
         } else {
-          igst = finalTaxable * (item.gstRate / 100);
+          igst = finalTaxable * ((item.gstRate || 0) / 100);
           igstTotal += igst;
         }
       }
@@ -648,10 +652,10 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
     const processedCharges = additionalCharges.map((charge) => {
       let taxAmount = 0;
       if (gstEnabled && charge.isTaxable) {
-        taxAmount = charge.amount * (charge.gstRate / 100);
+        taxAmount = (charge.amount || 0) * ((charge.gstRate || 0) / 100);
       }
-      additionalChargesTotal += (charge.amount + taxAmount);
-      return { ...charge, taxAmount, total: charge.amount + taxAmount };
+      additionalChargesTotal += ((charge.amount || 0) + taxAmount);
+      return { ...charge, taxAmount, total: (charge.amount || 0) + taxAmount };
     });
 
     const grandTotalNoRound = (subtotal - documentDiscountAmount) + cgstTotal + sgstTotal + igstTotal + additionalChargesTotal;
@@ -677,36 +681,42 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
 
   // Helper: line item manipulation
   const handleAddItemRow = () => {
-    setItems((prev) => withTrailingBlankLineItem([...prev, createBlankLineItem()]));
+    setItems((prev) => [...prev, createBlankLineItem()]);
   };
 
   const handleUpdateItemRow = (index: number, updatedFields: Partial<LineItem>) => {
-    const list = [...items];
-    list[index] = { ...list[index], ...updatedFields };
-    setItems(withTrailingBlankLineItem(list));
+    setItems((prev) => {
+      const list = [...prev];
+      if (list[index]) {
+        list[index] = { ...list[index], ...updatedFields };
+      }
+      return list;
+    });
   };
 
   const handleRemoveRow = (index: number) => {
-    const list = [...items];
-    list.splice(index, 1);
-    // Ensure at least one editable line item remains
-    if (list.length === 0) {
-      list.push(createBlankLineItem());
-      setItems(list);
-    } else {
-      setItems(withTrailingBlankLineItem(list));
-    }
+    setItems((prev) => {
+      if (prev.length <= 1) {
+        return [createBlankLineItem()];
+      }
+      const list = [...prev];
+      list.splice(index, 1);
+      return list;
+    });
   };
 
   const handleDuplicateRow = (index: number) => {
-    const list = [...items];
-    const source = list[index];
-    const clone = {
-      ...source,
-      id: Math.random().toString(36).substring(2, 9),
-    };
-    list.splice(index + 1, 0, clone);
-    setItems(list);
+    setItems((prev) => {
+      const list = [...prev];
+      if (!list[index]) return prev;
+      const source = list[index];
+      const clone = {
+        ...source,
+        id: Math.random().toString(36).substring(2, 9),
+      };
+      list.splice(index + 1, 0, clone);
+      return list;
+    });
   };
 
   // Image helpers
@@ -775,28 +785,42 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
   };
 
   // Save document core handler
-  const handleSaveDocument = async (draftOnly: boolean, redirectSetup: boolean) => {
+  const handleSaveDocument = async (draftOnly: boolean) => {
     if (!selectedClientId) {
       showToast('Please select a client before saving.', 'error');
       return;
     }
 
+    if (items.length === 0) {
+      showToast('Please add at least one line item.', 'error');
+      return;
+    }
+
     // Validate line items
-    for (const item of items) {
-      if (!item.isGroupHeader && !item.itemName.trim()) {
-        showToast('Line item name is required.', 'error');
-        return;
-      }
-      if (!item.isGroupHeader && (item.quantity <= 0 || item.rate < 0)) {
-        showToast('Quantity must be greater than 0 and rate non-negative.', 'error');
-        return;
+    for (let idx = 0; idx < items.length; idx++) {
+      const item = items[idx];
+      if (!item.isGroupHeader) {
+        if (!item.itemName || !item.itemName.trim()) {
+          showToast(`Line item #${idx + 1}: Item Name is required.`, 'error');
+          return;
+        }
+        if (item.quantity === undefined || item.quantity === null || item.quantity <= 0) {
+          showToast(`Line item #${idx + 1} (${item.itemName}): Quantity must be greater than 0.`, 'error');
+          return;
+        }
+        if (item.rate === undefined || item.rate === null || item.rate < 0) {
+          showToast(`Line item #${idx + 1} (${item.itemName}): Rate must be non-negative.`, 'error');
+          return;
+        }
       }
     }
 
     setSaving(true);
     try {
-      // Serialize items (prefix group headers toitemName)
-      const serializedItems = items.filter(isUsefulLineItem).map((item) => {
+      const resolvedPlaceOfSupply = getResolvedPlaceOfSupply();
+
+      // Serialize items (prefix group headers to itemName)
+      const serializedItems = items.map((item) => {
         if (item.isGroupHeader) {
           return {
             itemName: `[GROUP] ${item.groupTitle || 'Group Section'}`,
@@ -809,17 +833,17 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
           };
         }
         return {
-          itemName: item.itemName,
-          description: item.description,
-          hsnSac: item.hsnSac,
-          gstRate: item.gstRate,
+          itemName: item.itemName.trim(),
+          description: item.description || '',
+          hsnSac: item.hsnSac || '',
+          gstRate: item.gstRate || 0,
           quantity: item.quantity,
-          unit: item.unit,
+          unit: item.unit || 'PCS',
           rate: item.rate,
-          discountType: item.discountType,
-          discountValue: item.discountValue,
-          image: item.image,
-          productType: item.productType,
+          discountType: item.discountType || 'NONE',
+          discountValue: item.discountValue || 0,
+          image: item.image || '',
+          productType: item.productType || 'PRODUCT',
         };
       });
 
@@ -828,18 +852,19 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
         status: draftOnly ? 'DRAFT' : 'SENT',
         title: docTitle,
         subtitle: docSubtitle,
+        documentNumber: (documentNumber || '').trim(),
         poNumber,
         issueDate: issueDate ? new Date(issueDate).toISOString() : new Date().toISOString(),
         validTill: dueDate ? new Date(dueDate).toISOString() : undefined,
         clientId: selectedClientId,
         customFields,
-        placeOfSupply,
+        placeOfSupply: resolvedPlaceOfSupply,
         
         shippingDetails: enableShipping ? shippingAddress : null,
         currency,
         gstConfiguration: {
           gstEnabled,
-          placeOfSupply,
+          placeOfSupply: resolvedPlaceOfSupply,
           reverseCharge,
           taxType,
         },
@@ -902,21 +927,22 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
       if (response.data?.success && response.data.data?._id) {
         const docId = response.data.data._id;
         const docNum = response.data.data.documentNumber;
-        showToast(`Proforma invoice ${docNum} saved successfully!`, 'success');
-
+        showToast(`Proforma invoice ${docNum || ''} saved successfully!`, 'success');
         setSaving(false);
-
-        if (redirectSetup) {
-          router.push(`/proforma-invoices/${docId}/payment-setup`);
-        } else {
-          router.push(`/proforma-invoices/${docId}`);
-        }
+        router.push(`/proforma-invoices/${docId}`);
         return;
       } else {
         showToast(response.data?.message || 'Save completed but no document ID was returned. Please try again.', 'error');
       }
     } catch (err: any) {
-      showToast(err.response?.data?.message || 'Failed to save proforma invoice.', 'error');
+      let errMsg = err.response?.data?.message || 'Failed to save proforma invoice.';
+      if (err.response?.data?.errors && Array.isArray(err.response.data.errors) && err.response.data.errors.length > 0) {
+        const details = err.response.data.errors.map((e: any) => e.message || e.msg).filter(Boolean).join(' | ');
+        if (details) {
+          errMsg = `${errMsg}: ${details}`;
+        }
+      }
+      showToast(errMsg, 'error');
     } finally {
       setSaving(false);
     }
@@ -1539,7 +1565,7 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
                               min={0}
                               step="any"
                               onChange={(e) => handleUpdateItemRow(i, { rate: Math.max(0, parseFloat(e.target.value) || 0) })}
-                              className="w-full form-input text-xs font-semibold text-slate-900 bg-white"
+                              className="w-full form-input text-xs font-semibold text-slate-900 bg-white min-w-[120px]"
                             />
                           </td>
                         )}
@@ -1555,6 +1581,7 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
                         <td className="px-3 py-3 text-right align-top pt-4">
                           <div className="flex items-center justify-end gap-1">
                             <button
+                              type="button"
                               onClick={() => handleDuplicateRow(i)}
                               className="p-1.5 text-slate-400 hover:text-indigo-600 transition-colors"
                               title="Duplicate row"
@@ -1564,6 +1591,7 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
                               </svg>
                             </button>
                             <button
+                              type="button"
                               onClick={() => handleRemoveRow(i)}
                               className="p-1.5 text-slate-400 hover:text-rose-600 transition-colors"
                               title="Remove row"
@@ -1584,6 +1612,7 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
             {/* Line items actions */}
             <div className="flex gap-4">
               <button
+                type="button"
                 onClick={handleAddItemRow}
                 className="px-4 py-2 border border-slate-350 bg-white hover:bg-slate-50 font-bold rounded-xl text-xs text-slate-700 transition-colors flex items-center gap-1.5"
               >
@@ -2197,16 +2226,18 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
           {/* Flow actions */}
           <div className="card-panel p-5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col gap-3">
             <button
-              onClick={() => handleSaveDocument(false, true)}
+              type="button"
+              onClick={() => handleSaveDocument(false)}
               disabled={saving}
               className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-sm flex items-center justify-center gap-2 text-xs"
             >
               {saving ? <LoadingSpinner size="sm" /> : 'Save & Continue'}
             </button>
             <button
-              onClick={() => handleSaveDocument(true, false)}
+              type="button"
+              onClick={() => handleSaveDocument(true)}
               disabled={saving}
-              className="w-full py-2.5 border border-slate-350 bg-white hover:bg-slate-50 font-bold rounded-xl text-xs text-slate-700 transition-all flex items-center justify-center"
+              className="w-full py-2.5 border border-slate-350 bg-white hover:bg-slate-50 font-bold rounded-xl text-xs text-slate-700 transition-all flex items-center justify-center gap-2"
             >
               {saving ? <LoadingSpinner size="sm" /> : 'Save as Draft'}
             </button>
