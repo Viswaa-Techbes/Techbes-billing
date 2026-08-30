@@ -593,10 +593,9 @@ function NewQuotationForm() {
       return;
     }
 
-    // Validate item names
-    const hasInvalidItem = items.some((item) => !item.isGroupHeader && !item.itemName.trim());
-    if (hasInvalidItem) {
-      showToast('Each line item must have a name.', 'error');
+    // Validate place of supply — backend requires stateCode to be exactly 2 characters
+    if (!placeOfSupply.state || !placeOfSupply.stateCode || placeOfSupply.stateCode.length !== 2) {
+      showToast('Please select a valid Place of Supply (state) before saving.', 'error');
       return;
     }
 
@@ -606,10 +605,24 @@ function NewQuotationForm() {
       return;
     }
 
+    // IMPORTANT: always validate only the useful (filled-in) items.
+    // The items array always contains a trailing blank row for UX purposes; including it
+    // in the validation causes hasInvalidItem to be permanently true and blocks saving.
+    const usefulItems = items.filter(isUsefulLineItem);
+    if (usefulItems.length === 0) {
+      showToast('Please add at least one line item before saving.', 'error');
+      return;
+    }
+    const hasInvalidItem = usefulItems.some((item) => !item.isGroupHeader && !item.itemName.trim());
+    if (hasInvalidItem) {
+      showToast('Each line item must have a name.', 'error');
+      return;
+    }
+
     setSaving(true);
     try {
       // Serialize items: map group header rows to [GROUP] itemName tags so the backend validators pass
-      const serializedItems = items.filter(isUsefulLineItem).map((item) => {
+      const serializedItems = usefulItems.map((item) => {
         if (item.isGroupHeader) {
           return {
             itemName: `[GROUP] ${item.groupTitle || 'Group Section'}`,
@@ -1302,7 +1315,8 @@ function NewQuotationForm() {
                               <button
                                 type="button"
                                 onClick={() => duplicateLineItem(item.id)}
-                                className="p-1 border border-slate-200 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition-colors"
+                                disabled={!isUsefulLineItem(item)}
+                                className="p-1 border border-slate-200 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 disabled:opacity-0 disabled:pointer-events-none transition-colors"
                                 title="Duplicate Row"
                               >
                                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1312,8 +1326,8 @@ function NewQuotationForm() {
                               <button
                                 type="button"
                                 onClick={() => deleteLineItem(item.id)}
-                                disabled={items.length <= 1}
-                                className="p-1 border border-slate-200 hover:bg-slate-100 rounded-lg text-rose-600 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                                disabled={!isUsefulLineItem(item) || items.filter(isUsefulLineItem).length <= 1}
+                                className="p-1 border border-slate-200 hover:bg-slate-100 rounded-lg text-rose-600 disabled:opacity-0 disabled:pointer-events-none transition-colors"
                                 title="Delete Row"
                               >
                                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -2000,7 +2014,7 @@ function NewQuotationForm() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-150 text-slate-700">
-                  {totals.items.map((item, idx) => {
+                  {(totals.items.filter(isUsefulLineItem) as any[]).map((item, idx) => {
                     if (item.isGroupHeader) {
                       return (
                         <tr key={idx} className="bg-slate-50 font-bold">
