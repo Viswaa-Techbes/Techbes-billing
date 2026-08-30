@@ -7,6 +7,7 @@ import api from '@/lib/api';
 import { useToast } from '@/context/ToastContext';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Modal from '@/components/ui/Modal';
+import { downloadDocumentPdf, getDocumentTitle } from '@/lib/pdf';
 
 interface InvoiceToSettle {
   _id: string;
@@ -266,19 +267,17 @@ export default function CreditNoteDetailPage() {
     }
   };
 
-  const handlePrint = () => {
+  const handleDownloadPdf = async () => {
     if (!document) return;
-    const originalTitle = document.title || window.document.title;
-    const docTypeStr = 'CreditNote';
     const cleanDocNum = document.documentNumber.replace(/\s+/g, '-');
     const rawClient = document.clientSnapshot?.businessName || document.clientSnapshot?.clientName || 'Client';
     const cleanClient = rawClient.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-_]/g, '');
-    
-    window.document.title = `${docTypeStr}_${cleanDocNum}_${cleanClient}`;
-    window.print();
-    setTimeout(() => {
-      window.document.title = originalTitle;
-    }, 1000);
+
+    try {
+      await downloadDocumentPdf(printRef.current, `${getDocumentTitle(document.documentType).replace(/\s+/g, '-')}_${cleanDocNum}_${cleanClient}.pdf`);
+    } catch (err: any) {
+      showToast(err.message || 'Failed to generate PDF.', 'error');
+    }
   };
 
   const handleShare = (channel: 'email' | 'whatsapp') => {
@@ -385,7 +384,7 @@ export default function CreditNoteDetailPage() {
           Generate E-Invoice
         </button>
         <button
-          onClick={handlePrint}
+          onClick={handleDownloadPdf}
           className="px-4 py-2.5 border border-slate-350 bg-white hover:bg-slate-50 font-bold rounded-xl text-slate-705 transition-colors text-xs"
         >
           Download PDF

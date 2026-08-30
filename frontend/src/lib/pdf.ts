@@ -70,12 +70,12 @@ export const downloadDocumentPdf = async (
 
   const host = document.createElement('div');
   host.setAttribute('aria-hidden', 'true');
-  host.style.position = 'absolute';
+  host.style.position = 'fixed';
   host.style.left = '0';
   host.style.top = '0';
   host.style.width = '794px';
   host.style.background = '#ffffff';
-  host.style.zIndex = '-1';
+  host.style.zIndex = '-9999';
   host.style.pointerEvents = 'none';
   host.style.overflow = 'visible';
 
@@ -111,7 +111,7 @@ export const downloadDocumentPdf = async (
     await html2pdf()
       .set({
         filename,
-        margin: [8, 8, 8, 8],
+        margin: [0, 0, 0, 0],
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: {
           scale: 2,
@@ -120,6 +120,10 @@ export const downloadDocumentPdf = async (
           backgroundColor: '#ffffff',
           logging: false,
           windowWidth: 794,
+          scrollX: 0,
+          scrollY: 0,
+          x: 0,
+          y: 0,
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', '.print-avoid-break', '.invoice-doc-footer', '.invoice-doc-words-box'] },
