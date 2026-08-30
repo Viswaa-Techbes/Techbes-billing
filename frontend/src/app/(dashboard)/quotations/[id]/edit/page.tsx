@@ -182,12 +182,197 @@ export default function EditQuotationPage() {
   const handlePlaceOfSupplyChange = (stateName: string) => {
     const selected = INDIAN_STATES.find(s => s.name === stateName);
     setPlaceOfSupply({
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { useRouter, useParams } from 'next/navigation';
+import Link from 'next/link';
+import api from '@/lib/api';
+import { useToast } from '@/context/ToastContext';
+import PageHeader from '@/components/PageHeader';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { INDIAN_STATES } from '@/lib/constants';
+import ItemAutocomplete from '@/components/ItemAutocomplete';
+
+export default function EditQuotationPage() {
+  const router = useRouter();
+  const { id } = useParams();
+  const { showToast } = useToast();
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [activeStep, setActiveStep] = useState<1 | 2>(1); // Step 1: Edit, Step 2: Review
+
+  // Core business & clients lists
+  const [businessProfile, setBusinessProfile] = useState<any>(null);
+  const [clients, setClients] = useState<any[]>([]);
+  const [selectedClientId, setSelectedClientId] = useState('');
+  const [selectedClient, setSelectedClient] = useState<any>(null);
+
+  // Form Fields
+  const [documentNumber, setDocumentNumber] = useState('');
+  const [poNumber, setPoNumber] = useState('');
+  const [issueDate, setIssueDate] = useState('');
+  const [validTill, setValidTill] = useState('');
+  
+  // Shipping details toggle & override values
+  const [enableShipping, setEnableShipping] = useState(false);
+  const [shippingAddress, setShippingAddress] = useState({
+    addressLine1: '',
+    addressLine2: '',
+    city: '',
+    state: '',
+    stateCode: '',
+    country: 'India',
+    pincode: '',
+  });
+
+  // GST Config
+  const [placeOfSupply, setPlaceOfSupply] = useState({
+    state: '',
+    stateCode: '',
+  });
+
+  // Line items
+  const [items, setItems] = useState<any[]>([]);
+
+  // Document discount
+  const [enableDocDiscount, setEnableDocDiscount] = useState(false);
+  const [docDiscountType, setDocDiscountType] = useState<'PERCENTAGE' | 'FIXED'>('PERCENTAGE');
+  const [docDiscountValue, setDocDiscountValue] = useState(0);
+
+  // Additional charges
+  const [additionalCharges, setAdditionalCharges] = useState<any[]>([]);
+
+  // Clauses & custom metadata
+  const [terms, setTerms] = useState('');
+  const [notes, setNotes] = useState('');
+  const [footer, setFooter] = useState('');
+  const [customFields, setCustomFields] = useState<any[]>([]);
+  const [signatoryName, setSignatoryName] = useState('');
+
+  // Advanced options toggles
+  const [displayOptions, setDisplayOptions] = useState({
+    showHsnSac: true,
+    showTaxSummary: true,
+    showItemDescriptions: true,
+    showTotalQuantity: true,
+  });
+
+  // Load configuration lists & document
+  useEffect(() => {
+    const loadConfigurationAndDocument = async () => {
+      try {
+        const [profileRes, clientsRes, documentRes] = await Promise.all([
+          api.get('/business'),
+          api.get('/clients?status=ACTIVE&limit=100'),
+          api.get(`/documents/${id}`),
+        ]);
+
+        if (profileRes.data?.success) {
+          setBusinessProfile(profileRes.data.data?.business || {});
+        }
+        if (clientsRes.data?.success) {
+          setClients(clientsRes.data.data.clients || []);
+        }
+
+        if (documentRes.data?.success) {
+          const doc = documentRes.data.data;
+          
+
+          setDocumentNumber(doc.documentNumber);
+          setSelectedClientId(doc.clientId);
+          setPoNumber(doc.poNumber || '');
+          setIssueDate(new Date(doc.issueDate).toISOString().split('T')[0]);
+          setValidTill(doc.validTill ? new Date(doc.validTill).toISOString().split('T')[0] : '');
+          
+          if (doc.placeOfSupply) {
+            setPlaceOfSupply(doc.placeOfSupply);
+          }
+
+          if (doc.shippingAddress && doc.shippingAddress.addressLine1) {
+            setEnableShipping(true);
+            setShippingAddress(doc.shippingAddress);
+          }
+
+          setItems(doc.items || []);
+          
+          if (doc.documentDiscountType !== 'NONE') {
+            setEnableDocDiscount(true);
+            setDocDiscountType(doc.documentDiscountType);
+            setDocDiscountValue(doc.documentDiscountValue || 0);
+          }
+
+          setAdditionalCharges(doc.additionalCharges || []);
+          setTerms(doc.terms || '');
+          setNotes(doc.notes || '');
+          setFooter(doc.footer || '');
+          setCustomFields(doc.customFields || []);
+          setSignatoryName(doc.signatoryName || '');
+          
+          if (doc.displayOptions) {
+            setDisplayOptions(doc.displayOptions);
+          }
+        }
+      } catch (err: any) {
+        showToast('Failed to load document details or configuration parameters.', 'error');
+        router.push('/quotations');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      loadConfigurationAndDocument();
+    }
+  }, [id]);
+
+  // Sync selectedClient state when selectedClientId or clients changes
+  useEffect(() => {
+    if (selectedClientId && clients.length > 0) {
+      const client = clients.find(c => c._id === selectedClientId);
+      setSelectedClient(client || null);
+    }
+  }, [selectedClientId, clients]);
+
+  // Handle client selection change
+  const handleClientChange = (clientId: string) => {
+    setSelectedClientId(clientId);
+    const client = clients.find(c => c._id === clientId);
+    setSelectedClient(client || null);
+    
+    if (client) {
+      if (client.billingAddress?.state) {
+        setPlaceOfSupply({
+          state: client.billingAddress.state,
+          stateCode: client.billingAddress.stateCode || '',
+        });
+      }
+      
+      if (client.shippingAddress) {
+        setShippingAddress({
+          addressLine1: client.shippingAddress.addressLine1 || '',
+          addressLine2: client.shippingAddress.addressLine2 || '',
+          city: client.shippingAddress.city || '',
+          state: client.shippingAddress.state || '',
+          stateCode: client.shippingAddress.stateCode || '',
+          country: client.shippingAddress.country || 'India',
+          pincode: client.shippingAddress.pincode || '',
+        });
+      }
+    }
+  };
+
+  const handlePlaceOfSupplyChange = (stateName: string) => {
+    const selected = INDIAN_STATES.find(s => s.name === stateName);
+    setPlaceOfSupply({
       state: stateName,
       stateCode: selected ? selected.stateCode : '',
     });
   };
 
   const createBlankItemLine = () => ({
+    id: Math.random().toString(36).substring(2, 9),
     itemName: '',
     description: '',
     hsnSac: '',
@@ -213,49 +398,6 @@ export default function EditQuotationPage() {
     return [...useful, createBlankItemLine()];
   };
 
-  // Line item manipulation helpers
-  const handleItemFieldChange = (index: number, field: string, value: any) => {
-    setItems(prev => {
-      const list = [...prev];
-      list[index] = { ...list[index], [field]: value };
-      return list;
-    });
-  };
-
-  const addItemLine = () => {
-    setItems(prev => [
-      ...prev,
-      {
-        itemName: '',
-        description: '',
-        hsnSac: '',
-        gstRate: 18,
-        quantity: 1,
-        unit: 'PCS',
-        rate: 0,
-        discountType: 'NONE',
-        discountValue: 0,
-      }
-    ]);
-  };
-
-  const duplicateItemLine = (index: number) => {
-    setItems(prev => {
-      const list = [...prev];
-      const target = { ...list[index] };
-      list.splice(index + 1, 0, target);
-      return list;
-    });
-  };
-
-  const removeItemLine = (index: number) => {
-    if (items.length <= 1) return;
-    setItems(prev => prev.filter((_, i) => i !== index));
-  };
-
-  // Additional charges manipulation
-  const handleChargeFieldChange = (index: number, field: string, value: any) => {
-    setAdditionalCharges(prev => {
       const list = [...prev];
       list[index] = { ...list[index], [field]: value };
       return list;

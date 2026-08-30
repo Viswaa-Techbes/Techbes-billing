@@ -392,20 +392,16 @@ function NewQuotationForm() {
     item.image
   );
 
-  const withTrailingBlankLineItem = (list: LineItem[]) => {
-    const useful = list.filter(isUsefulLineItem);
-    return [...useful, createBlankLineItem()];
-  };
 
   // Helper: line item manipulation
   const handleItemFieldChange = (id: string, field: keyof LineItem, value: any) => {
-    setItems((prev) => withTrailingBlankLineItem(
+    setItems((prev) =>
       prev.map((item) => (item.id === id ? { ...item, [field]: value } : item))
-    ));
+    );
   };
 
   const addLineItem = () => {
-    setItems((prev) => withTrailingBlankLineItem([...prev, createBlankLineItem()]));
+    setItems((prev) => [...prev, createBlankLineItem()]);
   };
 
   const duplicateLineItem = (id: string) => {
@@ -420,7 +416,13 @@ function NewQuotationForm() {
   };
 
   const deleteLineItem = (id: string) => {
-    setItems((prev) => withTrailingBlankLineItem(prev.filter((item) => item.id !== id)));
+    setItems((prev) => {
+      const filtered = prev.filter((item) => item.id !== id);
+      if (filtered.length === 0) {
+        return [createBlankLineItem()];
+      }
+      return filtered;
+    });
   };
 
   // Additional Charges actions
@@ -621,7 +623,6 @@ function NewQuotationForm() {
 
     setSaving(true);
     try {
-      // Serialize items: map group header rows to [GROUP] itemName tags so the backend validators pass
       const serializedItems = usefulItems.map((item) => {
         if (item.isGroupHeader) {
           return {
@@ -639,12 +640,12 @@ function NewQuotationForm() {
           itemName: item.itemName,
           description: item.description,
           hsnSac: item.hsnSac,
-          gstRate: item.gstRate,
-          quantity: item.quantity,
+          gstRate: Number(item.gstRate) || 0,
+          quantity: Number(item.quantity) || 0,
           unit: item.unit,
-          rate: item.rate,
+          rate: Number(item.rate) || 0,
           discountType: item.discountType,
-          discountValue: item.discountValue,
+          discountValue: Number(item.discountValue) || 0,
         };
       });
 
@@ -658,8 +659,13 @@ function NewQuotationForm() {
         placeOfSupply,
         items: serializedItems,
         documentDiscountType: enableDocDiscount ? docDiscountType : 'NONE',
-        documentDiscountValue: enableDocDiscount ? docDiscountValue : 0,
-        additionalCharges,
+        documentDiscountValue: enableDocDiscount ? Number(docDiscountValue) || 0 : 0,
+        additionalCharges: additionalCharges.map((c) => ({
+          chargeName: c.chargeName,
+          amount: Number(c.amount) || 0,
+          isTaxable: c.isTaxable,
+          gstRate: Number(c.gstRate) || 0,
+        })),
         terms,
         notes,
         footer,
@@ -692,7 +698,16 @@ function NewQuotationForm() {
         showToast(response.data?.message || 'Save completed but no document ID was returned. Please try again.', 'error');
       }
     } catch (err: any) {
-      showToast(err.response?.data?.message || 'Failed to save quotation.', 'error');
+      const apiErrorMsg = err.response?.data?.message;
+      const subErrors = err.response?.data?.errors;
+      if (subErrors && Array.isArray(subErrors) && subErrors.length > 0) {
+        const errorDetail = subErrors.map(e => `${e.field}: ${e.message}`).join(', ');
+        showToast(`Validation Error: ${errorDetail}`, 'error');
+      } else if (apiErrorMsg) {
+        showToast(apiErrorMsg, 'error');
+      } else {
+        showToast('Failed to save quotation.', 'error');
+      }
     } finally {
       setSaving(false);
     }
@@ -1326,8 +1341,7 @@ function NewQuotationForm() {
                               <button
                                 type="button"
                                 onClick={() => deleteLineItem(item.id)}
-                                disabled={!isUsefulLineItem(item) || items.filter(isUsefulLineItem).length <= 1}
-                                className="p-1 border border-slate-200 hover:bg-slate-100 rounded-lg text-rose-600 disabled:opacity-0 disabled:pointer-events-none transition-colors"
+                                className="p-1 border border-slate-200 hover:bg-slate-100 rounded-lg text-rose-600 transition-colors"
                                 title="Delete Row"
                               >
                                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
