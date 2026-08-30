@@ -490,9 +490,9 @@ export default function QuotationDetailPage() {
             {/* Header */}
             <div className="invoice-doc-header print-avoid-break">
               <div className="invoice-doc-brand">
-                {document.businessSnapshot?.logo ? (
+                {getLogoSrc() ? (
                   <img
-                    src={formatImageSrc(document.businessSnapshot.logo)}
+                    src={getLogoSrc()!}
                     alt="Logo"
                     className="invoice-doc-logo"
                   />
@@ -595,7 +595,7 @@ export default function QuotationDetailPage() {
                       <span className="invoice-doc-detail-value">{document.gstConfiguration.placeOfSupply.state}</span>
                     </div>
                   )}
-                  {document.customFields?.map((field: any, index: number) => (
+                  {document.customFields?.filter((field: any) => field.key && !field.key.endsWith('_override') && field.label && !field.label.endsWith('_override')).map((field: any, index: number) => (
                     <div key={index} className="invoice-doc-detail-row">
                       <span className="invoice-doc-detail-label">{field.label}</span>
                       <span className="invoice-doc-detail-value">{field.value}</span>

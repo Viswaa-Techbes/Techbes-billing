@@ -31,6 +31,21 @@ export default function CreditNoteDetailPage() {
     return `data:image/png;base64,${src}`;
   };
 
+  const getLogoSrc = () => {
+    const logoOverride = document?.customFields?.find(
+      (f: any) => f.key === 'logo_url_override' || f.label === 'logo_url_override'
+    )?.value;
+    if (logoOverride) return formatImageSrc(logoOverride);
+
+    const logoDirect = document?.logoUrlOverride || document?.logo_url_override || document?.logoUrl || document?.logo_url || document?.logo;
+    if (logoDirect) return formatImageSrc(logoDirect);
+
+    const bizLogo = document?.businessSnapshot?.logoUrlOverride || document?.businessSnapshot?.logo_url_override || document?.businessSnapshot?.logoUrl || document?.businessSnapshot?.logo_url || document?.businessSnapshot?.logo;
+    if (bizLogo) return formatImageSrc(bizLogo);
+
+    return null;
+  };
+
   const [document, setDocument] = useState<any>(null);
   const [businessProfile, setBusinessProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -478,9 +493,9 @@ export default function CreditNoteDetailPage() {
             {/* Header */}
             <div className="invoice-doc-header print-avoid-break">
               <div className="invoice-doc-brand">
-                {document.businessSnapshot?.logo ? (
+                {getLogoSrc() ? (
                   <img
-                    src={formatImageSrc(document.businessSnapshot.logo)}
+                    src={getLogoSrc()!}
                     alt="Logo"
                     className="invoice-doc-logo"
                   />
@@ -561,7 +576,7 @@ export default function CreditNoteDetailPage() {
                       <span className="invoice-doc-detail-value">{document.gstConfiguration.placeOfSupply.state}</span>
                     </div>
                   )}
-                  {document.customFields?.map((field: any, index: number) => (
+                  {document.customFields?.filter((field: any) => field.key && !field.key.endsWith('_override') && field.label && !field.label.endsWith('_override')).map((field: any, index: number) => (
                     <div key={index} className="invoice-doc-detail-row">
                       <span className="invoice-doc-detail-label">{field.label}</span>
                       <span className="invoice-doc-detail-value">{field.value}</span>

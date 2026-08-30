@@ -22,6 +22,21 @@ export default function InvoiceDetailsPage({ params }: InvoiceDetailsProps) {
   const docId = params.id;
   const printRef = useRef<HTMLDivElement>(null);
 
+  const getLogoSrc = () => {
+    const logoOverride = document?.customFields?.find(
+      (f: any) => f.key === 'logo_url_override' || f.label === 'logo_url_override'
+    )?.value;
+    if (logoOverride) return formatImageSrc(logoOverride);
+
+    const logoDirect = document?.logoUrlOverride || document?.logo_url_override || document?.logoUrl || document?.logo_url || document?.logo;
+    if (logoDirect) return formatImageSrc(logoDirect);
+
+    const bizLogo = document?.businessSnapshot?.logoUrlOverride || document?.businessSnapshot?.logo_url_override || document?.businessSnapshot?.logoUrl || document?.businessSnapshot?.logo_url || document?.businessSnapshot?.logo;
+    if (bizLogo) return formatImageSrc(bizLogo);
+
+    return null;
+  };
+
 
   const [loading, setLoading] = useState(true);
   const [savingSettings, setSavingSettings] = useState(false);
@@ -560,9 +575,9 @@ export default function InvoiceDetailsPage({ params }: InvoiceDetailsProps) {
             <div className="invoice-doc-header print-avoid-break">
               {/* Left: logo + company info */}
               <div className="invoice-doc-brand">
-                {document.businessSnapshot?.logo ? (
+                {getLogoSrc() ? (
                   <img
-                    src={formatImageSrc(document.businessSnapshot.logo)}
+                    src={getLogoSrc()!}
                     alt="Logo"
                     className="invoice-doc-logo"
                   />
