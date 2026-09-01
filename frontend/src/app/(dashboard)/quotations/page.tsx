@@ -122,7 +122,7 @@ export default function QuotationsPage() {
   };
 
   return (
-    <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 space-y-6 text-slate-800">
+    <div className="w-full space-y-6 text-slate-800">
       {/* Page Header */}
       <PageHeader
         title="Quotation & Estimates"
@@ -141,7 +141,7 @@ export default function QuotationsPage() {
       />
 
       {/* Tabs */}
-      <div className="border-b border-slate-200 flex gap-6 text-xs leading-none pb-0">
+      <div className="border-b border-slate-200 flex gap-6 text-xs leading-none pb-0 overflow-x-auto">
         {['ALL', 'DRAFT', 'SENT', 'ACCEPTED', 'REJECTED', 'EXPIRED'].map((tab) => (
           <button
             key={tab}
@@ -159,7 +159,7 @@ export default function QuotationsPage() {
       </div>
 
       {/* Toolbar */}
-      <div className="flex flex-col lg:flex-row gap-3 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-xs">
+      <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center bg-white p-3 rounded-xl border border-slate-200 shadow-xs">
         <div className="relative flex-1 w-full">
           <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -174,13 +174,13 @@ export default function QuotationsPage() {
               setPage(1);
             }}
             placeholder="Search quotation number, client..."
-            className="w-full pl-9 h-9 form-input text-xs text-slate-905 placeholder:text-slate-400 bg-transparent border-0 focus:ring-0"
+            className="w-full pl-9 h-9 form-input text-xs text-slate-900 placeholder:text-slate-400 bg-transparent border-0 focus:ring-0"
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-end">
-          <div className="flex items-center gap-2 text-xs">
-            <span className="text-slate-500 font-medium">From:</span>
+        <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto justify-start lg:justify-end">
+          <div className="flex items-center gap-1.5 text-xs">
+            <span className="text-slate-500 font-medium text-[11px]">From:</span>
             <input
               type="date"
               value={fromDate}
@@ -188,9 +188,9 @@ export default function QuotationsPage() {
                 setFromDate(e.target.value);
                 setPage(1);
               }}
-              className="h-9 px-3 rounded-lg border border-slate-200 text-xs bg-white text-slate-900"
+              className="h-9 px-2 rounded-lg border border-slate-200 text-xs bg-white text-slate-900"
             />
-            <span className="text-slate-500 font-medium">To:</span>
+            <span className="text-slate-500 font-medium text-[11px]">To:</span>
             <input
               type="date"
               value={toDate}
@@ -198,14 +198,14 @@ export default function QuotationsPage() {
                 setToDate(e.target.value);
                 setPage(1);
               }}
-              className="h-9 px-3 rounded-lg border border-slate-200 text-xs bg-white text-slate-900"
+              className="h-9 px-2 rounded-lg border border-slate-200 text-xs bg-white text-slate-900"
             />
           </div>
 
           {hasActiveFilters && (
             <button
               onClick={handleClearFilters}
-              className="text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors"
+              className="h-9 px-3 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
             >
               Clear
             </button>
@@ -219,7 +219,6 @@ export default function QuotationsPage() {
           <LoadingSpinner size="md" />
         </div>
       ) : quotations.length === 0 ? (
-        /* Redesigned Compact Empty State */
         <div className="bg-white p-10 rounded-xl border border-slate-200 text-center space-y-4 max-w-xl mx-auto my-4 flex flex-col justify-center items-center min-h-[280px]">
           <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -227,8 +226,8 @@ export default function QuotationsPage() {
             </svg>
           </div>
           <div className="space-y-1">
-            <h3 className="text-sm font-bold text-slate-805">No quotations found</h3>
-            <p className="text-slate-450 text-xs max-w-sm leading-relaxed">
+            <h3 className="text-sm font-bold text-slate-800">No quotations found</h3>
+            <p className="text-slate-500 text-xs max-w-sm leading-relaxed">
               Create professional quotations for your clients with itemized pricing and GST calculations.
             </p>
           </div>
@@ -241,38 +240,37 @@ export default function QuotationsPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="card-panel rounded-xl overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-left text-xs">
+          <div className="card-panel rounded-xl overflow-hidden bg-white shadow-sm border border-slate-200">
+            <div className="overflow-x-auto app-table-container">
+              <table className="w-full border-collapse text-left text-xs min-w-[860px]">
                 <thead>
                   <tr className="border-b border-slate-200 text-slate-500 font-semibold bg-slate-50">
-                    <th className="px-6 py-3.5">Quotation Number</th>
-                    <th className="px-6 py-3.5">Client</th>
-                    <th className="px-6 py-3.5">Issue Date</th>
-                    <th className="px-6 py-3.5">Valid Till</th>
-                    <th className="px-6 py-3.5">Amount</th>
-                    <th className="px-6 py-3.5">Status</th>
-                    <th className="px-6 py-3.5">Created At</th>
-                    <th className="px-6 py-3.5 text-right">Actions</th>
+                    <th className="px-4 py-3 w-36">Quotation No</th>
+                    <th className="px-4 py-3">Client</th>
+                    <th className="px-3.5 py-3 w-28">Issue Date</th>
+                    <th className="px-3.5 py-3 w-28">Valid Till</th>
+                    <th className="px-3.5 py-3 text-right w-28">Amount</th>
+                    <th className="px-3.5 py-3 text-center w-28">Status</th>
+                    <th className="px-4 py-3 text-right w-36">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-slate-700">
+                <tbody className="divide-y divide-slate-100 text-slate-700 bg-white">
                   {quotations.map((quotation) => (
-                    <tr key={quotation._id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="px-6 py-4 font-semibold text-slate-900 font-mono">
+                    <tr key={quotation._id} className="hover:bg-slate-50/70 transition-colors">
+                      <td className="px-4 py-3 font-semibold text-slate-900 font-mono-numeric">
                         {quotation.documentNumber}
                       </td>
-                      <td className="px-6 py-4">
-                        <span className="font-semibold text-slate-800">
-                          {quotation.clientSnapshot.businessName || quotation.clientSnapshot.clientName}
+                      <td className="px-4 py-3 max-w-[240px]">
+                        <span className="font-semibold text-slate-800 block truncate" title={quotation.clientSnapshot?.businessName || quotation.clientSnapshot?.clientName}>
+                          {quotation.clientSnapshot?.businessName || quotation.clientSnapshot?.clientName}
                         </span>
-                        {quotation.clientSnapshot.businessName && (
-                          <span className="block text-[10px] text-slate-400 font-normal mt-0.5">
-                            Attn: {quotation.clientSnapshot.clientName}
+                        {quotation.clientSnapshot?.businessName && (
+                          <span className="block text-[10px] text-slate-400 font-normal truncate">
+                            Attn: {quotation.clientSnapshot?.clientName}
                           </span>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-slate-600">
+                      <td className="px-3.5 py-3 text-slate-600 whitespace-nowrap">
                         {quotation.issueDate && !isNaN(new Date(quotation.issueDate).getTime()) ? (
                           new Date(quotation.issueDate).toLocaleDateString('en-IN', {
                             day: '2-digit',
@@ -283,7 +281,7 @@ export default function QuotationsPage() {
                           <span className="text-slate-400">—</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-slate-600">
+                      <td className="px-3.5 py-3 text-slate-600 whitespace-nowrap">
                         {quotation.validTill && !isNaN(new Date(quotation.validTill).getTime()) ? (
                           new Date(quotation.validTill).toLocaleDateString('en-IN', {
                             day: '2-digit',
@@ -294,28 +292,17 @@ export default function QuotationsPage() {
                           <span className="text-slate-400">—</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 font-bold text-slate-800">
-                        ₹{quotation.grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                      <td className="px-3.5 py-3 font-bold text-slate-900 text-right font-mono-numeric whitespace-nowrap">
+                        ₹{Number(quotation.grandTotal ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-3.5 py-3 text-center">
                         {getStatusBadge(quotation.status)}
                       </td>
-                      <td className="px-6 py-4 text-slate-400">
-                        {quotation.createdAt && !isNaN(new Date(quotation.createdAt).getTime()) ? (
-                          new Date(quotation.createdAt).toLocaleDateString('en-IN', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric'
-                          })
-                        ) : (
-                          <span className="text-slate-400">—</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex items-center justify-end gap-1">
                           <Link
                             href={`/quotations/${quotation._id}`}
-                            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                            className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
                             title="View Quotation"
                           >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -323,41 +310,37 @@ export default function QuotationsPage() {
                               <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                             </svg>
                           </Link>
-                          {(
-                            <Link
-                              href={`/quotations/${quotation._id}/edit`}
-                              className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-slate-100 rounded-lg transition-colors"
-                              title="Edit Quotation"
-                            >
-                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                              </svg>
-                            </Link>
-                          )}
+                          <Link
+                            href={`/quotations/${quotation._id}/edit`}
+                            className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded-lg transition-colors"
+                            title="Edit Quotation"
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                          </Link>
                           <button
                             onClick={() => handleDuplicate(quotation._id)}
-                            className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition-colors"
+                            className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition-colors"
                             title="Duplicate"
                           >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
                             </svg>
                           </button>
-                          {(
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                handleDelete(quotation._id, quotation.documentNumber);
-                              }}
-                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-colors"
-                              title="Delete Quotation"
-                            >
-                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
-                            </button>
-                          )}
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleDelete(quotation._id, quotation.documentNumber);
+                            }}
+                            className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-colors"
+                            title="Delete Quotation"
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -365,32 +348,30 @@ export default function QuotationsPage() {
                 </tbody>
               </table>
             </div>
-          </div>
 
-          {/* Pagination Controls */}
-          {totalPages > 1 && (
-            <div className="flex justify-between items-center px-2 py-2">
-              <span className="text-xs text-slate-400">
-                Page {page} of {totalPages}
-              </span>
-              <div className="flex gap-2">
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="px-6 py-3.5 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-xs">
                 <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  onClick={() => setPage(page - 1)}
-                  className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-500 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  className="px-3 py-1.5 border border-slate-300 bg-white hover:bg-slate-50 font-semibold rounded-lg text-slate-700 disabled:opacity-50 transition-colors"
                 >
                   Previous
                 </button>
+                <span className="text-slate-500">
+                  Page <span className="font-bold text-slate-900">{page}</span> of <span className="font-bold text-slate-900">{totalPages}</span>
+                </span>
                 <button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
-                  onClick={() => setPage(page + 1)}
-                  className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-500 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  className="px-3 py-1.5 border border-slate-300 bg-white hover:bg-slate-50 font-semibold rounded-lg text-slate-700 disabled:opacity-50 transition-colors"
                 >
                   Next
                 </button>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
     </div>

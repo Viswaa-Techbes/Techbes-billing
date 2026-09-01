@@ -193,7 +193,7 @@ export default function InvoicesPage() {
   };
 
   return (
-    <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 space-y-6 text-slate-800">
+    <div className="w-full space-y-6 text-slate-800">
       {/* Page Header */}
       <PageHeader
         title="Invoices"
@@ -212,7 +212,7 @@ export default function InvoicesPage() {
       />
 
       {/* Tabs */}
-      <div className="border-b border-slate-200 flex gap-6 text-xs leading-none pb-0">
+      <div className="border-b border-slate-200 flex gap-6 text-xs leading-none pb-0 overflow-x-auto">
         {['ALL', 'DRAFT', 'ISSUED', 'SENT', 'OVERDUE', 'CANCELLED'].map((tab) => (
           <button
             key={tab}
@@ -230,7 +230,7 @@ export default function InvoicesPage() {
       </div>
 
       {/* Toolbar Filters */}
-      <div className="flex flex-col lg:flex-row gap-3 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-xs">
+      <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center bg-white p-3 rounded-xl border border-slate-200 shadow-xs">
         <div className="relative flex-1 w-full">
           <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -245,11 +245,11 @@ export default function InvoicesPage() {
               setPage(1);
             }}
             placeholder="Search by invoice number, client..."
-            className="w-full pl-9 h-9 form-input text-xs text-slate-905 placeholder:text-slate-400 bg-transparent border-0 focus:ring-0"
+            className="w-full pl-9 h-9 form-input text-xs text-slate-900 placeholder:text-slate-400 bg-transparent border-0 focus:ring-0"
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-end text-xs">
+        <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto justify-start lg:justify-end text-xs">
           <div>
             <select
               value={paymentStatusFilter}
@@ -257,7 +257,7 @@ export default function InvoicesPage() {
                 setPaymentStatusFilter(e.target.value);
                 setPage(1);
               }}
-              className="h-9 px-3 rounded-lg border border-slate-200 text-xs bg-white text-slate-905"
+              className="h-9 px-3 rounded-lg border border-slate-200 text-xs bg-white text-slate-800"
             >
               <option value="">All Payments</option>
               <option value="UNPAID">Unpaid</option>
@@ -266,8 +266,8 @@ export default function InvoicesPage() {
             </select>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-slate-500 font-medium">From:</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-slate-500 font-medium text-[11px]">From:</span>
             <input
               type="date"
               value={fromDate}
@@ -275,9 +275,9 @@ export default function InvoicesPage() {
                 setFromDate(e.target.value);
                 setPage(1);
               }}
-              className="h-9 px-3 rounded-lg border border-slate-200 text-xs bg-white text-slate-900"
+              className="h-9 px-2 rounded-lg border border-slate-200 text-xs bg-white text-slate-900"
             />
-            <span className="text-slate-500 font-medium">To:</span>
+            <span className="text-slate-500 font-medium text-[11px]">To:</span>
             <input
               type="date"
               value={toDate}
@@ -285,14 +285,14 @@ export default function InvoicesPage() {
                 setToDate(e.target.value);
                 setPage(1);
               }}
-              className="h-9 px-3 rounded-lg border border-slate-200 text-xs bg-white text-slate-900"
+              className="h-9 px-2 rounded-lg border border-slate-200 text-xs bg-white text-slate-900"
             />
           </div>
 
           {hasActiveFilters && (
             <button
               onClick={handleClearFilters}
-              className="text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors"
+              className="h-9 px-3 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
             >
               Clear
             </button>
@@ -314,8 +314,8 @@ export default function InvoicesPage() {
             </svg>
           </div>
           <div className="space-y-1">
-            <h3 className="text-sm font-bold text-slate-805">No invoices found</h3>
-            <p className="text-slate-450 text-xs max-w-sm leading-relaxed">
+            <h3 className="text-sm font-bold text-slate-800">No invoices found</h3>
+            <p className="text-slate-500 text-xs max-w-sm leading-relaxed">
               Issue Tax Invoices, track client payments, calculate GST splits, and generate professional PDFs.
             </p>
           </div>
@@ -329,34 +329,34 @@ export default function InvoicesPage() {
       ) : (
         <div className="space-y-4">
           <div className="card-panel rounded-xl overflow-hidden bg-white shadow-sm border border-slate-200">
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-left text-xs">
+            <div className="overflow-x-auto app-table-container">
+              <table className="w-full border-collapse text-left text-xs min-w-[980px]">
                 <thead>
                   <tr className="border-b border-slate-200 text-slate-500 font-semibold bg-slate-50">
-                    <th className="px-6 py-3.5">Invoice No</th>
-                    <th className="px-6 py-3.5">Client</th>
-                    <th className="px-6 py-3.5">Invoice Date</th>
-                    <th className="px-6 py-3.5">Due Date</th>
-                    <th className="px-6 py-3.5">Total</th>
-                    <th className="px-6 py-3.5">Amount Paid</th>
-                    <th className="px-6 py-3.5">Balance Due</th>
-                    <th className="px-6 py-3.5">Payment</th>
-                    <th className="px-6 py-3.5">Invoice Status</th>
-                    <th className="px-6 py-3.5 text-right">Actions</th>
+                    <th className="px-4 py-3 w-32">Invoice No</th>
+                    <th className="px-4 py-3">Client</th>
+                    <th className="px-3.5 py-3 w-28">Date</th>
+                    <th className="px-3.5 py-3 w-28">Due Date</th>
+                    <th className="px-3.5 py-3 text-right w-28">Total</th>
+                    <th className="px-3.5 py-3 text-right w-28">Paid</th>
+                    <th className="px-3.5 py-3 text-right w-28">Balance</th>
+                    <th className="px-3.5 py-3 text-center w-28">Payment</th>
+                    <th className="px-3.5 py-3 text-center w-28">Status</th>
+                    <th className="px-4 py-3 text-right w-36">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-700 bg-white">
                   {invoices.map((invoice) => (
-                    <tr key={invoice._id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="px-6 py-4 font-semibold text-slate-900 font-mono">
+                    <tr key={invoice._id} className="hover:bg-slate-50/70 transition-colors">
+                      <td className="px-4 py-3 font-semibold text-slate-900 font-mono-numeric">
                         {invoice.documentNumber}
                       </td>
-                      <td className="px-6 py-4">
-                        <span className="font-semibold text-slate-800 block">
+                      <td className="px-4 py-3 max-w-[220px]">
+                        <span className="font-semibold text-slate-800 block truncate" title={invoice.clientSnapshot?.businessName || invoice.clientSnapshot?.clientName}>
                           {invoice.clientSnapshot?.businessName || invoice.clientSnapshot?.clientName}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-slate-600">
+                      <td className="px-3.5 py-3 text-slate-600 whitespace-nowrap">
                         {invoice.issueDate && !isNaN(new Date(invoice.issueDate).getTime()) ? (
                           new Date(invoice.issueDate).toLocaleDateString('en-IN', {
                             day: '2-digit',
@@ -367,7 +367,7 @@ export default function InvoicesPage() {
                           <span className="text-slate-400">—</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-slate-600">
+                      <td className="px-3.5 py-3 text-slate-600 whitespace-nowrap">
                         {invoice.validTill && !isNaN(new Date(invoice.validTill).getTime()) ? (
                           new Date(invoice.validTill).toLocaleDateString('en-IN', {
                             day: '2-digit',
@@ -378,23 +378,23 @@ export default function InvoicesPage() {
                           <span className="text-slate-400">—</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 font-bold text-slate-900">
+                      <td className="px-3.5 py-3 font-bold text-slate-900 text-right font-mono-numeric whitespace-nowrap">
                         ₹{Number(invoice.grandTotal ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                       </td>
-                      <td className="px-6 py-4 text-slate-600">
+                      <td className="px-3.5 py-3 text-slate-600 text-right font-mono-numeric whitespace-nowrap">
                         ₹{Number(invoice.amountPaid ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                       </td>
-                      <td className="px-6 py-4 font-bold text-slate-900">
+                      <td className="px-3.5 py-3 font-bold text-slate-900 text-right font-mono-numeric whitespace-nowrap">
                         ₹{Number(invoice.balanceDue ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-3.5 py-3 text-center">
                         {getPaymentStatusBadge(invoice.paymentStatus)}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-3.5 py-3 text-center">
                         {getStatusBadge(invoice.status)}
                       </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex items-center justify-end gap-1">
                           <Link
                             href={`/invoices/${invoice._id}`}
                             className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
@@ -405,17 +405,15 @@ export default function InvoicesPage() {
                               <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                             </svg>
                           </Link>
-                          {(
-                            <Link
-                              href={`/invoices/${invoice._id}/edit`}
-                              className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded-lg transition-colors"
-                              title="Edit Invoice"
-                            >
-                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                              </svg>
-                            </Link>
-                          )}
+                          <Link
+                            href={`/invoices/${invoice._id}/edit`}
+                            className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded-lg transition-colors"
+                            title="Edit Invoice"
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                          </Link>
                           <button
                             onClick={() => handleDuplicate(invoice._id)}
                             className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition-colors"
@@ -438,20 +436,19 @@ export default function InvoicesPage() {
                             </button>
                           )}
 
-                          {
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                handleDeleteInvoice(invoice._id, invoice.documentNumber);
-                              }}
-                              className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-colors"
-                              title="Delete Invoice"
-                            >
-                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
-                            </button>}
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleDeleteInvoice(invoice._id, invoice.documentNumber);
+                            }}
+                            className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-colors"
+                            title="Delete Invoice"
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -462,11 +459,11 @@ export default function InvoicesPage() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="px-6 py-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-xs">
+              <div className="px-6 py-3.5 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-xs">
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="px-3 py-1.5 border border-slate-350 bg-white hover:bg-slate-50 font-semibold rounded-lg text-slate-700 disabled:opacity-50 transition-colors"
+                  className="px-3 py-1.5 border border-slate-300 bg-white hover:bg-slate-50 font-semibold rounded-lg text-slate-700 disabled:opacity-50 transition-colors"
                 >
                   Previous
                 </button>
@@ -476,7 +473,7 @@ export default function InvoicesPage() {
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
-                  className="px-3 py-1.5 border border-slate-350 bg-white hover:bg-slate-50 font-semibold rounded-lg text-slate-700 disabled:opacity-50 transition-colors"
+                  className="px-3 py-1.5 border border-slate-300 bg-white hover:bg-slate-50 font-semibold rounded-lg text-slate-700 disabled:opacity-50 transition-colors"
                 >
                   Next
                 </button>

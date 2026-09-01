@@ -19,6 +19,7 @@ interface ClientType {
     addressLine1?: string;
     city?: string;
     state?: string;
+    stateCode?: string;
     pincode?: string;
   };
 }
@@ -47,6 +48,28 @@ interface LineItemType {
   unit?: string;
   sourceInvoiceItemId?: string;
 }
+
+const createBlankItemLine = (): LineItemType => ({
+  itemName: '',
+  gstRate: 18,
+  quantity: 1,
+  rate: 0,
+  description: '',
+  unit: 'PCS',
+});
+
+const isUsefulItemLine = (item: LineItemType) => Boolean(
+  item.itemName?.trim() ||
+  item.description?.trim() ||
+  item.hsnSac?.trim() ||
+  item.rate > 0 ||
+  item.image
+);
+
+const withTrailingBlankItemLine = (list: LineItemType[]): LineItemType[] => {
+  const filtered = list.filter(isUsefulItemLine);
+  return [...filtered, createBlankItemLine()];
+};
 
 interface CreditNoteEditorProps {
   initialId?: string;
@@ -553,7 +576,7 @@ export default function CreditNoteEditor({ initialId }: CreditNoteEditorProps) {
       } : undefined,
       reason,
       reasonDetails: (reason === 'OTHER' || reason === 'FAULT_OR_DEFECT') ? reasonDetails : undefined,
-      items: (typeof persistedItems !== 'undefined' ? persistedItems : items.filter(isUsefulItemLine)).map((item) => ({
+      items: items.filter(isUsefulItemLine).map((item: LineItemType) => ({
         itemName: item.itemName,
         hsnSac: item.hsnSac || undefined,
         gstRate: item.gstRate,
@@ -1214,7 +1237,7 @@ export default function CreditNoteEditor({ initialId }: CreditNoteEditorProps) {
                 disabled={loading}
                 className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-sm disabled:opacity-50 text-xs"
               >
-                {loading ? <LoadingSpinner size="xs" /> : 'Finalize & Continue'}
+                {loading ? <LoadingSpinner size="sm" /> : 'Finalize & Continue'}
               </button>
             </div>
           </div>

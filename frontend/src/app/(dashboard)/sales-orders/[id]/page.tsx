@@ -171,6 +171,10 @@ export default function SalesOrderDetailPage() {
     }
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   // Delete document draft
   const handleDeleteDocument = async () => {
     if (!window.confirm(`Are you sure you want to delete draft Sales Order ${document.documentNumber}?`)) return;

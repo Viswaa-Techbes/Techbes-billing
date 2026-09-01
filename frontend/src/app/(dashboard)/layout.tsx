@@ -16,8 +16,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <Topbar />
 
           {/* Page Body Viewport */}
-          <main className="flex-1 p-8 overflow-y-auto print:p-0">
-            <div className="max-w-7xl mx-auto animate-fadeIn print:max-w-none">
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto overflow-x-hidden print:p-0">
+            <div className="max-w-[1536px] w-full mx-auto animate-fadeIn print:max-w-none">
               {children}
             </div>
           </main>

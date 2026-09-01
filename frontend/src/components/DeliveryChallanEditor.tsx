@@ -19,6 +19,7 @@ interface ClientType {
     addressLine1?: string;
     city?: string;
     state?: string;
+    stateCode?: string;
     pincode?: string;
   };
 }
@@ -1164,7 +1165,7 @@ export default function DeliveryChallanEditor({ initialId }: DeliveryChallanEdit
                 disabled={loading}
                 className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-sm disabled:opacity-50 text-xs"
               >
-                {loading ? <LoadingSpinner size="xs" /> : 'Finalize & Continue'}
+                {loading ? <LoadingSpinner size="sm" /> : 'Finalize & Continue'}
               </button>
             </div>
           </div>

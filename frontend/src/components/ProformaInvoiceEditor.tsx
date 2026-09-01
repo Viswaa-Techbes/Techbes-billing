@@ -679,6 +679,16 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
 
   const calculated = calculateTotals();
 
+  const isUsefulLineItem = (item: LineItem) => Boolean(
+    item.isGroupHeader ||
+    item.itemName?.trim() ||
+    item.description?.trim() ||
+    item.hsnSac?.trim() ||
+    item.rate > 0 ||
+    item.discountValue > 0 ||
+    item.image
+  );
+
   // Helper: line item manipulation
   const handleAddItemRow = () => {
     setItems((prev) => [...prev, createBlankLineItem()]);
@@ -786,19 +796,22 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
 
   // Save document core handler
   const handleSaveDocument = async (draftOnly: boolean) => {
+    if (saving) return;
+
     if (!selectedClientId) {
       showToast('Please select a client before saving.', 'error');
       return;
     }
 
-    if (items.length === 0) {
-      showToast('Please add at least one line item.', 'error');
+    const usefulItems = items.filter(isUsefulLineItem);
+    if (usefulItems.length === 0) {
+      showToast('Please add at least one line item before saving.', 'error');
       return;
     }
 
     // Validate line items
-    for (let idx = 0; idx < items.length; idx++) {
-      const item = items[idx];
+    for (let idx = 0; idx < usefulItems.length; idx++) {
+      const item = usefulItems[idx];
       if (!item.isGroupHeader) {
         if (!item.itemName || !item.itemName.trim()) {
           showToast(`Line item #${idx + 1}: Item Name is required.`, 'error');
@@ -820,7 +833,7 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
       const resolvedPlaceOfSupply = getResolvedPlaceOfSupply();
 
       // Serialize items (prefix group headers to itemName)
-      const serializedItems = items.map((item) => {
+      const serializedItems = usefulItems.map((item) => {
         if (item.isGroupHeader) {
           return {
             itemName: `[GROUP] ${item.groupTitle || 'Group Section'}`,

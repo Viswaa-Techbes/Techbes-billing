@@ -171,6 +171,10 @@ export default function DeliveryChallanDetailPage() {
     }
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   const handleDeleteDocument = async () => {
     if (!window.confirm(`Are you sure you want to delete draft Delivery Challan ${document.documentNumber}?`)) return;
     try {

@@ -242,6 +242,10 @@ export default function CreditNoteDetailPage() {
     }
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   const handleDeleteDocument = async () => {
     if (!window.confirm(`Are you sure you want to delete draft Credit Note ${document.documentNumber}?`)) return;
     try {

@@ -138,7 +138,7 @@ export default function ProformaInvoicesPage() {
   };
 
   return (
-    <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 space-y-6 text-slate-800">
+    <div className="w-full space-y-6 text-slate-800">
       {/* Page Header */}
       <PageHeader
         title="Proforma Invoices"
@@ -157,7 +157,7 @@ export default function ProformaInvoicesPage() {
       />
 
       {/* Tabs */}
-      <div className="border-b border-slate-200 flex gap-6 text-xs leading-none pb-0">
+      <div className="border-b border-slate-200 flex gap-6 text-xs leading-none pb-0 overflow-x-auto">
         {['ALL', 'DRAFT', 'SENT', 'VIEWED', 'ACCEPTED', 'REJECTED', 'EXPIRED', 'CONVERTED'].map((tab) => (
           <button
             key={tab}
@@ -175,7 +175,7 @@ export default function ProformaInvoicesPage() {
       </div>
 
       {/* Toolbar */}
-      <div className="flex flex-col lg:flex-row gap-3 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-xs">
+      <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center bg-white p-3 rounded-xl border border-slate-200 shadow-xs">
         <div className="relative flex-1 w-full">
           <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -190,13 +190,13 @@ export default function ProformaInvoicesPage() {
               setPage(1);
             }}
             placeholder="Search by invoice number, client..."
-            className="w-full pl-9 h-9 form-input text-xs text-slate-905 placeholder:text-slate-400 bg-transparent border-0 focus:ring-0"
+            className="w-full pl-9 h-9 form-input text-xs text-slate-900 placeholder:text-slate-400 bg-transparent border-0 focus:ring-0"
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-end">
-          <div className="flex items-center gap-2 text-xs">
-            <span className="text-slate-500 font-medium">From:</span>
+        <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto justify-start lg:justify-end">
+          <div className="flex items-center gap-1.5 text-xs">
+            <span className="text-slate-500 font-medium text-[11px]">From:</span>
             <input
               type="date"
               value={fromDate}
@@ -204,9 +204,9 @@ export default function ProformaInvoicesPage() {
                 setFromDate(e.target.value);
                 setPage(1);
               }}
-              className="h-9 px-3 rounded-lg border border-slate-200 text-xs bg-white text-slate-900"
+              className="h-9 px-2 rounded-lg border border-slate-200 text-xs bg-white text-slate-900"
             />
-            <span className="text-slate-500 font-medium">To:</span>
+            <span className="text-slate-500 font-medium text-[11px]">To:</span>
             <input
               type="date"
               value={toDate}
@@ -214,14 +214,14 @@ export default function ProformaInvoicesPage() {
                 setToDate(e.target.value);
                 setPage(1);
               }}
-              className="h-9 px-3 rounded-lg border border-slate-200 text-xs bg-white text-slate-900"
+              className="h-9 px-2 rounded-lg border border-slate-200 text-xs bg-white text-slate-900"
             />
           </div>
 
           {hasActiveFilters && (
             <button
               onClick={handleClearFilters}
-              className="text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors"
+              className="h-9 px-3 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
             >
               Clear
             </button>
@@ -243,8 +243,8 @@ export default function ProformaInvoicesPage() {
             </svg>
           </div>
           <div className="space-y-1">
-            <h3 className="text-sm font-bold text-slate-805">No proforma invoices found</h3>
-            <p className="text-slate-450 text-xs max-w-sm leading-relaxed">
+            <h3 className="text-sm font-bold text-slate-800">No proforma invoices found</h3>
+            <p className="text-slate-500 text-xs max-w-sm leading-relaxed">
               Create preliminary billing proposals and payment plans for your clients.
             </p>
           </div>
@@ -258,37 +258,36 @@ export default function ProformaInvoicesPage() {
       ) : (
         <div className="space-y-4">
           <div className="card-panel rounded-xl overflow-hidden bg-white shadow-sm border border-slate-200">
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-left text-xs">
+            <div className="overflow-x-auto app-table-container">
+              <table className="w-full border-collapse text-left text-xs min-w-[880px]">
                 <thead>
                   <tr className="border-b border-slate-200 text-slate-500 font-semibold bg-slate-50">
-                    <th className="px-6 py-3.5">Proforma Invoice No</th>
-                    <th className="px-6 py-3.5">Client</th>
-                    <th className="px-6 py-3.5">Invoice Date</th>
-                    <th className="px-6 py-3.5">Due Date</th>
-                    <th className="px-6 py-3.5">Amount</th>
-                    <th className="px-6 py-3.5">Status</th>
-                    <th className="px-6 py-3.5">Created At</th>
-                    <th className="px-6 py-3.5 text-right">Actions</th>
+                    <th className="px-4 py-3 w-36">Proforma No</th>
+                    <th className="px-4 py-3">Client</th>
+                    <th className="px-3.5 py-3 w-28">Date</th>
+                    <th className="px-3.5 py-3 w-28">Due Date</th>
+                    <th className="px-3.5 py-3 text-right w-28">Amount</th>
+                    <th className="px-3.5 py-3 text-center w-28">Status</th>
+                    <th className="px-4 py-3 text-right w-40">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-700 bg-white">
                   {invoices.map((invoice) => (
-                    <tr key={invoice._id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="px-6 py-4 font-semibold text-slate-900 font-mono">
+                    <tr key={invoice._id} className="hover:bg-slate-50/70 transition-colors">
+                      <td className="px-4 py-3 font-semibold text-slate-900 font-mono-numeric">
                         {invoice.documentNumber}
                       </td>
-                      <td className="px-6 py-4">
-                        <span className="font-semibold text-slate-800 block">
-                          {invoice.clientSnapshot.businessName || invoice.clientSnapshot.clientName}
+                      <td className="px-4 py-3 max-w-[220px]">
+                        <span className="font-semibold text-slate-800 block truncate" title={invoice.clientSnapshot?.businessName || invoice.clientSnapshot?.clientName}>
+                          {invoice.clientSnapshot?.businessName || invoice.clientSnapshot?.clientName}
                         </span>
-                        {invoice.clientSnapshot.businessName && (
-                          <span className="text-[10px] text-slate-400 font-normal">
-                            Attn: {invoice.clientSnapshot.clientName}
+                        {invoice.clientSnapshot?.businessName && (
+                          <span className="block text-[10px] text-slate-400 font-normal truncate">
+                            Attn: {invoice.clientSnapshot?.clientName}
                           </span>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-slate-600">
+                      <td className="px-3.5 py-3 text-slate-600 whitespace-nowrap">
                         {invoice.issueDate && !isNaN(new Date(invoice.issueDate).getTime()) ? (
                           new Date(invoice.issueDate).toLocaleDateString('en-IN', {
                             day: '2-digit',
@@ -299,7 +298,7 @@ export default function ProformaInvoicesPage() {
                           <span className="text-slate-400">—</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-slate-600">
+                      <td className="px-3.5 py-3 text-slate-600 whitespace-nowrap">
                         {invoice.validTill && !isNaN(new Date(invoice.validTill).getTime()) ? (
                           new Date(invoice.validTill).toLocaleDateString('en-IN', {
                             day: '2-digit',
@@ -310,25 +309,14 @@ export default function ProformaInvoicesPage() {
                           <span className="text-slate-400">—</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 font-bold text-slate-900">
-                        ₹{invoice.grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                      <td className="px-3.5 py-3 font-bold text-slate-900 text-right font-mono-numeric whitespace-nowrap">
+                        ₹{Number(invoice.grandTotal ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-3.5 py-3 text-center">
                         {getStatusBadge(invoice.status)}
                       </td>
-                      <td className="px-6 py-4 text-slate-400">
-                        {invoice.createdAt && !isNaN(new Date(invoice.createdAt).getTime()) ? (
-                          new Date(invoice.createdAt).toLocaleDateString('en-IN', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric'
-                          })
-                        ) : (
-                          <span className="text-slate-400">—</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex items-center justify-end gap-1">
                           <Link
                             href={`/proforma-invoices/${invoice._id}`}
                             className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
@@ -393,11 +381,11 @@ export default function ProformaInvoicesPage() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="px-6 py-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-xs">
+              <div className="px-6 py-3.5 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-xs">
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="px-3 py-1.5 border border-slate-350 bg-white hover:bg-slate-50 font-semibold rounded-lg text-slate-700 disabled:opacity-50 transition-colors"
+                  className="px-3 py-1.5 border border-slate-300 bg-white hover:bg-slate-50 font-semibold rounded-lg text-slate-700 disabled:opacity-50 transition-colors"
                 >
                   Previous
                 </button>
@@ -407,7 +395,7 @@ export default function ProformaInvoicesPage() {
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
-                  className="px-3 py-1.5 border border-slate-350 bg-white hover:bg-slate-50 font-semibold rounded-lg text-slate-700 disabled:opacity-50 transition-colors"
+                  className="px-3 py-1.5 border border-slate-300 bg-white hover:bg-slate-50 font-semibold rounded-lg text-slate-700 disabled:opacity-50 transition-colors"
                 >
                   Next
                 </button>
