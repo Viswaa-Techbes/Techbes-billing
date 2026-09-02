@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/lib/api';
@@ -400,8 +400,23 @@ function NewQuotationForm() {
     );
   };
 
+  const lineItemContainerRef = useRef<HTMLDivElement>(null);
+
   const addLineItem = () => {
-    setItems((prev) => [...prev, createBlankLineItem()]);
+    const newItem = createBlankLineItem();
+    setItems((prev) => [...prev, newItem]);
+    setTimeout(() => {
+      if (lineItemContainerRef.current) {
+        lineItemContainerRef.current.scrollTo({
+          top: lineItemContainerRef.current.scrollHeight,
+          behavior: 'smooth',
+        });
+      }
+      const el = document.getElementById(`item-name-input-${newItem.id}`);
+      if (el) {
+        el.focus();
+      }
+    }, 60);
   };
 
   const duplicateLineItem = (id: string) => {
@@ -1189,172 +1204,200 @@ function NewQuotationForm() {
 
             {/* Dynamic line items table */}
             <div className="border-t border-slate-200 pt-5 space-y-4">
-              <div className="flex justify-between items-center">
-                <h4 className="text-xs font-bold text-slate-900">Line Items</h4>
+              <div className="flex justify-between items-center pb-2 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  <h4 className="text-xs font-bold text-slate-900">Line Items</h4>
+                  <span className="px-2 py-0.5 text-[11px] font-bold bg-slate-100 text-slate-600 rounded-full">
+                    {items.filter(isUsefulLineItem).length}
+                  </span>
+                </div>
                 <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={addLineItem}
-                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-750 text-white text-[10px] font-bold rounded-lg uppercase tracking-wider transition-colors"
+                    className="px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700 font-bold rounded-lg text-xs transition-colors flex items-center gap-1.5 shadow-xs"
                   >
-                    Add New Line
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                    </svg>
+                    <span>Add Line</span>
                   </button>
                 </div>
               </div>
 
-              <div className="overflow-x-auto border border-slate-200 rounded-xl">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[9px]">
-                      <th className="p-3 min-w-[200px]">Item Details</th>
-                      {displayOptions.showHsnSac && <th className="p-3 w-24 text-center">HSN/SAC</th>}
-                      {gstEnabled && <th className="p-3 w-20 text-center">GST %</th>}
-                      <th className="p-3 w-20 text-center">Qty</th>
-                      <th className="p-3 w-24 text-right">Rate</th>
-                      <th className="p-3 w-28 text-right">Amount</th>
-                      <th className="p-3 w-24 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {items.map((item, idx) => {
-                      const computedAmt = Math.round(item.quantity * item.rate * 100) / 100;
-                      let compDisc = 0;
-                      if (item.discountType === 'PERCENTAGE') {
-                        compDisc = Math.round(((computedAmt * item.discountValue) / 100) * 100) / 100;
-                      } else if (item.discountType === 'FIXED') {
-                        compDisc = Math.min(computedAmt, item.discountValue);
-                      }
-                      const computedTotal = computedAmt - compDisc;
+              {/* Dynamic Items Table Container */}
+              <div className="border border-slate-200 rounded-2xl bg-white overflow-hidden shadow-xs">
+                <div ref={lineItemContainerRef} className="overflow-x-auto overflow-y-auto max-h-[520px]">
+                  <table className="w-full text-left text-xs border-collapse min-w-[860px]">
+                    <thead className="sticky top-0 z-10 bg-slate-50 border-b border-slate-200 shadow-xs">
+                      <tr className="text-slate-500 font-semibold uppercase tracking-wider text-[10px]">
+                        <th className="px-4 py-3 min-w-[220px]">Item Details</th>
+                        {displayOptions.showHsnSac && <th className="px-3 py-3 w-28 min-w-[100px] text-center">HSN/SAC</th>}
+                        {gstEnabled && <th className="px-3 py-3 w-24 min-w-[85px] text-center">GST %</th>}
+                        <th className="px-3 py-3 w-28 min-w-[100px] text-center">Qty</th>
+                        <th className="px-3 py-3 w-36 min-w-[140px] text-right">Rate</th>
+                        <th className="px-3 py-3 w-40 min-w-[145px] text-right">Amount</th>
+                        <th className="px-3 py-3 w-24 min-w-[80px] text-center">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 bg-white">
+                      {items.map((item) => {
+                        const computedAmt = Math.round(item.quantity * item.rate * 100) / 100;
+                        let compDisc = 0;
+                        if (item.discountType === 'PERCENTAGE') {
+                          compDisc = Math.round(((computedAmt * item.discountValue) / 100) * 100) / 100;
+                        } else if (item.discountType === 'FIXED') {
+                          compDisc = Math.min(computedAmt, item.discountValue);
+                        }
+                        const computedTotal = computedAmt - compDisc;
 
-                      return (
-                        <tr key={item.id} className="align-top hover:bg-slate-50/50 transition-colors">
-                          {/* Item Details */}
-                          <td className="p-3 space-y-2">
-                            <ItemAutocomplete
-                              value={item.itemName}
-                              onChange={(val) => handleItemFieldChange(item.id, 'itemName', val)}
-                              onSelect={(selected) => {
-                                handleItemFieldChange(item.id, 'itemName', selected.itemName);
-                                handleItemFieldChange(item.id, 'description', selected.description);
-                                handleItemFieldChange(item.id, 'hsnSac', selected.hsnSac);
-                                handleItemFieldChange(item.id, 'gstRate', selected.gstRate);
-                                handleItemFieldChange(item.id, 'rate', selected.sellingPrice);
-                                handleItemFieldChange(item.id, 'unit', selected.unit);
-                              }}
-                              placeholder="Search item or type name..."
-                            />
-                            {displayOptions.showItemDescriptions && (
-                              <textarea
-                                value={item.description}
-                                onChange={(e) => handleItemFieldChange(item.id, 'description', e.target.value)}
-                                className="w-full form-input text-[11px] text-slate-600 border-slate-200 resize-none"
-                                rows={2}
-                                placeholder="Description notes"
+                        return (
+                          <tr key={item.id} id={`line-row-${item.id}`} className="align-top hover:bg-slate-50/40 transition-colors">
+                            {/* Item Details */}
+                            <td className="px-4 py-3 space-y-2">
+                              <ItemAutocomplete
+                                id={`item-name-input-${item.id}`}
+                                value={item.itemName}
+                                onChange={(val) => handleItemFieldChange(item.id, 'itemName', val)}
+                                onSelect={(selected) => {
+                                  handleItemFieldChange(item.id, 'itemName', selected.itemName);
+                                  handleItemFieldChange(item.id, 'description', selected.description);
+                                  handleItemFieldChange(item.id, 'hsnSac', selected.hsnSac);
+                                  handleItemFieldChange(item.id, 'gstRate', selected.gstRate);
+                                  handleItemFieldChange(item.id, 'rate', selected.sellingPrice);
+                                  handleItemFieldChange(item.id, 'unit', selected.unit);
+                                }}
+                                placeholder="Search item or type name..."
                               />
+                              {displayOptions.showItemDescriptions && (
+                                <textarea
+                                  value={item.description}
+                                  onChange={(e) => handleItemFieldChange(item.id, 'description', e.target.value)}
+                                  className="w-full form-input text-[11px] text-slate-600 border-slate-200 resize-none"
+                                  rows={2}
+                                  placeholder="Description notes"
+                                />
+                              )}
+                              <div className="flex gap-2">
+                                <select
+                                  value={item.productType}
+                                  onChange={(e) => handleItemFieldChange(item.id, 'productType', e.target.value)}
+                                  className="form-input text-[10px] text-slate-500 py-0.5 border-slate-200 bg-white"
+                                >
+                                  <option value="PRODUCT">Product</option>
+                                  <option value="SERVICE">Service</option>
+                                </select>
+                              </div>
+                            </td>
+
+                            {/* HSN */}
+                            {displayOptions.showHsnSac && (
+                              <td className="px-3 py-3 text-center align-top w-28 min-w-[100px]">
+                                <input
+                                  type="text"
+                                  value={item.hsnSac}
+                                  onChange={(e) => handleItemFieldChange(item.id, 'hsnSac', e.target.value)}
+                                  className="w-full form-input text-xs text-center border-slate-200 font-mono"
+                                  placeholder="HSN"
+                                />
+                              </td>
                             )}
-                            <div className="flex gap-2">
-                              <select
-                                value={item.productType}
-                                onChange={(e) => handleItemFieldChange(item.id, 'productType', e.target.value)}
-                                className="form-input text-[10px] text-slate-500 py-0.5 border-slate-200 bg-white"
-                              >
-                                <option value="PRODUCT">Product</option>
-                                <option value="SERVICE">Service</option>
-                              </select>
-                            </div>
-                          </td>
 
-                          {/* HSN */}
-                          {displayOptions.showHsnSac && (
-                            <td className="p-3 text-center">
+                            {/* GST Rate */}
+                            {gstEnabled && (
+                              <td className="px-3 py-3 text-center align-top w-24 min-w-[85px]">
+                                <select
+                                  value={item.gstRate}
+                                  onChange={(e) => handleItemFieldChange(item.id, 'gstRate', parseFloat(e.target.value))}
+                                  className="w-full form-input text-xs bg-white border-slate-200 text-slate-900"
+                                >
+                                  <option value={0}>0%</option>
+                                  <option value={5}>5%</option>
+                                  <option value={12}>12%</option>
+                                  <option value={18}>18%</option>
+                                  <option value={28}>28%</option>
+                                </select>
+                              </td>
+                            )}
+
+                            {/* Quantity */}
+                            <td className="px-3 py-3 align-top w-28 min-w-[100px]">
                               <input
-                                type="text"
-                                value={item.hsnSac}
-                                onChange={(e) => handleItemFieldChange(item.id, 'hsnSac', e.target.value)}
-                                className="w-full form-input text-xs text-center border-slate-200 font-mono"
-                                placeholder="HSN"
+                                type="number"
+                                min={0.0001}
+                                step="any"
+                                value={item.quantity}
+                                onChange={(e) => handleItemFieldChange(item.id, 'quantity', parseFloat(e.target.value) || 0)}
+                                className="w-full form-input text-xs text-center border-slate-200 font-mono qty-input font-medium"
                               />
                             </td>
-                          )}
 
-                          {/* GST Rate */}
-                          {gstEnabled && (
-                            <td className="p-3 text-center">
-                              <select
-                                value={item.gstRate}
-                                onChange={(e) => handleItemFieldChange(item.id, 'gstRate', parseFloat(e.target.value))}
-                                className="w-full form-input text-xs bg-white border-slate-200 text-slate-900"
-                              >
-                                <option value={0}>0%</option>
-                                <option value={5}>5%</option>
-                                <option value={12}>12%</option>
-                                <option value={18}>18%</option>
-                                <option value={28}>28%</option>
-                              </select>
+                            {/* Rate */}
+                            <td className="px-3 py-3 align-top w-36 min-w-[140px]">
+                              <input
+                                type="number"
+                                min={0}
+                                step="any"
+                                value={item.rate}
+                                onChange={(e) => handleItemFieldChange(item.id, 'rate', parseFloat(e.target.value) || 0)}
+                                className="w-full form-input text-xs text-right border-slate-200 font-mono font-medium"
+                              />
                             </td>
-                          )}
 
-                          {/* Quantity */}
-                          <td className="p-3">
-                            <input
-                              type="number"
-                              min={0.0001}
-                              step={1}
-                              value={item.quantity}
-                              onChange={(e) => handleItemFieldChange(item.id, 'quantity', parseFloat(e.target.value) || 0)}
-                              className="w-full form-input text-xs text-center border-slate-200 font-mono qty-input"
-                            />
-                          </td>
+                            {/* Total Amount */}
+                            <td className="px-3 py-3 text-right font-mono font-bold text-slate-900 align-top pt-5 w-40 min-w-[145px] whitespace-nowrap">
+                              ₹{computedTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </td>
 
-                          {/* Rate */}
-                          <td className="p-3">
-                            <input
-                              type="number"
-                              min={0}
-                              value={item.rate}
-                              onChange={(e) => handleItemFieldChange(item.id, 'rate', parseFloat(e.target.value) || 0)}
-                              className="w-full form-input text-xs text-right border-slate-200 font-mono"
-                            />
-                          </td>
+                            {/* Row Actions */}
+                            <td className="px-3 py-3 text-center align-top pt-4 w-24 min-w-[80px]">
+                              <div className="flex items-center justify-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => duplicateLineItem(item.id)}
+                                  disabled={!isUsefulLineItem(item)}
+                                  className="p-1.5 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-slate-100 disabled:opacity-0 disabled:pointer-events-none transition-colors"
+                                  title="Duplicate Row"
+                                >
+                                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+                                  </svg>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => deleteLineItem(item.id)}
+                                  className="p-1.5 text-rose-500 hover:text-rose-700 rounded-lg hover:bg-rose-50 transition-colors"
+                                  title="Delete Row"
+                                >
+                                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  </svg>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
 
-                          {/* Amount Column is next, Discount removed */}
-
-                          {/* Total Amount */}
-                          <td className="p-3 text-right font-mono font-bold text-slate-900">
-                            ₹{computedTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                          </td>
-
-                          {/* Row Actions */}
-                          <td className="p-3 text-right">
-                            <div className="flex justify-end gap-1.5">
-                              <button
-                                type="button"
-                                onClick={() => duplicateLineItem(item.id)}
-                                disabled={!isUsefulLineItem(item)}
-                                className="p-1 border border-slate-200 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 disabled:opacity-0 disabled:pointer-events-none transition-colors"
-                                title="Duplicate Row"
-                              >
-                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
-                                </svg>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => deleteLineItem(item.id)}
-                                className="p-1 border border-slate-200 hover:bg-slate-100 rounded-lg text-rose-600 transition-colors"
-                                title="Delete Row"
-                              >
-                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                {/* Bottom Add Line Control */}
+                <div className="p-3 bg-slate-50/70 border-t border-slate-200 flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={addLineItem}
+                    className="px-3.5 py-1.5 bg-white border border-slate-300 hover:border-blue-500 hover:text-blue-600 font-bold rounded-xl text-xs text-slate-700 transition-all flex items-center gap-1.5 shadow-xs"
+                  >
+                    <svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                    </svg>
+                    <span>Add Line</span>
+                  </button>
+                  <span className="text-[11px] font-medium text-slate-400 mr-1">
+                    {items.length} {items.length === 1 ? 'item' : 'items'}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -1827,6 +1870,40 @@ function NewQuotationForm() {
                 </div>
               )}
             </div>
+
+            {/* Bottom Primary Actions Section */}
+            <div className="border-t border-slate-200 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <Link
+                href="/quotations"
+                className="w-full sm:w-auto px-5 py-2.5 text-center text-xs font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-all border border-slate-200"
+              >
+                Discard Changes
+              </Link>
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={() => handleSave('DRAFT')}
+                  disabled={saving}
+                  className="flex-1 sm:flex-none px-5 py-2.5 border border-slate-350 bg-white hover:bg-slate-50 font-bold rounded-xl text-xs text-slate-700 transition-all flex items-center justify-center gap-2 shadow-xs disabled:opacity-60"
+                >
+                  {saving ? 'Saving...' : 'Save as Draft'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!selectedClientId) {
+                      showToast('Please select a Client to preview.', 'error');
+                      return;
+                    }
+                    setActiveStep(2);
+                  }}
+                  disabled={saving}
+                  className="flex-1 sm:flex-none px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-sm flex items-center justify-center gap-2 text-xs disabled:opacity-60"
+                >
+                  Save & Continue
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Sidebar Editor Options / Advanced Options Column */}
@@ -2177,6 +2254,35 @@ function NewQuotationForm() {
                     <p className="text-[10px] text-slate-450 mt-0.5 uppercase tracking-wider font-semibold">Authorized Signatory</p>
                   </div>
                 )}
+              </div>
+            </div>
+
+            {/* Bottom Actions in Step 2 */}
+            <div className="border-t border-slate-200 pt-6 flex items-center justify-between gap-4">
+              <button
+                type="button"
+                onClick={() => setActiveStep(1)}
+                className="px-5 py-2.5 border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold shadow-xs transition-colors"
+              >
+                Back to Edit
+              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => handleSave('DRAFT')}
+                  disabled={saving}
+                  className="px-5 py-2.5 border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold shadow-xs transition-colors disabled:opacity-60"
+                >
+                  {saving ? 'Saving...' : 'Save as Draft'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSave('SENT')}
+                  disabled={saving}
+                  className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm transition-colors disabled:opacity-60"
+                >
+                  {saving ? 'Saving...' : 'Save & Publish'}
+                </button>
               </div>
             </div>
           </div>

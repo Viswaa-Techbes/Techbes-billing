@@ -6,6 +6,7 @@ import { useToast } from '@/context/ToastContext';
 import Modal from '@/components/ui/Modal';
 
 interface ItemAutocompleteProps {
+  id?: string;
   value: string;
   onChange: (value: string) => void;
   onSelect: (item: {
@@ -18,14 +19,19 @@ interface ItemAutocompleteProps {
   }) => void;
   placeholder?: string;
   className?: string;
+  autoFocus?: boolean;
+  inputRef?: React.Ref<HTMLInputElement>;
 }
 
 export default function ItemAutocomplete({
+  id,
   value,
   onChange,
   onSelect,
   placeholder = 'Search item...',
   className = '',
+  autoFocus,
+  inputRef,
 }: ItemAutocompleteProps) {
   const { showToast } = useToast();
   const [suggestions, setSuggestions] = useState<any[]>([]);
@@ -149,6 +155,9 @@ export default function ItemAutocomplete({
   return (
     <div className="relative w-full" ref={dropdownRef}>
       <input
+        ref={inputRef}
+        id={id}
+        autoFocus={autoFocus}
         type="text"
         value={value}
         onChange={(e) => {
