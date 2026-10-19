@@ -1038,9 +1038,9 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
         {/* Main Document Card */}
-        <div className="xl:col-span-3 card-panel p-6 sm:p-8 rounded-2xl bg-white shadow-sm border border-slate-200 space-y-8">
+        <div className="xl:col-span-9 2xl:col-span-9 card-panel p-5 sm:p-6 2xl:p-8 rounded-2xl bg-white shadow-sm border border-slate-200 space-y-8 min-w-0">
           {/* Header Title Editor */}
           <div className="border-b border-slate-100 pb-6 space-y-3">
             <div className="flex items-center gap-4">
@@ -1488,16 +1488,16 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
             {/* Dynamic Items Table Container */}
             <div className="border border-slate-200 rounded-2xl bg-white overflow-hidden shadow-xs">
               <div ref={lineItemContainerRef} className="overflow-x-auto overflow-y-auto max-h-[520px]">
-                <table className="w-full border-collapse text-left text-xs min-w-[860px]">
+                <table className="w-full border-collapse text-left text-xs min-w-[680px]">
                   <thead className="sticky top-0 z-10 bg-slate-50 border-b border-slate-200 shadow-xs">
                     <tr className="text-slate-500 font-semibold uppercase text-[10px] tracking-wider">
-                      <th className="px-4 py-3 min-w-[220px]">Item Description</th>
-                      {columnVisibility.hsnSac && <th className="px-3 py-3 w-28 min-w-[100px]">HSN/SAC</th>}
-                      {columnVisibility.gstRate && gstEnabled && <th className="px-3 py-3 w-24 min-w-[85px]">GST %</th>}
-                      {columnVisibility.quantity && <th className="px-3 py-3 w-28 min-w-[100px]">Qty</th>}
-                      {columnVisibility.rate && <th className="px-3 py-3 w-36 min-w-[140px]">Rate</th>}
-                      {columnVisibility.amount && <th className="px-3 py-3 w-40 min-w-[145px] text-right">Base Amount</th>}
-                      <th className="px-3 py-3 w-24 min-w-[80px] text-center">Actions</th>
+                      <th className="px-3.5 py-3 min-w-[160px]">Item Description</th>
+                      {columnVisibility.hsnSac && <th className="px-2 py-3 w-20 min-w-[80px] text-center">HSN/SAC</th>}
+                      {columnVisibility.gstRate && gstEnabled && <th className="px-2 py-3 w-[72px] min-w-[70px] text-center">GST %</th>}
+                      {columnVisibility.quantity && <th className="px-2 py-3 w-20 min-w-[76px] text-center">Qty</th>}
+                      {columnVisibility.rate && <th className="px-2.5 py-3 w-28 min-w-[110px] text-right">Rate</th>}
+                      {columnVisibility.amount && <th className="px-2.5 py-3 w-36 min-w-[130px] text-right">Base Amount</th>}
+                      <th className="px-2 py-3 w-20 min-w-[70px] text-center">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-slate-700 bg-white">
@@ -1505,7 +1505,7 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
                       return (
                         <tr key={item.id} id={`line-row-${item.id}`} className="hover:bg-slate-50/40 items-start transition-colors">
                           {/* Item Details */}
-                          <td className="px-4 py-3 space-y-2">
+                          <td className="px-3.5 py-3 space-y-2 min-w-[160px]">
                             <div className="flex gap-2">
                               {/* Optional Item image slot */}
                               {displayOptions.addImageInItems && (
@@ -1562,24 +1562,24 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
 
                           {/* HSN/SAC */}
                           {columnVisibility.hsnSac && (
-                            <td className="px-3 py-3 align-top w-28 min-w-[100px]">
+                            <td className="px-2 py-3 align-top w-20 min-w-[80px]">
                               <input
                                 type="text"
                                 value={item.hsnSac}
                                 onChange={(e) => handleUpdateItemRow(i, { hsnSac: e.target.value })}
                                 placeholder="Code"
-                                className="w-full form-input text-xs text-slate-900 bg-white"
+                                className="w-full form-input text-xs text-slate-900 bg-white px-1 py-1 text-center font-mono"
                               />
                             </td>
                           )}
 
                           {/* GST % */}
                           {columnVisibility.gstRate && gstEnabled && (
-                            <td className="px-3 py-3 align-top w-24 min-w-[85px]">
+                            <td className="px-2 py-3 align-top w-[72px] min-w-[70px]">
                               <select
                                 value={item.gstRate}
                                 onChange={(e) => handleUpdateItemRow(i, { gstRate: parseFloat(e.target.value) })}
-                                className="w-full form-input text-xs text-slate-900 bg-white"
+                                className="w-full form-input text-xs text-slate-900 bg-white px-1 py-1 text-center"
                               >
                                 {[0, 5, 12, 18, 28].map((rate) => (
                                   <option key={rate} value={rate}>
@@ -1592,41 +1592,41 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
 
                           {/* Quantity & Unit */}
                           {columnVisibility.quantity && (
-                            <td className="px-3 py-3 align-top space-y-1.5 w-28 min-w-[100px]">
+                            <td className="px-2 py-3 align-top space-y-1.5 w-20 min-w-[76px]">
                               <input
                                 type="number"
                                 value={item.quantity}
                                 min={0.0001}
                                 step="any"
                                 onChange={(e) => handleUpdateItemRow(i, { quantity: Math.max(0.0001, parseFloat(e.target.value) || 0) })}
-                                className="w-full form-input text-xs text-slate-900 bg-white qty-input font-medium"
+                                className="w-full form-input text-xs text-slate-900 bg-white qty-input font-medium px-1 py-1 text-center"
                               />
                             </td>
                           )}
 
                           {/* Rate / Discounts */}
                           {columnVisibility.rate && (
-                            <td className="px-3 py-3 align-top space-y-1.5 w-36 min-w-[140px]">
+                            <td className="px-2.5 py-3 align-top space-y-1.5 w-28 min-w-[110px]">
                               <input
                                 type="number"
                                 value={item.rate}
                                 min={0}
                                 step="any"
                                 onChange={(e) => handleUpdateItemRow(i, { rate: Math.max(0, parseFloat(e.target.value) || 0) })}
-                                className="w-full form-input text-xs font-semibold text-slate-900 bg-white"
+                                className="w-full form-input text-xs font-semibold text-slate-900 bg-white px-2 py-1 text-right"
                               />
                             </td>
                           )}
 
                           {/* Base Amount */}
                           {columnVisibility.amount && (
-                            <td className="px-3 py-3 align-top font-semibold text-slate-900 pt-5 text-right w-40 min-w-[145px] whitespace-nowrap font-mono">
+                            <td className="px-2.5 py-3 align-top font-semibold text-slate-900 pt-4 text-right w-36 min-w-[130px] whitespace-nowrap font-mono">
                               ₹{((item.quantity || 0) * (item.rate || 0)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </td>
                           )}
 
                           {/* Actions */}
-                          <td className="px-3 py-3 text-center align-top pt-4 w-24 min-w-[80px]">
+                          <td className="px-2 py-3 text-center align-top pt-3.5 w-20 min-w-[70px]">
                             <div className="flex items-center justify-center gap-1">
                               <button
                                 type="button"
@@ -2159,7 +2159,7 @@ export default function ProformaInvoiceEditor({ mode, documentId }: ProformaInvo
         </div>
 
         {/* Right column: Advanced options panel */}
-        <div className="xl:col-span-1 space-y-6">
+        <div className="xl:col-span-3 2xl:col-span-3 space-y-6">
           <div className="card-panel p-5 rounded-2xl bg-white shadow-sm border border-slate-200 space-y-5">
             <h3 className="text-sm font-black text-slate-900 pb-2 border-b border-slate-100 flex items-center gap-1.5">
               Advanced Design Configs
