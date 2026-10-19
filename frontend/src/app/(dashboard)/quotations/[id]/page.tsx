@@ -319,10 +319,10 @@ export default function QuotationDetailPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4 print:hidden">
         <div>
           <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-            {document.businessSnapshot?.businessName || 'TechBes'} / <Link href="/quotations" className="hover:underline">QUOTATIONS</Link> / {document.documentNumber}
+            {document.businessSnapshot?.businessName || 'TechBes'} / <Link href="/quotations" className="hover:underline">QUOTATIONS</Link> / {document.documentNumber && document.documentNumber !== 'Auto-generated' && document.documentNumber !== 'Draft (Auto-generated)' ? document.documentNumber : 'Draft'}
           </span>
           <div className="flex items-center gap-3 mt-1">
-            <h1 className="text-xl font-bold text-slate-900">{document.documentNumber}</h1>
+            <h1 className="text-xl font-bold text-slate-900">{document.documentNumber && document.documentNumber !== 'Auto-generated' && document.documentNumber !== 'Draft (Auto-generated)' ? document.documentNumber : 'Quotation'}</h1>
             {getStatusBadge(document.status)}
             {savingSettings && (
               <span className="text-[10px] text-blue-600 font-bold bg-blue-50 px-2 py-0.5 rounded animate-pulse">
@@ -518,10 +518,12 @@ export default function QuotationDetailPage() {
                 <h1 className="invoice-doc-title">{getDocumentTitle(document.documentType)}</h1>
                 {document.subtitle && <p className="invoice-doc-subtitle">{document.subtitle}</p>}
                 <div className="invoice-doc-meta-grid">
-                  <div className="invoice-doc-meta-row">
-                    <span className="invoice-doc-meta-label">Quotation No</span>
-                    <span className="invoice-doc-meta-value">{document.documentNumber}</span>
-                  </div>
+                  {document.documentNumber && document.documentNumber !== 'Auto-generated' && document.documentNumber !== 'Draft (Auto-generated)' && (
+                    <div className="invoice-doc-meta-row">
+                      <span className="invoice-doc-meta-label">Quotation No</span>
+                      <span className="invoice-doc-meta-value">{document.documentNumber}</span>
+                    </div>
+                  )}
                   {document.poNumber && (
                     <div className="invoice-doc-meta-row">
                       <span className="invoice-doc-meta-label">PO Ref</span>
@@ -579,10 +581,12 @@ export default function QuotationDetailPage() {
 
                 <div className="invoice-doc-party-box invoice-doc-party-box--white">
                   <p className="invoice-doc-section-label">Quotation Details</p>
-                  <div className="invoice-doc-detail-row">
-                    <span className="invoice-doc-detail-label">Quotation No</span>
-                    <span className="invoice-doc-detail-value">{document.documentNumber}</span>
-                  </div>
+                  {document.documentNumber && document.documentNumber !== 'Auto-generated' && document.documentNumber !== 'Draft (Auto-generated)' && (
+                    <div className="invoice-doc-detail-row">
+                      <span className="invoice-doc-detail-label">Quotation No</span>
+                      <span className="invoice-doc-detail-value">{document.documentNumber}</span>
+                    </div>
+                  )}
                   {document.poNumber && (
                     <div className="invoice-doc-detail-row">
                       <span className="invoice-doc-detail-label">PO Ref</span>

@@ -459,13 +459,36 @@ export default function EditQuotationPage() {
         discountValue: Number(item.discountValue) || 0,
       }));
 
+      let finalPlaceOfSupply = { ...placeOfSupply };
+      if (!finalPlaceOfSupply.stateCode && finalPlaceOfSupply.state) {
+        const found = INDIAN_STATES.find((s) => s.name.toLowerCase() === finalPlaceOfSupply.state.toLowerCase());
+        if (found) finalPlaceOfSupply.stateCode = found.stateCode;
+      }
+      if (!finalPlaceOfSupply.state || !finalPlaceOfSupply.stateCode || finalPlaceOfSupply.stateCode.length !== 2) {
+        if (selectedClient?.billingAddress?.state) {
+          const foundClientState = INDIAN_STATES.find((s) => s.name.toLowerCase() === selectedClient.billingAddress.state.toLowerCase());
+          finalPlaceOfSupply = {
+            state: selectedClient.billingAddress.state,
+            stateCode: selectedClient.billingAddress.stateCode || foundClientState?.stateCode || 'DL',
+          };
+        } else if (businessProfile?.address?.state) {
+          const foundBizState = INDIAN_STATES.find((s) => s.name.toLowerCase() === businessProfile.address.state.toLowerCase());
+          finalPlaceOfSupply = {
+            state: businessProfile.address.state,
+            stateCode: businessProfile.address.stateCode || foundBizState?.stateCode || 'DL',
+          };
+        } else {
+          finalPlaceOfSupply = { state: 'Delhi', stateCode: 'DL' };
+        }
+      }
+
       const payload = {
         documentType: 'QUOTATION',
         clientId: selectedClientId,
         poNumber,
         issueDate: new Date(issueDate).toISOString(),
         validTill: validTill ? new Date(validTill).toISOString() : undefined,
-        placeOfSupply,
+        placeOfSupply: finalPlaceOfSupply,
         items: serializedItems,
         documentDiscountType: enableDocDiscount ? docDiscountType : 'NONE',
         documentDiscountValue: enableDocDiscount ? Number(docDiscountValue) || 0 : 0,
@@ -581,10 +604,12 @@ export default function EditQuotationPage() {
               </div>
 
               <div className="text-left sm:text-right space-y-1.5 text-xs text-slate-650 font-mono">
-                <div>
-                  <span className="font-semibold text-slate-500 uppercase text-[10px]">Quotation No:</span>
-                  <span className="ml-2 font-bold text-slate-900">{documentNumber}</span>
-                </div>
+                {documentNumber && documentNumber !== 'Auto-generated' && documentNumber !== 'Draft (Auto-generated)' && (
+                  <div>
+                    <span className="font-semibold text-slate-500 uppercase text-[10px]">Quotation No:</span>
+                    <span className="ml-2 font-bold text-slate-900">{documentNumber}</span>
+                  </div>
+                )}
                 <div className="flex items-center sm:justify-end gap-2">
                   <span className="font-semibold text-slate-500 uppercase text-[10px]">Date:</span>
                   <input
@@ -1297,7 +1322,9 @@ export default function EditQuotationPage() {
 
             <div className="text-right space-y-1 font-mono text-slate-650">
               <p className="text-[10px] text-slate-450 uppercase font-semibold">Document Details</p>
-              <p><span className="font-bold text-slate-800">Doc No:</span> {documentNumber}</p>
+              {documentNumber && documentNumber !== 'Auto-generated' && documentNumber !== 'Draft (Auto-generated)' && (
+                <p><span className="font-bold text-slate-800">Doc No:</span> {documentNumber}</p>
+              )}
               <p><span className="font-bold text-slate-800">Date:</span> {issueDate}</p>
               <p><span className="font-bold text-slate-800">Valid Till:</span> {validTill || '—'}</p>
               {poNumber && <p><span className="font-bold text-slate-800">PO Ref:</span> {poNumber}</p>}

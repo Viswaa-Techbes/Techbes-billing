@@ -258,7 +258,11 @@ export default function QuotationsPage() {
                   {quotations.map((quotation) => (
                     <tr key={quotation._id} className="hover:bg-slate-50/70 transition-colors">
                       <td className="px-4 py-3 font-semibold text-slate-900 font-mono-numeric">
-                        {quotation.documentNumber}
+                        {quotation.documentNumber && quotation.documentNumber !== 'Auto-generated' && quotation.documentNumber !== 'Draft (Auto-generated)' ? (
+                          quotation.documentNumber
+                        ) : (
+                          <span className="text-slate-400 italic font-normal">Draft</span>
+                        )}
                       </td>
                       <td className="px-4 py-3 max-w-[240px]">
                         <span className="font-semibold text-slate-800 block truncate" title={quotation.clientSnapshot?.businessName || quotation.clientSnapshot?.clientName}>

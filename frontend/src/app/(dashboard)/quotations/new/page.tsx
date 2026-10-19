@@ -62,7 +62,7 @@ function NewQuotationForm() {
 
   // Form Headers
   const [docTitle, setDocTitle] = useState('Quotation');
-  const [documentNumber, setDocumentNumber] = useState('Auto-generated');
+  const [documentNumber, setDocumentNumber] = useState('');
   const [isNumberEditable, setIsNumberEditable] = useState(false);
   const [docSubtitle, setDocSubtitle] = useState('');
   const [showSubtitleInput, setShowSubtitleInput] = useState(false);
@@ -279,9 +279,12 @@ function NewQuotationForm() {
 
     if (client) {
       if (client.billingAddress?.state) {
+        const foundState = INDIAN_STATES.find(
+          (s) => s.name.toLowerCase() === (client.billingAddress?.state || '').toLowerCase()
+        );
         setPlaceOfSupply({
           state: client.billingAddress.state,
-          stateCode: client.billingAddress.stateCode || '',
+          stateCode: client.billingAddress.stateCode || foundState?.stateCode || '',
         });
       }
 
@@ -606,14 +609,38 @@ function NewQuotationForm() {
   // Handle saving the document
   const handleSave = async (statusOverride: 'DRAFT' | 'SENT') => {
     if (!selectedClientId) {
-      showToast('Please select a Client.', 'error');
+      showToast('Please select a Client before saving.', 'error');
       return;
     }
 
-    // Validate place of supply — backend requires stateCode to be exactly 2 characters
-    if (!placeOfSupply.state || !placeOfSupply.stateCode || placeOfSupply.stateCode.length !== 2) {
-      showToast('Please select a valid Place of Supply (state) before saving.', 'error');
-      return;
+    // Resolve place of supply with fallback to client address, business profile, or default
+    let finalPlaceOfSupply = { ...placeOfSupply };
+    if (!finalPlaceOfSupply.stateCode && finalPlaceOfSupply.state) {
+      const found = INDIAN_STATES.find(
+        (s) => s.name.toLowerCase() === finalPlaceOfSupply.state.toLowerCase()
+      );
+      if (found) finalPlaceOfSupply.stateCode = found.stateCode;
+    }
+    if (!finalPlaceOfSupply.state || !finalPlaceOfSupply.stateCode || finalPlaceOfSupply.stateCode.length !== 2) {
+      if (selectedClient?.billingAddress?.state) {
+        const foundClientState = INDIAN_STATES.find(
+          (s) => s.name.toLowerCase() === selectedClient.billingAddress.state.toLowerCase()
+        );
+        finalPlaceOfSupply = {
+          state: selectedClient.billingAddress.state,
+          stateCode: selectedClient.billingAddress.stateCode || foundClientState?.stateCode || 'DL',
+        };
+      } else if (businessProfile?.address?.state) {
+        const foundBizState = INDIAN_STATES.find(
+          (s) => s.name.toLowerCase() === businessProfile.address.state.toLowerCase()
+        );
+        finalPlaceOfSupply = {
+          state: businessProfile.address.state,
+          stateCode: businessProfile.address.stateCode || foundBizState?.stateCode || 'DL',
+        };
+      } else {
+        finalPlaceOfSupply = { state: 'Delhi', stateCode: 'DL' };
+      }
     }
 
     // Check if business profile is incomplete (in DB)
@@ -622,23 +649,36 @@ function NewQuotationForm() {
       return;
     }
 
-    // IMPORTANT: always validate only the useful (filled-in) items.
-    // The items array always contains a trailing blank row for UX purposes; including it
-    // in the validation causes hasInvalidItem to be permanently true and blocks saving.
     const usefulItems = items.filter(isUsefulLineItem);
-    if (usefulItems.length === 0) {
-      showToast('Please add at least one line item before saving.', 'error');
-      return;
+
+    // Publication-specific validation vs Draft validation
+    if (statusOverride === 'SENT') {
+      if (usefulItems.length === 0) {
+        showToast('Please add at least one line item before publishing.', 'error');
+        return;
+      }
+      const hasInvalidItem = usefulItems.some((item) => !item.isGroupHeader && !item.itemName.trim());
+      if (hasInvalidItem) {
+        showToast('Each line item must have a name.', 'error');
+        return;
+      }
     }
-    const hasInvalidItem = usefulItems.some((item) => !item.isGroupHeader && !item.itemName.trim());
-    if (hasInvalidItem) {
-      showToast('Each line item must have a name.', 'error');
-      return;
-    }
+
+    // Prepare line items: for drafts with no items, supply a draft row so the API succeeds
+    const itemsToSerialize = usefulItems.length > 0
+      ? usefulItems
+      : [
+          {
+            ...createBlankLineItem(),
+            itemName: 'Draft Item',
+            quantity: 1,
+            rate: 0,
+          },
+        ];
 
     setSaving(true);
     try {
-      const serializedItems = usefulItems.map((item) => {
+      const serializedItems = itemsToSerialize.map((item) => {
         if (item.isGroupHeader) {
           return {
             itemName: `[GROUP] ${item.groupTitle || 'Group Section'}`,
@@ -646,32 +686,33 @@ function NewQuotationForm() {
             rate: 0,
             gstRate: 0,
             unit: 'PCS',
-            discountType: 'NONE',
+            discountType: 'NONE' as const,
             discountValue: 0,
             description: 'Group Section Header Row',
           };
         }
         return {
-          itemName: item.itemName,
+          itemName: item.itemName.trim() || (statusOverride === 'DRAFT' ? 'Draft Item' : ''),
           description: item.description,
           hsnSac: item.hsnSac,
           gstRate: Number(item.gstRate) || 0,
-          quantity: Number(item.quantity) || 0,
-          unit: item.unit,
-          rate: Number(item.rate) || 0,
-          discountType: item.discountType,
+          quantity: Math.max(0.0001, Number(item.quantity) || 1),
+          unit: item.unit || 'PCS',
+          rate: Math.max(0, Number(item.rate) || 0),
+          discountType: item.discountType || 'NONE',
           discountValue: Number(item.discountValue) || 0,
         };
       });
 
-      const payload = {
+      const payload: any = {
         clientId: selectedClientId,
         documentType: 'QUOTATION',
-        documentNumber: documentNumber || undefined,
+        documentNumber: (documentNumber && documentNumber !== 'Auto-generated' && documentNumber !== 'Draft (Auto-generated)') ? documentNumber.trim() : undefined,
         status: statusOverride,
-        issueDate: new Date(issueDate).toISOString(),
+        poNumber: poNumber ? poNumber.trim() : '',
+        issueDate: issueDate ? new Date(issueDate).toISOString() : new Date().toISOString(),
         validTill: validTill ? new Date(validTill).toISOString() : undefined,
-        placeOfSupply,
+        placeOfSupply: finalPlaceOfSupply,
         items: serializedItems,
         documentDiscountType: enableDocDiscount ? docDiscountType : 'NONE',
         documentDiscountValue: enableDocDiscount ? Number(docDiscountValue) || 0 : 0,
@@ -684,6 +725,24 @@ function NewQuotationForm() {
         terms,
         notes,
         footer,
+        title: docTitle,
+        subtitle: docSubtitle,
+        shippingDetails: enableShipping ? shippingAddress : undefined,
+        gstConfiguration: {
+          gstEnabled,
+          placeOfSupply: finalPlaceOfSupply,
+          reverseCharge,
+          taxType: 'Auto',
+        },
+        signature: {
+          signatureUrl: signatureBase64 || undefined,
+          signatoryName: signatoryName || undefined,
+        },
+        contactDetails: {
+          name: contactDetails.name || undefined,
+          phone: contactDetails.phone || undefined,
+          email: contactDetails.email || undefined,
+        },
         customFields: [
           ...additionalInfo.filter((f) => f.label.trim() && f.value.trim()).map((f) => ({ key: f.label, value: f.value })),
           ...(docTitle !== 'Quotation' ? [{ key: 'doc_title_override', value: docTitle }] : []),
@@ -705,9 +764,13 @@ function NewQuotationForm() {
 
       const response = await api.post('/documents', payload);
       if (response.data?.success && response.data.data?._id) {
-        showToast('Quotation saved successfully!', 'success');
+        const savedDoc = response.data.data;
+        const successMsg = statusOverride === 'SENT' 
+          ? 'Quotation saved and published successfully!' 
+          : 'Quotation saved as draft successfully!';
+        showToast(successMsg, 'success');
         setSaving(false);
-        router.push(`/quotations/${response.data.data._id}`);
+        router.push(`/quotations/${savedDoc._id}`);
         return;
       } else {
         showToast(response.data?.message || 'Save completed but no document ID was returned. Please try again.', 'error');
@@ -716,7 +779,7 @@ function NewQuotationForm() {
       const apiErrorMsg = err.response?.data?.message;
       const subErrors = err.response?.data?.errors;
       if (subErrors && Array.isArray(subErrors) && subErrors.length > 0) {
-        const errorDetail = subErrors.map(e => `${e.field}: ${e.message}`).join(', ');
+        const errorDetail = subErrors.map((e: any) => `${e.field || e.param || 'Error'}: ${e.message || e.msg}`).join(', ');
         showToast(`Validation Error: ${errorDetail}`, 'error');
       } else if (apiErrorMsg) {
         showToast(apiErrorMsg, 'error');
@@ -2047,7 +2110,9 @@ function NewQuotationForm() {
                 )}
                 <div className="text-right space-y-1 font-mono text-slate-650">
                   <p className="text-[10px] text-slate-450 uppercase font-semibold">Quotation details</p>
-                  <p><span className="font-bold text-slate-800">No:</span> Draft (Auto-generated)</p>
+                  {documentNumber && documentNumber !== 'Auto-generated' && documentNumber !== 'Draft (Auto-generated)' && (
+                    <p><span className="font-bold text-slate-800">No:</span> {documentNumber}</p>
+                  )}
                   <p><span className="font-bold text-slate-800">Date:</span> {issueDate}</p>
                   <p><span className="font-bold text-slate-800">Valid Till:</span> {validTill || '—'}</p>
                   {poNumber && <p><span className="font-bold text-slate-800">PO Ref:</span> {poNumber}</p>}
