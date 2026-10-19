@@ -520,7 +520,7 @@ export default function EditQuotationPage() {
   const totals = calculateTotals();
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto pb-16 text-slate-800">
+    <div className="space-y-6 w-full pb-16 text-slate-800">
       {/* Top Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -570,9 +570,9 @@ export default function EditQuotationPage() {
 
       {activeStep === 1 ? (
         /* STEP 1: BILLING DOCUMENT EDITOR */
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start animate-fadeIn">
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start animate-fadeIn">
           {/* Main Card Panel Editor */}
-          <div className="xl:col-span-3 card-panel p-8 rounded-xl space-y-8 bg-white">
+          <div className="xl:col-span-9 2xl:col-span-9 card-panel p-5 sm:p-6 2xl:p-8 rounded-xl space-y-8 bg-white min-w-0">
             {/* Logo/Watermark Title Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start gap-4 pb-6 border-b border-slate-100">
               <div>
@@ -774,16 +774,16 @@ export default function EditQuotationPage() {
               {/* Dynamic Items Table Container */}
               <div className="border border-slate-200 rounded-2xl bg-white overflow-hidden shadow-xs">
                 <div ref={lineItemContainerRef} className="overflow-x-auto overflow-y-auto max-h-[520px]">
-                  <table className="w-full text-left text-xs border-collapse min-w-[860px]">
+                  <table className="w-full text-left text-xs border-collapse min-w-[680px]">
                     <thead className="sticky top-0 z-10 bg-slate-50 border-b border-slate-200 shadow-xs">
                       <tr className="text-slate-500 font-semibold uppercase tracking-wider text-[10px]">
-                        <th className="px-4 py-3 min-w-[220px]">Item Details</th>
-                        {displayOptions.showHsnSac && <th className="px-3 py-3 w-28 min-w-[100px] text-center">HSN/SAC</th>}
-                        <th className="px-3 py-3 w-28 min-w-[100px] text-center">Qty</th>
-                        <th className="px-3 py-3 w-36 min-w-[140px] text-right">Rate</th>
-                        <th className="px-3 py-3 w-24 min-w-[85px] text-center">GST %</th>
-                        <th className="px-3 py-3 w-40 min-w-[145px] text-right">Total (INR)</th>
-                        <th className="px-3 py-3 w-24 min-w-[80px] text-center">Actions</th>
+                        <th className="px-3.5 py-3 min-w-[160px]">Item Details</th>
+                        {displayOptions.showHsnSac && <th className="px-2 py-3 w-20 min-w-[80px] text-center">HSN/SAC</th>}
+                        <th className="px-2 py-3 w-20 min-w-[76px] text-center">Qty</th>
+                        <th className="px-2.5 py-3 w-28 min-w-[110px] text-right">Rate</th>
+                        <th className="px-2 py-3 w-[72px] min-w-[70px] text-center">GST %</th>
+                        <th className="px-2.5 py-3 w-36 min-w-[130px] text-right">Total (INR)</th>
+                        <th className="px-2 py-3 w-20 min-w-[70px] text-center">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 bg-white">
@@ -792,7 +792,7 @@ export default function EditQuotationPage() {
                         return (
                           <tr key={item.id || idx} id={`line-row-${item.id}`} className="align-top hover:bg-slate-50/40 transition-colors">
                             {/* Item Details */}
-                            <td className="px-4 py-3 space-y-2">
+                            <td className="px-3.5 py-3 space-y-2 min-w-[160px]">
                               <ItemAutocomplete
                                 id={`item-name-input-${item.id}`}
                                 value={item.itemName}
@@ -819,7 +819,7 @@ export default function EditQuotationPage() {
 
                             {/* HSN */}
                             {displayOptions.showHsnSac && (
-                              <td className="px-3 py-3 align-top w-28 min-w-[100px]">
+                              <td className="px-2 py-3 align-top w-20 min-w-[80px]">
                                 <input
                                   type="text"
                                   value={item.hsnSac}
@@ -831,7 +831,7 @@ export default function EditQuotationPage() {
                             )}
 
                             {/* Qty */}
-                            <td className="px-3 py-3 align-top w-28 min-w-[100px]">
+                            <td className="px-2 py-3 align-top w-20 min-w-[76px]">
                               <input
                                 type="number"
                                 step="any"
@@ -843,7 +843,7 @@ export default function EditQuotationPage() {
                             </td>
 
                             {/* Rate */}
-                            <td className="px-3 py-3 align-top w-36 min-w-[140px]">
+                            <td className="px-2.5 py-3 align-top w-28 min-w-[110px]">
                               <input
                                 type="number"
                                 step="any"
@@ -856,11 +856,11 @@ export default function EditQuotationPage() {
                             </td>
 
                             {/* GST % */}
-                            <td className="px-3 py-3 align-top w-24 min-w-[85px]">
+                            <td className="px-2 py-3 align-top w-[72px] min-w-[70px]">
                               <select
                                 value={item.gstRate}
                                 onChange={(e) => handleItemFieldChange(item.id, 'gstRate', parseFloat(e.target.value) || 0)}
-                                className="w-full form-input text-xs py-1 bg-white px-1"
+                                className="w-full form-input text-xs py-1 bg-white px-1 text-center"
                               >
                                 {[0, 5, 12, 18, 28].map(r => (
                                   <option key={r} value={r}>{r}%</option>
@@ -869,12 +869,12 @@ export default function EditQuotationPage() {
                             </td>
 
                             {/* Total Amount */}
-                            <td className="px-3 py-3 text-right font-bold text-slate-800 align-top pt-5 w-40 min-w-[145px] whitespace-nowrap font-mono">
+                            <td className="px-2.5 py-3 text-right font-bold text-slate-800 align-top pt-4 w-36 min-w-[130px] whitespace-nowrap font-mono">
                               ₹{computedItem.total?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </td>
 
                             {/* Actions */}
-                            <td className="px-3 py-3 text-center align-top pt-4 w-24 min-w-[80px]">
+                            <td className="px-2 py-3 text-center align-top pt-3.5 w-20 min-w-[70px]">
                               <div className="flex items-center justify-center gap-1">
                                 <button
                                   type="button"
@@ -1213,7 +1213,7 @@ export default function EditQuotationPage() {
           </div>
 
           {/* Configuration sidebar */}
-          <div className="card-panel p-6 rounded-xl space-y-6 bg-white text-xs text-slate-700">
+          <div className="xl:col-span-3 2xl:col-span-3 card-panel p-6 rounded-xl space-y-6 bg-white text-xs text-slate-700">
             <h3 className="font-bold text-sm text-slate-900 pb-2 border-b border-slate-100">Document Settings</h3>
 
             {/* Display options */}
