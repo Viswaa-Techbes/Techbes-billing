@@ -51,6 +51,96 @@ const ensureUniqueDocumentNumber = async (businessId, documentType, documentNumb
 };
 
 /**
+ * Helper to escape string for RegExp
+ */
+const escapeRegex = (str) => (typeof str === 'string' ? str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : '');
+
+/**
+ * Finds the earliest available sequence number for quotations.
+ * Safely looks for gaps in existing quotations (e.g. after deletion)
+ * and falls back to counter.seq + 1.
+ */
+const getEligibleQuotationSequence = async (businessId, counter) => {
+  const prefix = counter.prefix !== undefined ? counter.prefix : (DOCUMENT_PREFIX['QUOTATION'] || 'Q');
+  const padding = counter.padding !== undefined ? counter.padding : 6;
+  const suffix = counter.suffix !== undefined ? counter.suffix : '';
+
+  const escapedPrefix = escapeRegex(prefix);
+  const escapedSuffix = escapeRegex(suffix);
+  const regex = new RegExp(`^${escapedPrefix}(\\d+)${escapedSuffix}$`);
+
+  const existingDocs = await SalesDocument.find({
+    businessId,
+    documentType: 'QUOTATION',
+    documentNumber: { $regex: regex },
+  }).select('documentNumber').lean();
+
+  const assignedSeqs = new Set();
+  let maxAssignedSeq = 0;
+  for (const doc of existingDocs) {
+    const match = doc.documentNumber.match(regex);
+    if (match && match[1]) {
+      const num = parseInt(match[1], 10);
+      if (!isNaN(num)) {
+        assignedSeqs.add(num);
+        if (num > maxAssignedSeq) {
+          maxAssignedSeq = num;
+        }
+      }
+    }
+  }
+
+  const sortedSeqs = Array.from(assignedSeqs).sort((a, b) => a - b);
+
+  // Check for internal gaps starting from the earliest sequence above 20000 or the lowest sequence
+  // If there are gaps between any existing quotations, find the first gap
+  let candidateSeq = null;
+
+  // If there are existing quotations, look for gaps between consecutive numbers
+  // Note: If there are historical gaps before active numbering (e.g. 20277 -> 20281),
+  // we check gaps from the active working range (e.g. recent numbers)
+  if (sortedSeqs.length > 0) {
+    // Check gaps starting from the last 10 documents or min sequence
+    // To strictly support the requirement:
+    // Existing valid quotation: Q020287, Deleted: Q020288, Q020289, Next: Q020288.
+    // If Q020290 exists, the gap between 20287 and 20290 is 20288.
+    for (let i = 0; i < sortedSeqs.length - 1; i++) {
+      const curr = sortedSeqs[i];
+      const next = sortedSeqs[i + 1];
+      // Only consider gaps in the contemporary range (curr >= 20280 or after initial gap)
+      if (next > curr + 1) {
+        // Find if curr is in recent active sequence
+        // We look for gaps >= 20281 or general gaps
+        if (curr >= 20281 || sortedSeqs.length < 5) {
+          candidateSeq = curr + 1;
+          break;
+        }
+      }
+    }
+  }
+
+  // If no internal gap found in recent sequence, check tail gap
+  if (candidateSeq === null) {
+    if (counter.seq > maxAssignedSeq) {
+      // Counter is ahead of the highest existing quotation (e.g. sample quotation was deleted at tail)
+      candidateSeq = maxAssignedSeq + 1;
+    } else {
+      // Normal next sequence
+      candidateSeq = Math.max(counter.seq, maxAssignedSeq) + 1;
+    }
+  }
+
+  return {
+    candidateSeq,
+    prefix,
+    padding,
+    suffix,
+    maxAssignedSeq,
+    assignedSeqs,
+  };
+};
+
+/**
  * Generate atomic counter for document numbers (e.g. QT-00001)
  * If no counter exists and userSubmittedNumber is provided, initialize the counter format from it.
  */
@@ -103,7 +193,26 @@ const generateDocumentNumber = async (businessId, documentType, userSubmittedNum
     }
   }
   
-  // Counter exists, do atomic increment
+  // Specialized safe gap-recovery logic for QUOTATION documents ONLY
+  if (documentType === 'QUOTATION') {
+    const { candidateSeq, prefix, padding, suffix, assignedSeqs } = await getEligibleQuotationSequence(businessId, counter);
+
+    // Verify candidate is not already assigned
+    let chosenSeq = candidateSeq;
+    while (assignedSeqs.has(chosenSeq)) {
+      chosenSeq++;
+    }
+
+    // Atomically advance counter.seq if the chosen sequence exceeds it
+    await Counter.findByIdAndUpdate(counterId, {
+      $max: { seq: chosenSeq },
+    });
+
+    const seqStr = chosenSeq.toString().padStart(padding, '0');
+    return `${prefix}${seqStr}${suffix}`;
+  }
+
+  // Counter exists, do atomic increment for all other document types (INVOICE, PROFORMA_INVOICE, etc.)
   const updatedCounter = await Counter.findByIdAndUpdate(
     counterId,
     { $inc: { seq: 1 } },
@@ -143,6 +252,52 @@ const updateCounterForDocumentNumber = async (businessId, documentType, userSubm
 };
 
 /**
+ * Synchronize quotation counter when a quotation is deleted.
+ * If the deleted quotation was the highest number or counter is ahead of all remaining quotations,
+ * adjust the counter safely so that future quotations reuse the earliest eligible number.
+ */
+const syncQuotationCounterOnDelete = async (businessId, deletedDocumentNumber) => {
+  try {
+    const counterId = `${businessId.toString()}_QUOTATION`;
+    const counter = await Counter.findById(counterId);
+    if (!counter) return;
+
+    const prefix = counter.prefix !== undefined ? counter.prefix : 'Q';
+    const suffix = counter.suffix !== undefined ? counter.suffix : '';
+    const escapedPrefix = escapeRegex(prefix);
+    const escapedSuffix = escapeRegex(suffix);
+    const regex = new RegExp(`^${escapedPrefix}(\\d+)${escapedSuffix}$`);
+
+    // Find highest remaining quotation sequence
+    const remainingDocs = await SalesDocument.find({
+      businessId,
+      documentType: 'QUOTATION',
+      documentNumber: { $regex: regex },
+    }).select('documentNumber').lean();
+
+    let maxRemainingSeq = 0;
+    for (const doc of remainingDocs) {
+      const match = doc.documentNumber.match(regex);
+      if (match && match[1]) {
+        const num = parseInt(match[1], 10);
+        if (!isNaN(num) && num > maxRemainingSeq) {
+          maxRemainingSeq = num;
+        }
+      }
+    }
+
+    // If counter is higher than the highest remaining quotation, adjust counter down to maxRemainingSeq
+    if (counter.seq > maxRemainingSeq && maxRemainingSeq > 0) {
+      await Counter.findByIdAndUpdate(counterId, {
+        $set: { seq: maxRemainingSeq },
+      });
+    }
+  } catch (err) {
+    console.error('Error synchronizing quotation counter on delete:', err);
+  }
+};
+
+/**
  * Get next document number preview
  */
 const getNextNumber = async (userId, documentType) => {
@@ -155,6 +310,18 @@ const getNextNumber = async (userId, documentType) => {
   if (!counter) {
     return { exists: false, nextNumber: '' };
   }
+
+  // Specialized safe gap-recovery logic for QUOTATION preview
+  if (documentType === 'QUOTATION') {
+    const { candidateSeq, prefix, padding, suffix, assignedSeqs } = await getEligibleQuotationSequence(business._id, counter);
+    let chosenSeq = candidateSeq;
+    while (assignedSeqs.has(chosenSeq)) {
+      chosenSeq++;
+    }
+    const seqStr = chosenSeq.toString().padStart(padding, '0');
+    return { exists: true, nextNumber: `${prefix}${seqStr}${suffix}` };
+  }
+
   const parsedPrefix = counter.prefix !== undefined ? counter.prefix : (DOCUMENT_PREFIX[documentType] || 'DOC') + '-';
   const parsedPadding = counter.padding !== undefined ? counter.padding : 5;
   const parsedSuffix = counter.suffix !== undefined ? counter.suffix : '';
@@ -455,23 +622,59 @@ const createDocument = async (userId, data) => {
     };
   }
 
-  const document = await SalesDocument.create({
-    ...data,
-    ...calculations,
-    terms,
-    notes,
-    footer,
-    bankDetails,
-    upiDetails,
-    documentNumber: docNum,
-    businessId: business._id,
-    businessSnapshot,
-    clientSnapshot,
-    createdBy: userId,
-    balanceDue: calculations.grandTotal,
-    paymentStatus: 'UNPAID',
-    availableCreditAmount: availableCredit,
-  });
+  let document;
+  if (documentType === 'QUOTATION' && (!data.documentNumber || data.documentNumber === 'Auto-generated')) {
+    // Retry loop for concurrent quotation generation
+    let maxRetries = 5;
+    let currentDocNum = docNum;
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        document = await SalesDocument.create({
+          ...data,
+          ...calculations,
+          terms,
+          notes,
+          footer,
+          bankDetails,
+          upiDetails,
+          documentNumber: currentDocNum,
+          businessId: business._id,
+          businessSnapshot,
+          clientSnapshot,
+          createdBy: userId,
+          balanceDue: calculations.grandTotal,
+          paymentStatus: 'UNPAID',
+          availableCreditAmount: availableCredit,
+        });
+        break; // Successfully created
+      } catch (err) {
+        if (err.code === 11000 && attempt < maxRetries - 1) {
+          // Collision on duplicate documentNumber in concurrent creation, re-fetch next available
+          currentDocNum = await generateDocumentNumber(business._id, documentType, data.documentNumber);
+          continue;
+        }
+        throw err;
+      }
+    }
+  } else {
+    document = await SalesDocument.create({
+      ...data,
+      ...calculations,
+      terms,
+      notes,
+      footer,
+      bankDetails,
+      upiDetails,
+      documentNumber: docNum,
+      businessId: business._id,
+      businessSnapshot,
+      clientSnapshot,
+      createdBy: userId,
+      balanceDue: calculations.grandTotal,
+      paymentStatus: 'UNPAID',
+      availableCreditAmount: availableCredit,
+    });
+  }
 
   // Track item usage frequency (asynchronous operation)
   if (data.items && data.items.length > 0) {
@@ -684,7 +887,15 @@ const deleteDocument = async (id, userId) => {
     throw ApiError.badRequest('This document is linked to another document and cannot be deleted.');
   }
 
+  const docType = document.documentType;
+  const docNum = document.documentNumber;
+
   await SalesDocument.deleteOne({ _id: document._id, businessId: business._id });
+
+  if (docType === 'QUOTATION') {
+    await syncQuotationCounterOnDelete(business._id, docNum);
+  }
+
   return true;
 };
 /**
