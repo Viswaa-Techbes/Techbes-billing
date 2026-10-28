@@ -97,6 +97,30 @@ export const downloadDocumentPdf = async (
   clone.style.borderRadius = '0';
   clone.style.boxShadow = 'none';
   clone.style.background = '#ffffff';
+  clone.style.boxSizing = 'border-box';
+
+  // Prevent digit overlap in html2canvas by ensuring zero letter spacing and nowrap on numeric elements
+  clone.querySelectorAll<HTMLElement>('*').forEach((el) => {
+    const ls = window.getComputedStyle(el).letterSpacing;
+    if (ls && ls !== 'normal' && ls !== '0px') {
+      if (
+        parseFloat(ls) < 0 ||
+        el.closest('table') ||
+        el.closest('.invoice-doc-totals-panel') ||
+        el.classList.contains('invoice-doc-grand-total-value')
+      ) {
+        el.style.letterSpacing = '0px';
+      }
+    }
+  });
+
+  clone.querySelectorAll<HTMLElement>(
+    '.col-rate, .col-tax, .col-amount, .item-amount, .invoice-doc-grand-total-value, .invoice-doc-total-row span:last-child'
+  ).forEach((el) => {
+    el.style.whiteSpace = 'nowrap';
+    el.style.letterSpacing = '0px';
+    el.style.wordBreak = 'keep-all';
+  });
 
   host.appendChild(clone);
   document.body.appendChild(host);
@@ -126,7 +150,7 @@ export const downloadDocumentPdf = async (
           y: 0,
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', '.print-avoid-break', '.invoice-doc-footer', '.invoice-doc-words-box'] },
+        pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', '.print-avoid-break', '.invoice-doc-footer', '.invoice-doc-words-box', '.totals-section', '.invoice-doc-totals-grid'] },
       })
       .from(clone)
       .save();

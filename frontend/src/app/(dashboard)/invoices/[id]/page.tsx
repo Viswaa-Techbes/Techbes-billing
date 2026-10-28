@@ -710,15 +710,20 @@ export default function InvoiceDetailsPage({ params }: InvoiceDetailsProps) {
                 <table className={`invoice-doc-table ${localSettings.design.tableStyle === 'Striped' ? 'striped' : ''}`}>
                   <thead>
                     <tr>
-                      <th style={{ width: '4%', textAlign: 'center' }}>#</th>
-                      <th style={{ width: localSettings.advanced.hsnColumnView !== 'Hide' ? '26%' : '34%' }}>Item / Description</th>
-                      {localSettings.advanced.hsnColumnView !== 'Hide' && <th style={{ width: '9%', textAlign: 'center' }}>HSN/SAC</th>}
-                      {localSettings.advanced.unitDisplay === 'Separate column' && <th style={{ width: '6%', textAlign: 'center' }}>Unit</th>}
-                      <th style={{ width: '7%', textAlign: 'center' }}>Qty</th>
-                      <th style={{ width: '12%', textAlign: 'right' }}>Rate</th>
-                      {document.gstConfiguration?.gstEnabled && <th style={{ width: '7%', textAlign: 'center' }}>GST%</th>}
-                      {document.gstConfiguration?.gstEnabled && <th style={{ width: '12%', textAlign: 'right' }}>Tax Amt</th>}
-                      <th style={{ width: '13%', textAlign: 'right' }}>Amount</th>
+                      <th className="col-num" style={{ width: '4%', textAlign: 'center' }}>#</th>
+                      <th className="col-desc" style={{
+                        width: localSettings.advanced.hsnColumnView !== 'Hide'
+                          ? (localSettings.advanced.unitDisplay === 'Separate column' ? '23%' : '28%')
+                          : (localSettings.advanced.unitDisplay === 'Separate column' ? '31%' : '36%'),
+                        textAlign: 'left'
+                      }}>Item / Description</th>
+                      {localSettings.advanced.hsnColumnView !== 'Hide' && <th className="col-hsn" style={{ width: '8%', textAlign: 'center' }}>HSN/SAC</th>}
+                      {localSettings.advanced.unitDisplay === 'Separate column' && <th className="col-unit" style={{ width: '5%', textAlign: 'center' }}>Unit</th>}
+                      <th className="col-qty" style={{ width: '6%', textAlign: 'center' }}>Qty</th>
+                      <th className="col-rate" style={{ width: '16%', textAlign: 'right' }}>Rate</th>
+                      {document.gstConfiguration?.gstEnabled && <th className="col-gst" style={{ width: '6%', textAlign: 'center' }}>GST%</th>}
+                      {document.gstConfiguration?.gstEnabled && <th className="col-tax" style={{ width: '14%', textAlign: 'right' }}>Tax Amt</th>}
+                      <th className="col-amount" style={{ width: '18%', textAlign: 'right' }}>Amount</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -745,8 +750,8 @@ export default function InvoiceDetailsPage({ params }: InvoiceDetailsProps) {
 
                       return (
                         <tr key={i}>
-                          <td style={{ textAlign: 'center', color: 'var(--invoice-label)', fontSize: 10 }}>{i + 1}</td>
-                          <td className="item-name">
+                          <td className="col-num" style={{ textAlign: 'center', color: 'var(--invoice-label)', fontSize: 10 }}>{i + 1}</td>
+                          <td className="item-name col-desc">
                             <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
                               {localSettings.advanced.showOriginalItemImages && item.image && (
                                 <img src={formatImageSrc(item.image)} alt="item" style={{ width: 32, height: 32, objectFit: 'contain', border: '1px solid var(--invoice-border)', borderRadius: 4, flexShrink: 0 }} />
@@ -766,19 +771,19 @@ export default function InvoiceDetailsPage({ params }: InvoiceDetailsProps) {
                             <td style={{ fontFamily: 'monospace', fontSize: 10, textAlign: 'center' }}>{item.hsnSac || '—'}</td>
                           )}
                           {localSettings.advanced.unitDisplay === 'Separate column' && (
-                            <td style={{ textAlign: 'center' }}>{item.unit || 'PCS'}</td>
+                            <td className="col-unit" style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>{item.unit || 'PCS'}</td>
                           )}
-                          <td style={{ textAlign: 'center' }}>
+                          <td className="col-qty" style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
                             {item.quantity}{localSettings.advanced.unitDisplay !== 'Separate column' ? ` ${item.unit || 'PCS'}` : ''}
                           </td>
-                          <td style={{ textAlign: 'right' }}>₹{rate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                          <td className="col-rate" style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>₹{rate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                           {document.gstConfiguration?.gstEnabled && (
-                            <td style={{ textAlign: 'center' }}>{gstRate}%</td>
+                            <td className="col-gst" style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>{gstRate}%</td>
                           )}
                           {document.gstConfiguration?.gstEnabled && (
-                            <td style={{ textAlign: 'right' }}>₹{taxAmt.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                            <td className="col-tax" style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>₹{taxAmt.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                           )}
-                          <td className="item-amount">₹{lineAmt.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                          <td className="item-amount col-amount" style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>₹{lineAmt.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                         </tr>
                       );
                     })}

@@ -631,12 +631,12 @@ export default function ProformaInvoiceDetailsPage({ params }: ProformaInvoiceDe
                 <table className={`invoice-doc-table ${localSettings.design.tableStyle === 'Striped' ? 'striped' : ''}`}>
                   <thead>
                     <tr>
-                      <th>Item Description</th>
-                      {localSettings.advanced.hsnColumnView !== 'Hide' && <th>HSN/SAC</th>}
-                      {document.gstConfiguration?.gstEnabled && <th>GST %</th>}
-                      <th className="text-right">Qty</th>
-                      <th className="text-right">Rate</th>
-                      <th className="text-right">Amount</th>
+                      <th className="col-desc" style={{ textAlign: 'left' }}>Item Description</th>
+                      {localSettings.advanced.hsnColumnView !== 'Hide' && <th className="col-hsn" style={{ width: '9%', textAlign: 'center' }}>HSN/SAC</th>}
+                      {document.gstConfiguration?.gstEnabled && <th className="col-gst" style={{ width: '7%', textAlign: 'center' }}>GST %</th>}
+                      <th className="col-qty" style={{ width: '8%', textAlign: 'center' }}>Qty</th>
+                      <th className="col-rate" style={{ width: '18%', textAlign: 'right' }}>Rate</th>
+                      <th className="col-amount" style={{ width: '20%', textAlign: 'right' }}>Amount</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -652,7 +652,7 @@ export default function ProformaInvoiceDetailsPage({ params }: ProformaInvoiceDe
 
                       return (
                         <tr key={i}>
-                          <td className="item-name">
+                          <td className="item-name col-desc">
                             <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
                               {localSettings.advanced.showOriginalItemImages && item.image && (
                                 <img
@@ -670,14 +670,14 @@ export default function ProformaInvoiceDetailsPage({ params }: ProformaInvoiceDe
                             </div>
                           </td>
                           {localSettings.advanced.hsnColumnView !== 'Hide' && (
-                            <td style={{ fontFamily: 'monospace', fontSize: 11 }}>{item.hsnSac || '—'}</td>
+                            <td className="col-hsn" style={{ fontFamily: 'monospace', fontSize: 11, textAlign: 'center' }}>{item.hsnSac || '—'}</td>
                           )}
-                          {document.gstConfiguration?.gstEnabled && <td>{item.gstRate || 0}%</td>}
-                          <td style={{ textAlign: 'right' }}>
-                            {item.quantity} {localSettings.advanced.unitDisplay === 'Separate column' ? (item.unit || 'PCS') : ''}
+                          {document.gstConfiguration?.gstEnabled && <td className="col-gst" style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>{item.gstRate || 0}%</td>}
+                          <td className="col-qty" style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
+                            {item.quantity}{item.unit ? ` ${item.unit}` : ''}
                           </td>
-                          <td style={{ textAlign: 'right' }}>₹{item.rate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-                          <td className="item-amount">
+                          <td className="col-rate" style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>₹{item.rate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                          <td className="item-amount col-amount" style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
                             ₹{((item.quantity * item.rate) - (item.itemDiscountAmount || 0)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                           </td>
                         </tr>
